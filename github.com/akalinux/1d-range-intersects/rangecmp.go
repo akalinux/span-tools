@@ -18,14 +18,11 @@ type ResolvedRangeSet[E any, T any] struct {
 }
 
 func BuildCreateRange[E any, T any](cmp func(E, E) int) func(E, E, *T) (Range[E, T], error) {
-
 	var createRange = func(begin, end E, tag *T) (Range[E, T], error) {
-
 		if cmp(end, begin) == 1 {
 			return Range[E, T]{}, fmt.Errorf("Invalid range, Begin must be less than or equal to End")
 		}
 		newRange := Range[E, T]{Begin: begin, End: end, Tag: tag}
-
 		return newRange, nil
 	}
 	return createRange
