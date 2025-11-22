@@ -1,4 +1,4 @@
-package overlaps
+package rangecmp; 
 
 import (
 	"cmp"
