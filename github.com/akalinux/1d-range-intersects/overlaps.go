@@ -2,6 +2,7 @@ package overlaps
 
 import (
 	"cmp"
+	"fmt"
 )
 
 type Range[E any, T any] struct {
@@ -16,10 +17,25 @@ type ResolvedRangeSet[E any, T any] struct {
 	Contains *RangeSlices[E, T]
 }
 
+func BuildCreateRange[E any, T any](cmp func(E, E) int) func(E, E, *T) (Range[E, T], error) {
+
+	var createRange = func(begin, end E, tag *T) (Range[E, T], error) {
+
+		if cmp(end, begin) == 1 {
+			return Range[E, T]{}, fmt.Errorf("Invalid range, Begin must be less than or equal to End")
+		}
+		newRange := Range[E, T]{Begin: begin, End: end, Tag: tag}
+
+		return newRange, nil
+	}
+	return createRange
+}
+
 type RangeTests[E any, T any] struct {
 	Compare          func(a, b Range[E, T]) int
 	ContainedBy      func(a, b Range[E, T]) (int, int)
 	ResolveContainer func(a, b Range[E, T], s RangeSlices[E, T]) ResolvedRangeSet[E, T]
+	CreateRange      func(a, b E, tag *T) (Range[E, T], error)
 }
 
 func BuildCompare[E any, T any](cmp func(E, E) int) func(a, b Range[E, T]) int {
@@ -73,17 +89,23 @@ func BuildResolveContainer[E any, T any](ContainedBy func(a, b Range[E, T]) (int
 		return rs
 	}
 }
+
 func CreateCompare[E any, T any](cmp func(E, E) int) RangeTests[E, T] {
 	var Compare = BuildCompare[E, T](cmp)
 	var ContainedBy = BuildContainedBy[E, T](cmp)
 	var ResolveContainer = BuildResolveContainer(ContainedBy)
+	var CreateRange = BuildCreateRange[E, T](cmp)
 	var ops = RangeTests[E, T]{
 		Compare:          Compare,
 		ContainedBy:      ContainedBy,
 		ResolveContainer: ResolveContainer,
+		CreateRange:      CreateRange,
 	}
 	return ops
 }
 
-type RangeSlicesOrdered[E cmp.Ordered, T any] []Range[E, T]
+func OrderedCreateCompare[E cmp.Ordered, T any]() RangeTests[E, T] {
+  return CreateCompare[E,T](cmp.Compare);
+}
+
 
