@@ -1,3 +1,3 @@
-module github.com/akalinux/1d-range-intersects
+module 1d-span-intersects
 
 go 1.25.4
