@@ -1,3 +1,3 @@
-module 1d-span-intersects
+module span-tools
 
 go 1.25.4
