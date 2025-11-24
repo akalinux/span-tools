@@ -1,4 +1,4 @@
-package spantools
+package spans 
 
 import (
 	"slices"
