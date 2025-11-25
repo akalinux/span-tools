@@ -6,8 +6,11 @@ import (
 )
 
 type Span[E any, T any] struct {
+  // Start of the Span.
 	Begin E
+  // End of the Span.
 	End   E
+  // Pointer to data set used to identify this Span[E,T]
 	Tag   *T
 }
 
