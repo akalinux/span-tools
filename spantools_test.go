@@ -14,12 +14,12 @@ var AllSet = []Span[int, string]{
 	{Begin: 0, End: 1},
 }
 
-var tagA="a";
-var tagB="b"
+var tagA = "a"
+var tagB = "b"
 var MultiSet = []Span[int, string]{
 	{Begin: -1, End: 0},
-	{Begin: 2, End: 2,Tag:&tagA},
-	{Begin: 2, End: 2,Tag:&tagB},
+	{Begin: 2, End: 2, Tag: &tagA},
+	{Begin: 2, End: 2, Tag: &tagB},
 	{Begin: 5, End: 6},
 	{Begin: 9, End: 11},
 }
@@ -97,23 +97,59 @@ func TestMergeMultiple(t *testing.T) {
 	var accumulator = driver.SpanAccumulator()
 	for idx, span := range MultiSet {
 		var res = accumulator(&span)
-    if(span.Begin!=res.Begin||span.End!=res.End) {
-      t.Errorf("Range missmatch, expected: %d->%d, got: %d->%d",span.Begin,span.End,res.Begin,res.End);
-    }
-		switch idx {
-		  case 0,1,3,4:
-			  if res.Contains != nil {
-				  t.Errorf("First should be nil")
-			  }
-		  case 2:
-			  if res.Contains == nil || len(*res.Contains)!=2 {
-				  t.Errorf("Container should have 2 elements")
-			  }
-        var list =*res.Contains;
-        var check=*list[0].Tag+ *list[1].Tag;
-        if(check!="ab") {
-          t.Errorf("tag validation failed")
-        }
+		if span.Begin != res.Begin || span.End != res.End {
+			t.Errorf("Range missmatch, expected: %d->%d, got: %d->%d", span.Begin, span.End, res.Begin, res.End)
 		}
+		switch idx {
+		case 0, 1, 3, 4:
+			if res.Contains != nil {
+				t.Errorf("First should be nil")
+			}
+		case 2:
+			if res.Contains == nil || len(*res.Contains) != 2 {
+				t.Errorf("Container should have 2 elements")
+			}
+			var list = *res.Contains
+			var check = *list[0].Tag + *list[1].Tag
+			if check != "ab" {
+				t.Errorf("tag validation failed")
+			}
+		}
+	}
+}
+
+func TestGrowth(t *testing.T) {
+	src := []Span[int, string]{
+		// sorted
+		{Begin: -2, End: -1},
+		{Begin: -1, End: 0},
+		{Begin: 1, End: 1},
+	}
+	var accumulator = driver.SpanAccumulator()
+	var lastRes *AccumulatedSpanSet[int, string] = nil
+	for idx, span := range src {
+		res := accumulator(&span)
+		switch idx {
+		case 0:
+			if res.Begin != -2 || res.End != -1 || res.Contains != nil {
+				t.Errorf("Bad Range on element 0")
+			}
+		case 1:
+			if res.Begin != -2 || res.End != -0 || res.Contains == nil || lastRes != res {
+				t.Errorf("Bad Range on element 1")
+			}
+		case 2:
+			if res.Begin != 1 || res.End != 1 {
+				t.Errorf("Bad Range")
+			}
+			if res == lastRes {
+				t.Errorf("Bad result")
+			}
+			if nil != res.Contains {
+				t.Errorf("Invalid Contains")
+			}
+		}
+
+		lastRes = res
 	}
 }
