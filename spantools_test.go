@@ -53,6 +53,7 @@ var testSets = [][][]Span[int, string]{
 
 var driver = OrderedCreateCompare[int, string]()
 
+// Validates sort operation, by sorting slices and compairing the the sorted elements to a manually sorted array.
 func TestOneContainerForAllSort(t *testing.T) {
 	for setId, testSet := range testSets {
 		var unsorted = make([]Span[int, string], len(testSet[0]))
@@ -70,6 +71,7 @@ func TestOneContainerForAllSort(t *testing.T) {
 
 }
 
+// Test the Accumulator function and validates that the overlaps are generated correctly.
 func TestConsolidate(t *testing.T) {
 	var container = AllSet[0]
 	var accumulator = driver.SpanAccumulator()
@@ -93,6 +95,7 @@ func TestConsolidate(t *testing.T) {
 	}
 }
 
+// Tests the Accumulator function with multiple both overlapping and non overlapping Spans.
 func TestMergeMultiple(t *testing.T) {
 	var accumulator = driver.SpanAccumulator()
 	for idx, span := range MultiSet {
@@ -118,6 +121,7 @@ func TestMergeMultiple(t *testing.T) {
 	}
 }
 
+//  Tests the Accumulator function to make sure growth works as expected for accumulated spans.
 func TestGrowth(t *testing.T) {
 	src := []Span[int, string]{
 		// sorted
@@ -135,9 +139,16 @@ func TestGrowth(t *testing.T) {
 				t.Errorf("Bad Range on element 0")
 			}
 		case 1:
-			if res.Begin != -2 || res.End != -0 || res.Contains == nil || lastRes != res {
+			if res.Begin != -2 || res.End != -0 {
 				t.Errorf("Bad Range on element 1")
 			}
+      if(res.Contains == nil) {
+				t.Errorf("Expected contains for element 1")
+      } 
+      if lastRes != res {
+        t.Errorf("Did not expect new range!")
+        return;
+      }
 		case 2:
 			if res.Begin != 1 || res.End != 1 {
 				t.Errorf("Bad Range")
@@ -153,43 +164,65 @@ func TestGrowth(t *testing.T) {
 	}
 }
 
+// Validates the inital range of a list of ranges
 func TestFirstRange(t *testing.T) {
-  var src *[]*Span[int,string]=&[]*Span[int, string]{
-    {Begin:2,End:2},
-    {Begin:0,End:1},
-  }
-  var span=driver.FirstSpan(src);
-  if(span.Begin!=0 || span.End!=1) {
-    t.Errorf("Invalid start range")
-  }
+	var src *[]*Span[int, string] = &[]*Span[int, string]{
+		{Begin: 2, End: 2},
+		{Begin: 0, End: 1},
+	}
+	var span = driver.FirstSpan(src)
+	if span.Begin != 0 || span.End != 1 {
+		t.Errorf("Invalid start range")
+	}
 }
 
+// Validates the creation of the next span based on the current span.
 func TestNextRange(t *testing.T) {
-  var src *[]*Span[int,string]=&[]*Span[int, string]{
-    {Begin:3,End:4}, // 3,4, last valid range, should get nil after this
-    {Begin:2,End:2}, // 2,2, first range
-    {Begin:0,End:1}, // should ignore
+	var src *[]*Span[int, string] = &[]*Span[int, string]{
+		{Begin: 3, End: 4}, // 3,4, last valid range, should get nil after this
+		{Begin: 2, End: 2}, // 2,2, first range
+		{Begin: 0, End: 1}, // should ignore
+	}
+	var first = &Span[int, string]{Begin: 0, End: 1}
+	var span = driver.NextSpan(first, src)
+	if span == nil {
+		t.Errorf("Should not have reached our end yet!")
+		return
+	}
+	if span.Begin != 2 || span.End != 2 {
+		t.Errorf("Invalid range, expected: 2->2, got %d->%d", span.Begin, span.End)
+	}
+	span = driver.NextSpan(span, src)
+	if span == nil {
+		t.Errorf("Should not have reached our end yet!")
+		return
+	}
+	if span.Begin != 3 || span.End != 4 {
+		t.Errorf("Invalid range, expected: 3->4, got %d->%d", span.Begin, span.End)
+	}
+	span = driver.NextSpan(span, src)
+	if span != nil {
+		t.Errorf("End expected!")
+		return
+	}
+}
+
+// Negative and positive overlap span testing.
+func TestOverlaps(t *testing.T) {
+  var a =&Span[int,string]{Begin: 0,End: 1}
+  var b =&Span[int,string]{Begin: 1,End: 2}
+  if(!driver.Overlap(a,b)) {
+    t.Errorf("Expected a and b to overlap");
   }
-  var first=&Span[int,string]{Begin: 0,End:1};
-  var span=driver.NextSpan(first,src);
-  if(span==nil) {
-    t.Errorf("Should not have reached our end yet!")
-    return;
+  if(!driver.Overlap(b,a)) {
+    t.Errorf("Expected a and b to overlap");
   }
-  if(span.Begin!=2 || span.End!=2) {
-    t.Errorf("Invalid range, expected: 2->2, got %d->%d",span.Begin,span.End);
+  a =&Span[int,string]{Begin: 0,End: 1}
+  b =&Span[int,string]{Begin: 2,End: 2}
+  if(driver.Overlap(a,b)) {
+    t.Errorf("Invalid overlap of a and b ");
   }
-  span=driver.NextSpan(span,src);
-  if(span==nil) {
-    t.Errorf("Should not have reached our end yet!")
-    return;
-  }
-  if(span.Begin!=3 || span.End!=4) {
-    t.Errorf("Invalid range, expected: 3->4, got %d->%d",span.Begin,span.End);
-  }
-  span=driver.NextSpan(span,src);
-  if(span!=nil) {
-    t.Errorf("End expected!")
-    return;
+  if(driver.Overlap(a,b)) {
+    t.Errorf("Invalid overlap of b and a ");
   }
 }
