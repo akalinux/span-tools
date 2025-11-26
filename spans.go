@@ -112,13 +112,9 @@ func buidAccumulator[E any, T any](
 					var r = Span[E, T]{}
 					if x < 0 {
 						r.Begin = a.Begin
-					} else {
-						r.Begin = b.Begin
-					}
+					} 
 					if y > 0 {
 						r.End = a.End
-					} else {
-						r.End = b.End
 					}
 					rss.Span = &r
 
