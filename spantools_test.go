@@ -149,7 +149,47 @@ func TestGrowth(t *testing.T) {
 				t.Errorf("Invalid Contains")
 			}
 		}
-
 		lastRes = res
 	}
+}
+
+func TestFirstRange(t *testing.T) {
+  var src *[]*Span[int,string]=&[]*Span[int, string]{
+    {Begin:2,End:2},
+    {Begin:0,End:1},
+  }
+  var span=driver.FirstSpan(src);
+  if(span.Begin!=0 || span.End!=1) {
+    t.Errorf("Invalid start range")
+  }
+}
+
+func TestNextRange(t *testing.T) {
+  var src *[]*Span[int,string]=&[]*Span[int, string]{
+    {Begin:3,End:4}, // 3,4, last valid range, should get nil after this
+    {Begin:2,End:2}, // 2,2, first range
+    {Begin:0,End:1}, // should ignore
+  }
+  var first=&Span[int,string]{Begin: 0,End:1};
+  var span=driver.NextSpan(first,src);
+  if(span==nil) {
+    t.Errorf("Should not have reached our end yet!")
+    return;
+  }
+  if(span.Begin!=2 || span.End!=2) {
+    t.Errorf("Invalid range, expected: 2->2, got %d->%d",span.Begin,span.End);
+  }
+  span=driver.NextSpan(span,src);
+  if(span==nil) {
+    t.Errorf("Should not have reached our end yet!")
+    return;
+  }
+  if(span.Begin!=3 || span.End!=4) {
+    t.Errorf("Invalid range, expected: 3->4, got %d->%d",span.Begin,span.End);
+  }
+  span=driver.NextSpan(span,src);
+  if(span!=nil) {
+    t.Errorf("End expected!")
+    return;
+  }
 }
