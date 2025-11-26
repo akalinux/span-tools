@@ -207,6 +207,95 @@ func TestNextRange(t *testing.T) {
 	}
 }
 
+// Validates the creation of the next span when there are gaps.
+func TestNextRangeGap(t *testing.T) {
+  var src *[]*Span[int, string] = &[]*Span[int, string]{
+    {Begin: 4, End: 5}, // 3,4, last valid range, should get nil after this
+    {Begin: 2, End: 2}, // 2,2, first range
+    {Begin: 0, End: 1}, // should ignore
+  }
+  var first = &Span[int, string]{Begin: 0, End: 0}
+  var span = driver.NextSpan(first, src)
+  if span == nil {
+    t.Errorf("Should not have reached our end yet!")
+    return
+  }
+  if span.Begin != 2 || span.End != 2 {
+    t.Errorf("Invalid range, expected: 2->2, got %d->%d", span.Begin, span.End)
+    return;
+  }
+  span = driver.NextSpan(span, src)
+  if span == nil {
+    t.Errorf("Should not have reached our end yet!")
+    return
+  }
+  if span.Begin != 4 || span.End != 5 {
+    t.Errorf("Invalid range, expected: 4->5, got %d->%d", span.Begin, span.End)
+    return;
+  }
+  span = driver.NextSpan(span, src)
+  if span != nil {
+    t.Errorf("End expected!")
+    return
+  }
+}
+
+// Used to test overlaping span generation.
+func testNextOverlaps(t *testing.T,src *[]*Span[int,string]) {
+  
+  var first = &Span[int, string]{Begin: -1, End: 0}
+  var span = driver.NextSpan(first, src)
+  if span == nil {
+    t.Errorf("Should not have reached our end yet!")
+    return
+  }
+  if span.Begin != 1 || span.End != 1 {
+    t.Errorf("Invalid range, expected: 1->1, got %d->%d", span.Begin, span.End)
+    return;
+  }
+  span = driver.NextSpan(span, src)
+  if span == nil {
+    t.Errorf("Should not have reached our end yet!")
+    return
+  }
+  if span.Begin != 2 || span.End != 3 {
+    t.Errorf("Invalid range, expected: 2->3, got %d->%d", span.Begin, span.End)
+  }
+  span = driver.NextSpan(span, src)
+  if span != nil {
+    t.Errorf("End expected!")
+    return
+  }
+}
+// Validates the creation of the next span with overlaps.
+func TestNextRangeOverlaps(t *testing.T) {
+  var src *[]*Span[int, string] = &[]*Span[int, string]{
+    {Begin: 2, End: 3}, // 2,3, next range is nil
+    {Begin: 1, End: 3}, // overlaps with 0 and 2
+    {Begin: 0, End: 1}, // 1,1, first range
+  }
+  testNextOverlaps(t,src);
+}
+
+// Validates the creation of the next span with a different data set.
+func TestNextRangeOverlapsReverseOrder(t *testing.T) {
+  var src *[]*Span[int, string] = &[]*Span[int, string]{
+    {Begin: 0, End: 1}, // 1,1, first range
+    {Begin: 1, End: 3}, // overlaps with 0 and 2
+    {Begin: 2, End: 3}, // 2,3, next range is nil
+  }
+  testNextOverlaps(t,src);
+}
+
+func TestNextRangeOverlapsMixedOrder(t *testing.T) {
+  var src *[]*Span[int, string] = &[]*Span[int, string]{
+    {Begin: 1, End: 3}, // overlaps with 1 and 2
+    {Begin: 0, End: 1}, // 1,1, first range
+    {Begin: 2, End: 3}, // 2,3, next range is nil
+  }
+  testNextOverlaps(t,src);
+}
+
 // Negative and positive overlap span testing.
 func TestOverlaps(t *testing.T) {
   var a =&Span[int,string]{Begin: 0,End: 1}

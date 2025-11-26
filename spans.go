@@ -2,7 +2,6 @@ package spans
 
 import (
 	"cmp"
-	//"fmt"
 )
 
 // Representation of a Span/Range of values in a generic context.
@@ -97,7 +96,6 @@ func buidAccumulator[E any, T any](
 				rss.Span = b
 			} else if cmp(a.End, b.Begin) < 0 {
 				// reset our accumulator
-				//fmt.Println("New Range")
 				rss = nil
 				rss = &AccumulatedSpanSet[E, T]{}
 				rss.Span = b
@@ -112,7 +110,7 @@ func buidAccumulator[E any, T any](
 					var r = Span[E, T]{}
 					if x < 0 {
 						r.Begin = a.Begin
-					} 
+					}
 					if y > 0 {
 						r.End = a.End
 					}
@@ -156,37 +154,32 @@ func buildFirstSpan[E any, T any](cmp func(a, b E) int) func(list *[]*Span[E, T]
 
 func buildNextSpan[E any, T any](cmp func(a, b E) int) func(start *Span[E, T], list *[]*Span[E, T]) *Span[E, T] {
 	return func(start *Span[E, T], list *[]*Span[E, T]) *Span[E, T] {
-		var span = &Span[E, T]{Begin: start.End}
 		var begin *E = nil
 		var end *E = nil
 		for _, check := range *list {
-			var diff = cmp(start.End, check.Begin)
-			if diff > -1 {
-				continue
-			}
-			if nil == begin {
-				span.Begin = check.Begin
-				begin = &check.Begin
-				span.End = check.End
-				end = &check.End
-
-			} else {
-				//fmt.Printf("Diff is %d, Index is: %d\n" ,diff,idx)
-				diff = cmp(check.Begin, *begin)
-				if diff < 0 {
-					span.Begin = check.Begin
+			if begin == nil {
+				if cmp(check.Begin, start.End) > 0 {
 					begin = &check.Begin
-				}
-				diff = cmp(check.End, *end)
-				if diff < 0 {
-					span.End = check.End
 					end = &check.End
+				} else if cmp(check.End, start.End) > 0 {
+					begin = &check.End
+					end = &check.End
+				} 
+			} else {
+				if cmp(check.Begin, start.End) > 0 {
+					if cmp(*begin, check.Begin) > 0 {
+						begin = &check.Begin
+					}
+				}
+				if cmp(*begin,check.End) < 1 && cmp(check.End, start.End) > 0 {
+					if cmp(*end, check.End) > 0 {
+						end = &check.End
+					} 
 				}
 			}
-
 		}
 		if begin != nil {
-			return span
+			return &Span[E, T]{Begin: *begin, End: *end}
 		}
 		return nil
 	}
