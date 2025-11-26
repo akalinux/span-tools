@@ -2,57 +2,71 @@ package spans
 
 import (
 	"cmp"
-	// "fmt"
+	//"fmt"
 )
 
+// Representation of a Span/Range of values in a generic context.
+// The assumption is that Begin is less than or equal to the End value.
 type Span[E any, T any] struct {
-  // Start of the Span.
+	// Start of the Span.
 	Begin E
-  // End of the Span.
-	End   E
-  // Pointer to data set used to identify this Span[E,T]
-	Tag   *T
+	// End of the Span.
+	End E
+	// Pointer to data set used to identify this Span[E,T]
+	Tag *T
 }
 
+// A representation of accumulated Span from a given source.
+// The *Span[E,T] represents the span that contains all Spans[E,T] in *Contains.
+// When *Contains is nil, then this struct only has 1 Span[E,T].
+// When *Contains is not nil, the orignal *Span[E,T] values are contained within.
 type AccumulatedSpanSet[E any, T any] struct {
-  
-  // The Span that contains all Spans in this instance.
+
+	// The Span that contains all Spans in this instance.
 	*Span[E, T]
-  
-  // When nil, Span is the only value representing this Span.
-  // When not nill, contains all the Spans acumulated to create this instance. 
+
+	// When nil, Span is the only value representing this Span.
+	// When not nill, contains all the Spans acumulated to create this instance.
 	Contains *[]*Span[E, T]
 }
 
 type SpanTests[E any, T any] struct {
-  // Sort method used by slices.SortFunc to sort slices in order of accumulation.  
-  // Order is represent as the smallest Begin value and largest End value.
-	Compare         func(a, b Span[E, T]) int
-  
-  // Compuates the smallest Begin value and largest End value given the input a,b *Span[E,T].  
-  // Return values: First int represents the smallest Span[E,T] Begin, Second value represents the largest Span[E,T] End.
-	ContainedBy     func(a, b *Span[E, T]) (int, int)
-  
-  // Returns true if the a *Span[E,T] contains the value b E.
-	Contains        func(a *Span[E, T], b E) bool
-  
-  // Creates a Closure used to accumualte new Span overlaps.
-  // Each time a new pointer is returned, a new Span overlap has been found.
-  // Values passed to the accumuator(s *Span[E,T]) function must be in the oder produced by slices.SortFunc(SpanTests[E,T].Compare)
+	// Sort method used by slices.SortFunc to sort slices in order of accumulation.
+	// Order is represent as the smallest Begin value and largest End value.
+	Compare func(a, b Span[E, T]) int
+
+	// Compuates the smallest Begin value and largest End value given the input a,b *Span[E,T].
+	// Return values: First int represents the smallest Span[E,T] Begin, Second value represents the largest Span[E,T] End.
+	ContainedBy func(a, b *Span[E, T]) (int, int)
+
+	// Returns true if the a *Span[E,T] contains the value b E.
+	Contains func(a *Span[E, T], b E) bool
+
+	// Creates a closure used to accumualte new Span overlaps.
+	// Each time a new pointer is returned, a new Span overlap has been found.
+	// Values passed to the accumuator(s *Span[E,T]) function must be in the oder produced by slices.SortFunc(SpanTests[E,T].Compare)
 	SpanAccumulator func() func(b *Span[E, T]) *AccumulatedSpanSet[E, T]
-  // Comapres a to b: returns -1,0,1 based on the 2 values compared
-	Cmp             func(a,b E) int
-  // Used to compare 2 spans, returns true if they overlap
-  Overlap         func(a,b *Span[E,T])  bool
+
+	// Comapres a to b: returns -1,0,1 based on the 2 values compared
+	Cmp func(a, b E) int
+
+	// Used to compare 2 spans, returns true if they overlap
+	Overlap func(a, b *Span[E, T]) bool
+
+	// Returns the smallest start Span[E,T]. Assumes Compare order.
+	FirstSpan func(list *[]*Span[E, T]) *Span[E, T]
+
+	// Returns the next *Span[E,T] or nil if no remaining *Span[E,T] overlaps.  Assumes Compare order.
+	NextSpan func(first *Span[E, T], list *[]*Span[E, T]) *Span[E, T]
 }
 
-func BuildOverlap[E any ,T any](contains func (a *Span[E,T], b E) bool) func(a,b *Span[E,T]) bool {
-  return func (a,b *Span[E,T]) bool {
-    return contains(a,b.Begin) || contains(a,b.End) || (contains(b,a.Begin) || contains(b,a.End))
-  }
+func buildOverlap[E any, T any](contains func(a *Span[E, T], b E) bool) func(a, b *Span[E, T]) bool {
+	return func(a, b *Span[E, T]) bool {
+		return contains(a, b.Begin) || contains(a, b.End) || (contains(b, a.Begin) || contains(b, a.End))
+	}
 }
 
-func BuildCompare[E any, T any](cmp func(E, E) int) func(a, b Span[E, T]) int {
+func buildCompare[E any, T any](cmp func(E, E) int) func(a, b Span[E, T]) int {
 	return func(a, b Span[E, T]) int {
 		var diff int = cmp(a.Begin, b.Begin)
 		if diff == 0 {
@@ -62,13 +76,13 @@ func BuildCompare[E any, T any](cmp func(E, E) int) func(a, b Span[E, T]) int {
 	}
 }
 
-func BuildContainedBy[E any, T any](cmp func(E, E) int) func(a, b *Span[E, T]) (int, int) {
+func buildContainedBy[E any, T any](cmp func(E, E) int) func(a, b *Span[E, T]) (int, int) {
 	return func(a, b *Span[E, T]) (int, int) {
 		return cmp(a.Begin, b.Begin), cmp(a.End, b.End)
 	}
 }
 
-func BuidAccumulator[E any, T any](
+func buidAccumulator[E any, T any](
 	ContainedBy func(a, b *Span[E, T]) (int, int),
 	cmp func(a, b E) int,
 ) func() func(b *Span[E, T]) *AccumulatedSpanSet[E, T] {
@@ -121,29 +135,88 @@ func BuidAccumulator[E any, T any](
 	}
 }
 
-func BuildContains[E any, T any](cmp func(a,b E) int) func (a *Span[E,T],b E) bool {
-  return func(a *Span[E,T], b E) bool {
-    return cmp(a.Begin,b)<1 && cmp(a.End,b) >-1
-  }
+func buildContains[E any, T any](cmp func(a, b E) int) func(a *Span[E, T], b E) bool {
+	return func(a *Span[E, T], b E) bool {
+		return cmp(a.Begin, b) < 1 && cmp(a.End, b) > -1
+	}
 }
 
+func buildFirstSpan[E any, T any](cmp func(a, b E) int) func(list *[]*Span[E, T]) *Span[E, T] {
+	return func(list *[]*Span[E, T]) *Span[E, T] {
+		var span = Span[E, T]{Begin: (*list)[0].Begin, End: (*list)[0].End}
+		var last = len(*list)
+		for i := 1; i < last; i++ {
+			var check = (*list)[i]
+			if cmp(check.Begin, span.Begin) == -1 {
+				span.Begin = check.Begin
+			}
+			if cmp(check.End, span.End) == -1 {
+				span.End = check.End
+			}
+		}
+		return &span
+	}
+}
+
+func buildNextSpan[E any, T any](cmp func(a, b E) int) func(start *Span[E, T], list *[]*Span[E, T]) *Span[E, T] {
+	return func(start *Span[E, T], list *[]*Span[E, T]) *Span[E, T] {
+		var span = &Span[E, T]{Begin: start.End}
+		var begin *E = nil
+		var end *E = nil
+		for _, check := range *list {
+			var diff = cmp(start.End, check.Begin)
+			if nil == begin {
+				if diff < 0 {
+          span.Begin=check.Begin
+          begin=&check.Begin
+          span.End=check.End
+          end=&check.End;
+				}
+			} else if diff < 0  {
+        //fmt.Printf("Diff is %d, Index is: %d\n" ,diff,idx)
+        diff = cmp(check.Begin,*begin)
+        if(diff<0) {
+          span.Begin=check.Begin
+          begin=&check.Begin
+        }
+        diff = cmp(check.End,*end)
+        if(diff<0) {
+          span.End=check.End;
+          end=&check.End
+        }
+      }
+      
+		}
+    if(begin!=nil) {
+      return span;
+    }
+		return nil
+	}
+}
+
+// Factory for the creation of SpanTest[E,T], the cmp func(E,E) int, is used to compare the Begin and End values of a given Span[E,T].
 func CreateCompare[E any, T any](cmp func(E, E) int) SpanTests[E, T] {
-	var Compare = BuildCompare[E, T](cmp)
-	var ContainedBy = BuildContainedBy[E, T](cmp)
-	var SpanAccumulator = BuidAccumulator(ContainedBy, cmp)
-  var Contains = BuildContains[E,T](cmp);
-  var Overlap = BuildOverlap(Contains);
+	var Compare = buildCompare[E, T](cmp)
+	var ContainedBy = buildContainedBy[E, T](cmp)
+	var SpanAccumulator = buidAccumulator(ContainedBy, cmp)
+	var Contains = buildContains[E, T](cmp)
+	var Overlap = buildOverlap(Contains)
+	var FirstSpan = buildFirstSpan[E, T](cmp)
+	var NextSpan = buildNextSpan[E, T](cmp)
 	var ops = SpanTests[E, T]{
 		Compare:         Compare,
 		ContainedBy:     ContainedBy,
 		SpanAccumulator: SpanAccumulator,
 		Cmp:             cmp,
-    Contains:        Contains,
-    Overlap:         Overlap,
+		Contains:        Contains,
+		Overlap:         Overlap,
+		FirstSpan:       FirstSpan,
+		NextSpan:        NextSpan,
 	}
 	return ops
 }
 
+// Factory for the creation of SpanTest[E,T], where the type of E is represented by any data type supported by E cmp.Ordered.
 func OrderedCreateCompare[E cmp.Ordered, T any]() SpanTests[E, T] {
 	return CreateCompare[E, T](cmp.Compare)
 }
