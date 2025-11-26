@@ -164,15 +164,13 @@ func buildNextSpan[E any, T any](cmp func(a, b E) int) func(start *Span[E, T], l
 				} else if cmp(check.End, start.End) > 0 {
 					begin = &check.End
 					end = &check.End
-				} 
+				}
 			} else {
 				if cmp(check.Begin, start.End) > 0 && cmp(*begin, check.Begin) > 0 {
-						begin = &check.Begin
-					}
+					begin = &check.Begin
 				}
-				if cmp(*begin,check.End) < 1 && cmp(check.End, start.End) > 0 && cmp(*end, check.End) > 0 {
-						end = &check.End
-					} 
+				if cmp(*begin, check.End) < 1 && cmp(check.End, start.End) > 0 && cmp(*end, check.End) > 0 {
+					end = &check.End
 				}
 			}
 		}
