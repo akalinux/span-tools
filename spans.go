@@ -165,31 +165,33 @@ func buildNextSpan[E any, T any](cmp func(a, b E) int) func(start *Span[E, T], l
 		var end *E = nil
 		for _, check := range *list {
 			var diff = cmp(start.End, check.Begin)
+			if diff > -1 {
+				continue
+			}
 			if nil == begin {
+				span.Begin = check.Begin
+				begin = &check.Begin
+				span.End = check.End
+				end = &check.End
+
+			} else {
+				//fmt.Printf("Diff is %d, Index is: %d\n" ,diff,idx)
+				diff = cmp(check.Begin, *begin)
 				if diff < 0 {
-          span.Begin=check.Begin
-          begin=&check.Begin
-          span.End=check.End
-          end=&check.End;
+					span.Begin = check.Begin
+					begin = &check.Begin
 				}
-			} else if diff < 0  {
-        //fmt.Printf("Diff is %d, Index is: %d\n" ,diff,idx)
-        diff = cmp(check.Begin,*begin)
-        if(diff<0) {
-          span.Begin=check.Begin
-          begin=&check.Begin
-        }
-        diff = cmp(check.End,*end)
-        if(diff<0) {
-          span.End=check.End;
-          end=&check.End
-        }
-      }
-      
+				diff = cmp(check.End, *end)
+				if diff < 0 {
+					span.End = check.End
+					end = &check.End
+				}
+			}
+
 		}
-    if(begin!=nil) {
-      return span;
-    }
+		if begin != nil {
+			return span
+		}
 		return nil
 	}
 }
