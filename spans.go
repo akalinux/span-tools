@@ -39,6 +39,10 @@ func NewOrderedSpanUtil[E cmp.Ordered, T any]() *SpanUtil[E, T] {
   return NewSpanUtil[E, T](cmp.Compare)
 }
 
+// Creates an instance of *SpanUtil[E,T], the value of cmp is expected to be able to compare the Span.Begin and Span.End values.
+// See [[cmp.Compare]] for more info.
+//
+// [cmp.Compare]: https://pkg.go.dev/github.com/google/go-cmp/cmp#Comparer
 func NewSpanUtil[E any, T any](cmp func(a, b E) int) *SpanUtil[E, T] {
   return &SpanUtil[E, T]{Cmp: cmp}
 }
@@ -65,10 +69,13 @@ func (s *SpanUtil[E, T]) Overlap(a, b *Span[E, T]) bool {
   return s.Contains(a, b.Begin) || s.Contains(a, b.End) || s.Contains(b, a.Begin) || s.Contains(b, a.End)
 }
 
+// This method is used to determin the outer bounds of ranges a and b.  
+// The first int represents comparing a.Begin to b.Begin and the second int represents comparing a.End to b.End.
 func (s *SpanUtil[E, T]) ContainedBy(a, b *Span[E, T]) (int, int) {
   return s.Cmp(a.Begin, b.Begin), s.Cmp(a.End, b.End)
 }
 
+// This method returns the first smallest span from the slice of Span[E,T].
 func (s *SpanUtil[E, T]) FirstSpan(list *[]*Span[E, T]) *Span[E, T] {
   var span = &Span[E, T]{Begin: (*list)[0].Begin, End: (*list)[0].End}
   var last = len(*list)
@@ -114,26 +121,33 @@ func (s *SpanUtil[E, T]) NextSpan(start *Span[E, T], list *[]*Span[E, T]) *Span[
   return nil
 }
 
+// This is a stater structure, used to driver the creation of new OverlappingSpanSets.
 type SpanOverlapAccumulator[E any, T any] struct {
   Rss *OverlappingSpanSets[E, T]
   *SpanUtil[E, T]
 }
 
+// Factory interface for the creation of SpanOverlapAccumulator[E,T].
 func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, T] {
   return &SpanOverlapAccumulator[E, T]{SpanUtil: s, Rss: &OverlappingSpanSets[E, T]{Contains: nil, Span: nil}}
 }
 
-func (s *SpanOverlapAccumulator[E, T]) Accumulate(b *Span[E, T]) *OverlappingSpanSets[E, T] {
+// The Accumulate method.  
+// 
+// For a given Span[E,T] provided:
+// When the span overlaps with the current Span[E,T], the OverlappingSpanSets is expanded and the span is appened to the Contains slice.
+// When the span is outside of the current Span[E,T], then a new OverlappingSpanSets is created with this span as its current span.
+func (s *SpanOverlapAccumulator[E, T]) Accumulate(span *Span[E, T]) *OverlappingSpanSets[E, T] {
   if s.Rss.Span == nil {
-    s.Rss.Span = b
+    s.Rss.Span = span
     return s.Rss
   }
 
   a := s.Rss.Span
-  if s.Cmp(a.End, b.Begin) < 0 {
-    s.Rss = &OverlappingSpanSets[E, T]{Span: b, Contains: nil}
+  if s.Cmp(a.End, span.Begin) < 0 {
+    s.Rss = &OverlappingSpanSets[E, T]{Span: span, Contains: nil}
   } else {
-    x, y := s.ContainedBy(a, b)
+    x, y := s.ContainedBy(a, span)
     if x|y != 0 {
       var r = Span[E, T]{}
       if x < 0 {
@@ -145,9 +159,9 @@ func (s *SpanOverlapAccumulator[E, T]) Accumulate(b *Span[E, T]) *OverlappingSpa
       s.Rss.Span = &r
     }
     if s.Rss.Contains == nil {
-      s.Rss.Contains = &[]*Span[E, T]{a, b}
+      s.Rss.Contains = &[]*Span[E, T]{a, span}
     } else {
-      *s.Rss.Contains = append(*s.Rss.Contains, b)
+      *s.Rss.Contains = append(*s.Rss.Contains, span)
     }
   }
   return s.Rss
