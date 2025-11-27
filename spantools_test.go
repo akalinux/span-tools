@@ -51,14 +51,14 @@ var testSets = [][][]Span[int, string]{
 	},
 }
 
-var driver = OrderedCreateCompare[int, string]()
+var testDriver=NewOrderedSpanUtil[int,string]()
 
 // Validates sort operation, by sorting slices and compairing the the sorted elements to a manually sorted array.
 func TestOneContainerForAllSort(t *testing.T) {
 	for setId, testSet := range testSets {
 		var unsorted = make([]Span[int, string], len(testSet[0]))
 		copy(unsorted, testSet[0])
-		slices.SortFunc(unsorted, driver.Compare)
+		slices.SortFunc(unsorted, testDriver.Compare)
 
 		var sorted = testSet[1]
 		for idx, span := range unsorted {
@@ -74,9 +74,9 @@ func TestOneContainerForAllSort(t *testing.T) {
 // Test the Accumulator function and validates that the overlaps are generated correctly.
 func TestConsolidate(t *testing.T) {
 	var container = AllSet[0]
-	var accumulator = driver.SpanAccumulator()
+	var s= testDriver.NewSpanOverlapAccumulator()
 	for idx, span := range AllSet {
-		var res = accumulator(&span)
+		var res = s.Accumulate(&span)
 		if container.Begin != res.Begin || container.End != res.End {
 			t.Errorf("Container out of bounds in element: %d", idx)
 		}
@@ -97,20 +97,26 @@ func TestConsolidate(t *testing.T) {
 
 // Tests the Accumulator function with multiple both overlapping and non overlapping Spans.
 func TestMergeMultiple(t *testing.T) {
-	var accumulator = driver.SpanAccumulator()
+	var accumulator =testDriver.NewSpanOverlapAccumulator();
 	for idx, span := range MultiSet {
-		var res = accumulator(&span)
-		if span.Begin != res.Begin || span.End != res.End {
+		var res = accumulator.Accumulate(&span)
+		if span.Begin != res.Span.Begin || span.End != res.Span.End {
 			t.Errorf("Range missmatch, expected: %d->%d, got: %d->%d", span.Begin, span.End, res.Begin, res.End)
 		}
 		switch idx {
 		case 0, 1, 3, 4:
 			if res.Contains != nil {
 				t.Errorf("First should be nil")
+        return;
 			}
 		case 2:
-			if res.Contains == nil || len(*res.Contains) != 2 {
+			if res.Contains == nil {
+				t.Errorf("Container should not be nil")
+        return;
+      }
+      if len(*res.Contains) != 2 {
 				t.Errorf("Container should have 2 elements")
+        return;
 			}
 			var list = *res.Contains
 			var check = *list[0].Tag + *list[1].Tag
@@ -129,10 +135,10 @@ func TestGrowth(t *testing.T) {
 		{Begin: -1, End: 0},
 		{Begin: 1, End: 1},
 	}
-	var accumulator = driver.SpanAccumulator()
-	var lastRes *AccumulatedSpanSet[int, string] = nil
+	var s = testDriver.NewSpanOverlapAccumulator()
+	var lastRes *OverlappingSpanSets[int, string] = nil
 	for idx, span := range src {
-		res := accumulator(&span)
+		res := s.Accumulate(&span)
 		switch idx {
 		case 0:
 			if res.Begin != -2 || res.End != -1 || res.Contains != nil {
@@ -145,16 +151,16 @@ func TestGrowth(t *testing.T) {
       if(res.Contains == nil) {
 				t.Errorf("Expected contains for element 1")
       } 
-      if lastRes != res {
-        t.Errorf("Did not expect new range!")
+      if *lastRes != *res {
+        t.Errorf("Did not expect new result!")
         return;
       }
 		case 2:
 			if res.Begin != 1 || res.End != 1 {
 				t.Errorf("Bad Range")
 			}
-			if res == lastRes {
-				t.Errorf("Bad result")
+			if *res == *lastRes {
+				t.Errorf("Expected new result");
 			}
 			if nil != res.Contains {
 				t.Errorf("Invalid Contains")
@@ -170,7 +176,7 @@ func TestFirstRange(t *testing.T) {
 		{Begin: 2, End: 2},
 		{Begin: 0, End: 1},
 	}
-	var span = driver.FirstSpan(src)
+	var span = testDriver.FirstSpan(src)
 	if span.Begin != 0 || span.End != 1 {
 		t.Errorf("Invalid start range")
 	}
@@ -184,7 +190,7 @@ func TestNextRange(t *testing.T) {
 		{Begin: 0, End: 1}, // should ignore
 	}
 	var first = &Span[int, string]{Begin: 0, End: 1}
-	var span = driver.NextSpan(first, src)
+	var span = testDriver.NextSpan(first, src)
 	if span == nil {
 		t.Errorf("Should not have reached our end yet!")
 		return
@@ -192,7 +198,7 @@ func TestNextRange(t *testing.T) {
 	if span.Begin != 2 || span.End != 2 {
 		t.Errorf("Invalid range, expected: 2->2, got %d->%d", span.Begin, span.End)
 	}
-	span = driver.NextSpan(span, src)
+	span = testDriver.NextSpan(span, src)
 	if span == nil {
 		t.Errorf("Should not have reached our end yet!")
 		return
@@ -200,7 +206,7 @@ func TestNextRange(t *testing.T) {
 	if span.Begin != 3 || span.End != 4 {
 		t.Errorf("Invalid range, expected: 3->4, got %d->%d", span.Begin, span.End)
 	}
-	span = driver.NextSpan(span, src)
+	span = testDriver.NextSpan(span, src)
 	if span != nil {
 		t.Errorf("End expected!")
 		return
@@ -215,7 +221,7 @@ func TestNextRangeGap(t *testing.T) {
     {Begin: 0, End: 1}, // should ignore
   }
   var first = &Span[int, string]{Begin: 0, End: 0}
-  var span = driver.NextSpan(first, src)
+  var span = testDriver.NextSpan(first, src)
   if span == nil {
     t.Errorf("Should not have reached our end yet!")
     return
@@ -224,7 +230,7 @@ func TestNextRangeGap(t *testing.T) {
     t.Errorf("Invalid range, expected: 2->2, got %d->%d", span.Begin, span.End)
     return;
   }
-  span = driver.NextSpan(span, src)
+  span = testDriver.NextSpan(span, src)
   if span == nil {
     t.Errorf("Should not have reached our end yet!")
     return
@@ -233,7 +239,7 @@ func TestNextRangeGap(t *testing.T) {
     t.Errorf("Invalid range, expected: 4->5, got %d->%d", span.Begin, span.End)
     return;
   }
-  span = driver.NextSpan(span, src)
+  span = testDriver.NextSpan(span, src)
   if span != nil {
     t.Errorf("End expected!")
     return
@@ -244,7 +250,7 @@ func TestNextRangeGap(t *testing.T) {
 func testNextOverlaps(t *testing.T,src *[]*Span[int,string]) {
   
   var first = &Span[int, string]{Begin: -1, End: 0}
-  var span = driver.NextSpan(first, src)
+  var span = testDriver.NextSpan(first, src)
   if span == nil {
     t.Errorf("Should not have reached our end yet!")
     return
@@ -253,7 +259,7 @@ func testNextOverlaps(t *testing.T,src *[]*Span[int,string]) {
     t.Errorf("Invalid range, expected: 1->1, got %d->%d", span.Begin, span.End)
     return;
   }
-  span = driver.NextSpan(span, src)
+  span = testDriver.NextSpan(span, src)
   if span == nil {
     t.Errorf("Should not have reached our end yet!")
     return
@@ -261,7 +267,7 @@ func testNextOverlaps(t *testing.T,src *[]*Span[int,string]) {
   if span.Begin != 2 || span.End != 3 {
     t.Errorf("Invalid range, expected: 2->3, got %d->%d", span.Begin, span.End)
   }
-  span = driver.NextSpan(span, src)
+  span = testDriver.NextSpan(span, src)
   if span != nil {
     t.Errorf("End expected!")
     return
@@ -300,18 +306,18 @@ func TestNextRangeOverlapsMixedOrder(t *testing.T) {
 func TestOverlaps(t *testing.T) {
   var a =&Span[int,string]{Begin: 0,End: 1}
   var b =&Span[int,string]{Begin: 1,End: 2}
-  if(!driver.Overlap(a,b)) {
+  if(!testDriver.Overlap(a,b)) {
     t.Errorf("Expected a and b to overlap");
   }
-  if(!driver.Overlap(b,a)) {
+  if(!testDriver.Overlap(b,a)) {
     t.Errorf("Expected a and b to overlap");
   }
   a =&Span[int,string]{Begin: 0,End: 1}
   b =&Span[int,string]{Begin: 2,End: 2}
-  if(driver.Overlap(a,b)) {
+  if(testDriver.Overlap(a,b)) {
     t.Errorf("Invalid overlap of a and b ");
   }
-  if(driver.Overlap(a,b)) {
+  if(testDriver.Overlap(a,b)) {
     t.Errorf("Invalid overlap of b and a ");
   }
 }
