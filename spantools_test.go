@@ -1,3 +1,4 @@
+
 package spans
 
 import (
@@ -53,6 +54,25 @@ var testSets = [][][]Span[int, string]{
 
 var testDriver=NewOrderedSpanUtil[int,string]()
 
+func TestNewSpan(t *testing.T) {
+  var span,err =testDriver.NewSpan(1,2,&tagA);
+  if(err!= nil) {
+    t.Errorf("Creation of new valid span failed")
+    return;
+  }
+  if(span == nil) {
+    t.Errorf("Invalid return span value")
+    return;
+  }
+  if(span.Begin!=1 || span.End !=2 || span.Tag!=&tagA) {
+    t.Errorf("Invalid return span content")
+    return;
+  }
+  span,err =testDriver.NewSpan(2,1,&tagA);
+  if(err==nil) {
+    t.Errorf("Should have an error here")
+  }
+}
 // Validates sort operation, by sorting slices and compairing the the sorted elements to a manually sorted array.
 func TestOneContainerForAllSort(t *testing.T) {
 	for setId, testSet := range testSets {

@@ -1,7 +1,17 @@
+// Package span implements utilties for handling spans of values.
+//
+// The package provides a data span/range intersection library that is algorithmically implmented using generics and should work with any
+// data set that has a comparable Begin and End value.
+//
+// # How this package treats spans.
+//
+// Spans in this package are expected to contain a Begin and End value. The Begin and End values should be 
+// comparable with a cmp function.  The Begin value is expected to be less than or equal to the End value.
 package spans
 
 import (
-  "cmp"
+	"cmp"
+	"errors"
 )
 
 // Representation of a Span/Range of values in a generic context.
@@ -73,6 +83,14 @@ func (s *SpanUtil[E, T]) Overlap(a, b *Span[E, T]) bool {
 // The first int represents comparing a.Begin to b.Begin and the second int represents comparing a.End to b.End.
 func (s *SpanUtil[E, T]) ContainedBy(a, b *Span[E, T]) (int, int) {
   return s.Cmp(a.Begin, b.Begin), s.Cmp(a.End, b.End)
+}
+
+// Creates a new span, error is nill unless a is greater than b.
+func (s *SpanUtil[E, T]) NewSpan(a,b E, tag *T) (*Span[E,T],error) {
+  if(s.Cmp(a,b)>0) {
+    return nil,errors.New("Value a is greater than value b")
+  }
+  return &Span[E,T]{Begin: a,End: b,Tag: tag},nil
 }
 
 // This method returns the first smallest span from the slice of Span[E,T].
