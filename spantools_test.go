@@ -6,47 +6,47 @@ import (
 	"testing"
 )
 
-var AllSet = []Span[int, string]{
+var AllSet = []SpanBounds[int, string]{
 	// sorted
-	{Begin: -2, End: 2},
-	{Begin: -1, End: 0},
-	{Begin: -1, End: 0},
-	{Begin: 0, End: 1},
-	{Begin: 0, End: 1},
+	&Span[int,string]{Begin: -2, End: 2},
+	&Span[int,string]{Begin: -1, End: 0},
+	&Span[int,string]{Begin: -1, End: 0},
+	&Span[int,string]{Begin: 0, End: 1},
+	&Span[int,string]{Begin: 0, End: 1},
 }
 
 var tagA = "a"
 var tagB = "b"
-var MultiSet = []Span[int, string]{
-	{Begin: -1, End: 0},
-	{Begin: 2, End: 2, Tag: &tagA},
-	{Begin: 2, End: 2, Tag: &tagB},
-	{Begin: 5, End: 6},
-	{Begin: 9, End: 11},
+var MultiSet = []SpanBounds[int, string]{
+	&Span[int,string]{Begin: -1, End: 0},
+	&Span[int,string]{Begin: 2, End: 2, Tag: &tagA},
+	&Span[int,string]{Begin: 2, End: 2, Tag: &tagB},
+	&Span[int,string]{Begin: 5, End: 6},
+	&Span[int,string]{Begin: 9, End: 11},
 }
 
 // Data sets used to verify the range sort method works as expected
-var testSets = [][][]Span[int, string]{
+var testSets = [][][]SpanBounds[int, string]{
 	{
 		// test set 0, All consumed by 1 range
 		{
 			// unsorted
-			{Begin: -1, End: 0},
-			{Begin: 0, End: 1},
-			{Begin: -1, End: 0},
-			{Begin: 0, End: 1},
-			{Begin: -2, End: 2},
+			&Span[int,string]{Begin: -1, End: 0},
+			&Span[int,string]{Begin: 0, End: 1},
+			&Span[int,string]{Begin: -1, End: 0},
+			&Span[int,string]{Begin: 0, End: 1},
+			&Span[int,string]{Begin: -2, End: 2},
 		},
 		AllSet,
 	},
 	// test set 1, Seperate blocks with only 1 overlap
 	{
 		{
-			{Begin: 2, End: 2},
-			{Begin: 9, End: 11},
-			{Begin: 5, End: 6},
-			{Begin: 2, End: 2},
-			{Begin: -1, End: 0},
+			&Span[int,string]{Begin: 2, End: 2},
+			&Span[int,string]{Begin: 9, End: 11},
+			&Span[int,string]{Begin: 5, End: 6},
+			&Span[int,string]{Begin: 2, End: 2},
+			&Span[int,string]{Begin: -1, End: 0},
 		},
 		MultiSet,
 	},
@@ -64,6 +64,10 @@ func TestNewSpan(t *testing.T) {
     t.Errorf("Invalid return span value")
     return;
   }
+  if(span.GetTag()!=&tagA) {
+    t.Errorf("Invalid return span tag pointer")
+    return;
+  }
   if(span.Begin!=1 || span.End !=2 || span.Tag!=&tagA) {
     t.Errorf("Invalid return span content")
     return;
@@ -76,15 +80,15 @@ func TestNewSpan(t *testing.T) {
 // Validates sort operation, by sorting slices and compairing the the sorted elements to a manually sorted array.
 func TestOneContainerForAllSort(t *testing.T) {
 	for setId, testSet := range testSets {
-		var unsorted = make([]Span[int, string], len(testSet[0]))
+		var unsorted = make([]SpanBounds[int, string], len(testSet[0]))
 		copy(unsorted, testSet[0])
 		slices.SortFunc(unsorted, testDriver.Compare)
 
 		var sorted = testSet[1]
 		for idx, span := range unsorted {
 			var expected = sorted[idx]
-			if span.Begin != expected.Begin || span.End != expected.End {
-				t.Errorf("Error comparing test sort data set: %d, row: %d, Expected: %d,%d, Got: %d,%d", setId, idx, expected.Begin, expected.End, span.Begin, span.End)
+			if span.GetBegin() != expected.GetBegin() || span.GetEnd() != expected.GetEnd() {
+				t.Errorf("Error comparing test sort data set: %d, row: %d, Expected: %d,%d, Got: %d,%d", setId, idx, expected.GetBegin(), expected.GetEnd(), span.GetBegin(), span.GetEnd())
 			}
 		}
 	}
@@ -96,8 +100,8 @@ func TestConsolidate(t *testing.T) {
 	var container = AllSet[0]
 	var s= testDriver.NewSpanOverlapAccumulator()
 	for idx, span := range AllSet {
-		var res = s.Accumulate(&span)
-		if container.Begin != res.Begin || container.End != res.End {
+		var res = s.Accumulate(span)
+		if container.GetBegin() != res.GetBegin() || container.GetEnd() != res.GetEnd() {
 			t.Errorf("Container out of bounds in element: %d", idx)
 		}
 		if idx == 0 {
@@ -119,9 +123,9 @@ func TestConsolidate(t *testing.T) {
 func TestMergeMultiple(t *testing.T) {
 	var accumulator =testDriver.NewSpanOverlapAccumulator();
 	for idx, span := range MultiSet {
-		var res = accumulator.Accumulate(&span)
-		if span.Begin != res.Span.Begin || span.End != res.Span.End {
-			t.Errorf("Range missmatch, expected: %d->%d, got: %d->%d", span.Begin, span.End, res.Begin, res.End)
+		var res = accumulator.Accumulate(span)
+		if span.GetBegin() != res.GetBegin() || span.GetEnd() != res.GetEnd() {
+			t.Errorf("Range missmatch, expected: %d->%d, got: %d->%d", span.GetBegin(), span.GetEnd(), res.GetBegin(), res.GetEnd())
 		}
 		switch idx {
 		case 0, 1, 3, 4:
@@ -139,7 +143,7 @@ func TestMergeMultiple(t *testing.T) {
         return;
 			}
 			var list = *res.Contains
-			var check = *list[0].Tag + *list[1].Tag
+			var check = *list[0].GetTag() + *list[1].GetTag()
 			if check != "ab" {
 				t.Errorf("tag validation failed")
 			}
@@ -159,30 +163,43 @@ func TestGrowth(t *testing.T) {
 	var lastRes *OverlappingSpanSets[int, string] = nil
 	for idx, span := range src {
 		res := s.Accumulate(&span)
+    var p =res.GetBeginP();
+    if(res.GetTag()!=nil) {
+      t.Errorf("Tag should be nil")
+    }
+    if(*p!=res.GetBegin()) {
+      t.Errorf("Bad Begin value")
+      return;
+    }
+    p =res.GetEndP();
+    if(*p!=res.GetEnd()) {
+      t.Errorf("Bad End value")
+      return;
+    }
 		switch idx {
 		case 0:
-			if res.Begin != -2 || res.End != -1 || res.Contains != nil {
+			if res.GetBegin() != -2 || res.GetEnd() != -1 || res.Contains != nil {
 				t.Errorf("Bad Range on element 0")
 			}
 		case 1:
-			if res.Begin != -2 || res.End != -0 {
+			if res.GetBegin() != -2 || res.GetEnd() != -0 {
 				t.Errorf("Bad Range on element 1")
 			}
-      if(res.Contains == nil) {
-				t.Errorf("Expected contains for element 1")
+      if(res.IsUnique()) {
+				t.Errorf("Expected to be stand alone, but contians multiple elements")
       } 
       if *lastRes != *res {
         t.Errorf("Did not expect new result!")
         return;
       }
 		case 2:
-			if res.Begin != 1 || res.End != 1 {
+			if res.GetBegin() != 1 || res.GetEnd() != 1 {
 				t.Errorf("Bad Range")
 			}
 			if *res == *lastRes {
 				t.Errorf("Expected new result");
 			}
-			if nil != res.Contains {
+			if nil != res.GetContains(){
 				t.Errorf("Invalid Contains")
 			}
 		}
@@ -192,9 +209,9 @@ func TestGrowth(t *testing.T) {
 
 // Validates the inital range of a list of ranges
 func TestFirstRange(t *testing.T) {
-	var src *[]*Span[int, string] = &[]*Span[int, string]{
-		{Begin: 2, End: 2},
-		{Begin: 0, End: 1},
+	var src *[]SpanBounds[int, string] = &[]SpanBounds[int, string]{
+		&Span[int,string]{Begin: 2, End: 2},
+		&Span[int,string]{Begin: 0, End: 1},
 	}
 	var span = testDriver.FirstSpan(src)
 	if span.Begin != 0 || span.End != 1 {
@@ -204,10 +221,10 @@ func TestFirstRange(t *testing.T) {
 
 // Validates the creation of the next span based on the current span.
 func TestNextRange(t *testing.T) {
-	var src *[]*Span[int, string] = &[]*Span[int, string]{
-		{Begin: 3, End: 4}, // 3,4, last valid range, should get nil after this
-		{Begin: 2, End: 2}, // 2,2, first range
-		{Begin: 0, End: 1}, // should ignore
+	var src = &[]SpanBounds[int, string]{
+		&Span[int,string]{Begin: 3, End: 4}, // 3,4, last valid range, should get nil after this
+		&Span[int,string]{Begin: 2, End: 2}, // 2,2, first range
+		&Span[int,string]{Begin: 0, End: 1}, // should ignore
 	}
 	var first = &Span[int, string]{Begin: 0, End: 1}
 	var span = testDriver.NextSpan(first, src)
@@ -235,10 +252,10 @@ func TestNextRange(t *testing.T) {
 
 // Validates the creation of the next span when there are gaps.
 func TestNextRangeGap(t *testing.T) {
-  var src *[]*Span[int, string] = &[]*Span[int, string]{
-    {Begin: 4, End: 5}, // 3,4, last valid range, should get nil after this
-    {Begin: 2, End: 2}, // 2,2, first range
-    {Begin: 0, End: 1}, // should ignore
+  var src *[]SpanBounds[int, string] = &[]SpanBounds[int, string]{
+    &Span[int,string]{Begin: 4, End: 5}, // 3,4, last valid range, should get nil after this
+    &Span[int,string]{Begin: 2, End: 2}, // 2,2, first range
+    &Span[int,string]{Begin: 0, End: 1}, // should ignore
   }
   var first = &Span[int, string]{Begin: 0, End: 0}
   var span = testDriver.NextSpan(first, src)
@@ -267,7 +284,7 @@ func TestNextRangeGap(t *testing.T) {
 }
 
 // Used to test overlaping span generation.
-func testNextOverlaps(t *testing.T,src *[]*Span[int,string]) {
+func testNextOverlaps(t *testing.T,src *[]SpanBounds[int,string]) {
   
   var first = &Span[int, string]{Begin: -1, End: 0}
   var span = testDriver.NextSpan(first, src)
@@ -295,29 +312,29 @@ func testNextOverlaps(t *testing.T,src *[]*Span[int,string]) {
 }
 // Validates the creation of the next span with overlaps.
 func TestNextRangeOverlaps(t *testing.T) {
-  var src *[]*Span[int, string] = &[]*Span[int, string]{
-    {Begin: 2, End: 3}, // 2,3, next range is nil
-    {Begin: 1, End: 3}, // overlaps with 0 and 2
-    {Begin: 0, End: 1}, // 1,1, first range
+  var src *[]SpanBounds[int, string] = &[]SpanBounds[int, string]{
+    &Span[int,string]{Begin: 2, End: 3}, // 2,3, next range is nil
+    &Span[int,string]{Begin: 1, End: 3}, // overlaps with 0 and 2
+    &Span[int,string]{Begin: 0, End: 1}, // 1,1, first range
   }
   testNextOverlaps(t,src);
 }
 
 // Validates the creation of the next span with a different data set.
 func TestNextRangeOverlapsReverseOrder(t *testing.T) {
-  var src *[]*Span[int, string] = &[]*Span[int, string]{
-    {Begin: 0, End: 1}, // 1,1, first range
-    {Begin: 1, End: 3}, // overlaps with 0 and 2
-    {Begin: 2, End: 3}, // 2,3, next range is nil
+  var src *[]SpanBounds[int, string] = &[]SpanBounds[int, string]{
+    &Span[int,string]{Begin: 0, End: 1}, // 1,1, first range
+    &Span[int,string]{Begin: 1, End: 3}, // overlaps with 0 and 2
+    &Span[int,string]{Begin: 2, End: 3}, // 2,3, next range is nil
   }
   testNextOverlaps(t,src);
 }
 
 func TestNextRangeOverlapsMixedOrder(t *testing.T) {
-  var src *[]*Span[int, string] = &[]*Span[int, string]{
-    {Begin: 1, End: 3}, // overlaps with 1 and 2
-    {Begin: 0, End: 1}, // 1,1, first range
-    {Begin: 2, End: 3}, // 2,3, next range is nil
+  var src *[]SpanBounds[int, string] = &[]SpanBounds[int, string]{
+    &Span[int,string]{Begin: 1, End: 3}, // overlaps with 1 and 2
+    &Span[int,string]{Begin: 0, End: 1}, // 1,1, first range
+    &Span[int,string]{Begin: 2, End: 3}, // 2,3, next range is nil
   }
   testNextOverlaps(t,src);
 }
