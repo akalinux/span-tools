@@ -335,14 +335,12 @@ func (s *SpanOverlapColumnAccumulator[E, T]) Close() {
 	}
 }
 
+// Initalizes the data structure to represent the first span overlap
 func (s *SpanOverlapColumnAccumulator[E, T]) Init(overlap SpanBoundaries[E, T]) {
 	s.Overlap = overlap
 	s.Backlog = &[]*OverlappingSpanSets[E, T]{}
 	s.SrcPos = -1
 	s.SrcStart = -1
-	if s.Getnext == nil {
-		return
-	}
 
 	var id, current, hasnext = s.Getnext()
 	var u = *s.Util
@@ -363,7 +361,13 @@ func (s *SpanOverlapColumnAccumulator[E, T]) Init(overlap SpanBoundaries[E, T]) 
 				break
 			}
 			id, current, hasnext = s.Getnext()
-
+      if(!hasnext) {
+        if(s.SrcStart==-1) {
+          s.Next=nil
+          s.SrcPos=-1
+          s.HasNext=false;
+        }
+      }
 		}
 	}
 }
