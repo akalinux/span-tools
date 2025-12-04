@@ -256,9 +256,7 @@ func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundaries[E, T]) *Ov
 }
 
 // Factory interface for converting slices of SpanBoundaries instances into consolidated OverlappingSpanSets.
-func (s *SpanOverlapAccumulator[E, T]) GenSliceItr(list *[]SpanBoundaries[E, T]) iter.Seq2[int, *OverlappingSpanSets[E, T]] {
-
-
+func (s *SpanOverlapAccumulator[E, T]) SliceIterFactory(list *[]SpanBoundaries[E, T]) iter.Seq2[int, *OverlappingSpanSets[E, T]] {
 	var id int = 0
 	var current *OverlappingSpanSets[E, T] = nil
 	var next *OverlappingSpanSets[E, T] = nil
@@ -281,55 +279,91 @@ func (s *SpanOverlapAccumulator[E, T]) GenSliceItr(list *[]SpanBoundaries[E, T])
 		if end == -1 {
 			return
 		}
-    if s.Sort {
-      slices.SortFunc(*list, s.Compare)
-    }
+		if s.Sort {
+			slices.SortFunc(*list, s.Compare)
+		}
 
 		for {
 			if !yeild(id, current) {
 				return
 			}
-      if(pos>=end) {
-        return;
-      }
-      id++
-      current=next
-      for pos < end {
-        next = s.Accumulate((*list)[pos])
-        pos++
-        if next != current {
-          break
-        }
-      }
+			if pos >= end {
+				return
+			}
+			id++
+			current = next
+			for pos < end {
+				next = s.Accumulate((*list)[pos])
+				pos++
+				if next != current {
+					break
+				}
+			}
 		}
 	}
-
 }
 
-type SpanPosition[E any, T any] struct {
-	CurrentValue *OverlappingSpanSets[E, T]
-	NextValue    *OverlappingSpanSets[E, T]
-	Getnext      func() (OverlappingSpanSets[E, T], bool)
-	Stop         func()
-}
-
-type SpanOverlapResolver[E any, T any] struct {
-	Columns *[]*SpanPosition[E, T]
-	Util    *SpanUtil[E, T]
-}
-
-func (s *SpanUtil[E, T]) NewSpanColumnIterFromSlices(columns *[][]SpanBoundaries[E, T]) *SpanOverlapResolver[E, T] {
-	var cols = make([]*SpanPosition[E, T], len(*columns))
-	var res = &SpanOverlapResolver[E, T]{
-		Util:    s,
-		Columns: &cols,
-	}
-	for _, list := range *columns {
-		if s.Sort {
-			slices.SortFunc(list, s.Compare)
-		}
-
-	}
-
+func (s *SpanOverlapAccumulator[E, T]) ColumnOverlapFactory(driver iter.Seq2[int, *OverlappingSpanSets[E, T]]) *SpanOverlapColumnAccumulator[E, T] {
+	var res = &SpanOverlapColumnAccumulator[E, T]{}
+	var next, stop = iter.Pull2(driver)
+	res.Stop = stop
+	res.Getnext = next
+  res.Util=s.SpanUtil
 	return res
+}
+
+func (s *SpanOverlapAccumulator[E, T]) ColumnOverlapSliceFactory(list *[]SpanBoundaries[E, T]) *SpanOverlapColumnAccumulator[E , T ] {
+  return s.ColumnOverlapFactory(s.SliceIterFactory(list));
+}
+
+type SpanOverlapColumnAccumulator[E any, T any] struct {
+	Overlap  SpanBoundaries[E, T]
+	Backlog  *[]*OverlappingSpanSets[E, T]
+	Util     *SpanUtil[E, T]
+	Getnext  func() (int, *OverlappingSpanSets[E, T], bool)
+	Stop     func()
+	Next     *OverlappingSpanSets[E, T]
+	HasNext  bool
+	SrcPos   int
+	SrcStart int
+	SrcEnd   int
+}
+
+func (s *SpanOverlapColumnAccumulator[E, T]) Close() {
+	if s.Stop != nil {
+		s.Stop()
+	}
+}
+
+func (s *SpanOverlapColumnAccumulator[E, T]) Init(overlap SpanBoundaries[E, T]) {
+	s.Overlap = overlap
+	s.Backlog = &[]*OverlappingSpanSets[E, T]{}
+	s.SrcPos = -1
+	s.SrcStart = -1
+	if s.Getnext == nil {
+		return
+	}
+
+	var id, current, hasnext = s.Getnext()
+	var u = *s.Util
+
+	if hasnext {
+		s.HasNext = true
+		for hasnext {
+			s.SrcPos = id
+			if u.Overlap(overlap, current) {
+				if s.SrcStart == -1 {
+					s.SrcStart = id
+				}
+				s.SrcEnd = id
+				*s.Backlog = append(*s.Backlog, current)
+			} else if u.Cmp(current.GetBegin(),overlap.GetEnd())> 0 {
+				// current is after next, then we are done!
+				s.Next = current
+				break
+			}
+			id, current, hasnext = s.Getnext()
+
+		}
+	}
 }

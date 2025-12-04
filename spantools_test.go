@@ -51,7 +51,7 @@ var testSets = [][][]SpanBoundaries[int, string]{
 	},
 }
 
-var testDriver = NewOrderedSpanUtil[int, string]();
+var testDriver = NewOrderedSpanUtil[int, string]()
 
 func TestNewSpan(t *testing.T) {
 	var span, err = testDriver.NewSpan(1, 2, &tagA)
@@ -360,10 +360,11 @@ func TestOverlaps(t *testing.T) {
 	}
 }
 func TestAccumulateIter(t *testing.T) {
-  testDriver.Sort=true;
-	for idx, res := range testDriver.NewSpanOverlapAccumulator().GenSliceItr(&MultiSet) {
+	testDriver.Sort = true
+	for idx, res := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultiSet) {
 		switch idx {
-		case 0: {
+		case 0:
+			{
 				if res.GetBegin() != -1 || res.GetEnd() != 0 {
 					t.Errorf("Invalid Range on set 0, expected: -1,0, got %d,%d", res.GetBegin(), res.GetEnd())
 					return
@@ -373,7 +374,8 @@ func TestAccumulateIter(t *testing.T) {
 					return
 				}
 			}
-		case 1: {
+		case 1:
+			{
 				if res.GetBegin() != 2 || res.GetEnd() != 2 {
 					t.Errorf("Invalid Range on set 1, expected: 2,2, got %d,%d", res.GetBegin(), res.GetEnd())
 					return
@@ -383,7 +385,8 @@ func TestAccumulateIter(t *testing.T) {
 					return
 				}
 			}
-		case 2: {
+		case 2:
+			{
 				if res.GetBegin() != 5 || res.GetEnd() != 6 {
 					t.Errorf("Invalid Range on set 0, expected: 5,6... got %d,%d", res.GetBegin(), res.GetEnd())
 					return
@@ -393,39 +396,92 @@ func TestAccumulateIter(t *testing.T) {
 					return
 				}
 			}
-      case 3: {
-          if res.GetBegin() != 9 || res.GetEnd() != 11 {
-            t.Errorf("Invalid Range on set 0, expected: 9,11... got %d,%d", res.GetBegin(), res.GetEnd())
-            return
-          }
-          if res.Contains != nil {
-            t.Errorf("Exepcted Empty contains")
-            return
-          }
-        }
-      default: {
-        t.Errorf("Got a range beyond 3, expected set to end at the, end is at: %d",idx)
-        return
-      } 
+		case 3:
+			{
+				if res.GetBegin() != 9 || res.GetEnd() != 11 {
+					t.Errorf("Invalid Range on set 0, expected: 9,11... got %d,%d", res.GetBegin(), res.GetEnd())
+					return
+				}
+				if res.Contains != nil {
+					t.Errorf("Exepcted Empty contains")
+					return
+				}
+			}
+		default:
+			{
+				t.Errorf("Got a range beyond 3, expected set to end at the, end is at: %d", idx)
+				return
+			}
 		}
 
-	  for idx := range testDriver.NewSpanOverlapAccumulator().GenSliceItr(&MultiSet) {
-      if(idx==0) {
-        break;
-      }
-      if(idx!=0) {
-        t.Errorf("Someting went wrong and our iterator broke?")
-        return;
-      }
-    }
-    var count=0
-	  for  range testDriver.NewSpanOverlapAccumulator().GenSliceItr(nil) {
-      count++;
-    }
-    if(count!=0) {
-      t.Errorf("Should have not gotten any iterator passes when our slice is nil")
-      return;
-    }
+		for idx := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultiSet) {
+			if idx == 0 {
+				break
+			}
+			if idx != 0 {
+				t.Errorf("Someting went wrong and our iterator broke?")
+				return
+			}
+		}
+		var count = 0
+		for range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(nil) {
+			count++
+		}
+		if count != 0 {
+			t.Errorf("Should have not gotten any iterator passes when our slice is nil")
+			return
+		}
+	}
+}
+
+func TestColumnConsolidateIter(t *testing.T) {
+	var res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
+	res.Init(&Span[int, string]{Begin: -1, End: 0})
+	if !res.HasNext {
+		t.Errorf("Should Has Next")
+		return
+	}
+	if len(*res.Backlog) != 1 {
+		t.Errorf("Should have 1 element in our slice")
+		return
+	}
+	if (*res.Backlog)[0].GetBegin() != -1 || (*res.Backlog)[0].GetEnd() != 0 {
+		t.Errorf("Invalid first element")
+		return
+	}
+	if res.SrcPos != 1 {
+		t.Errorf("Expected SrcPos: 1, got SrcPos: %d", res.SrcPos)
+		return
 	}
 
+	// Make sure we close our pull iter
+	res.Close()
+	res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
+	res.Init(&Span[int, string]{Begin: -2, End: -2})
+	if res.SrcPos != 0 {
+		t.Errorf("Make sure our first span is 0, got %d", res.SrcPos)
+		return
+	}
+
+	res.Close()
+	res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
+	res.Init(&Span[int, string]{Begin: 2, End: 2})
+
+	if res.SrcStart != 1 {
+		t.Errorf("Validate we got the correct start postion, expected 1, got %d", res.SrcPos)
+		return
+	}
+	if res.SrcEnd != 1 {
+		t.Errorf("Validate we got the correct end postion, expected 1, got %d", res.SrcEnd)
+		return
+	}
+	if res.SrcPos != 2 {
+		t.Errorf("Make sure our span id is 3, got %d", res.SrcPos)
+		return
+	}
+  if(res.Next.GetBegin()!=5 || res.Next.GetEnd()!=6) {
+		t.Errorf("Make sure our next range is 5->6, got %d->%d", res.Next.GetBegin(),res.Next.GetEnd())
+		return
+  }
+	defer res.Close()
 }
