@@ -483,5 +483,12 @@ func TestColumnConsolidateIter(t *testing.T) {
 		t.Errorf("Make sure our next range is 5->6, got %d->%d", res.Next.GetBegin(),res.Next.GetEnd())
 		return
   }
+	res.Close()
+	res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
+	res.Init(&Span[int, string]{Begin: 20, End: 20})
+  if(res.SrcStart!=-1) {
+    t.Error("Should not have a next!")
+    return
+  }
 	defer res.Close()
 }
