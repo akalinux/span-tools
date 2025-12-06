@@ -382,7 +382,7 @@ type SpanOverlapColumnAccumulator[E any, T any] struct {
 
 	// The iter.Pull2 "next" method generated from the iter.Seq2 instance.
 	ItrGetNext func() (int, *OverlappingSpanSets[E, T], bool)
-	// The iter.Pull2 "stop " method generated from the iter.Seq2 instance.
+	// The iter.Pull2 "stop" method generated from the iter.Seq2 instance.
 	ItrStop func()
 
 	// The next set to operate on, when nil.
