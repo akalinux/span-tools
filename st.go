@@ -219,11 +219,35 @@ type SpanOverlapAccumulator[E any, T any] struct {
 	*SpanUtil[E, T]
 	// When true slices passed in will be sorted.
 	Sort bool
+  Validate bool
+  Err error
+  Pos int
 }
 
 // Factory interface for the creation of SpanOverlapAccumulator[E,T].
 func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, T] {
 	return &SpanOverlapAccumulator[E, T]{SpanUtil: s, Rss: &OverlappingSpanSets[E, T]{Contains: nil, Span: nil}}
+}
+
+func (s *SpanOverlapAccumulator[E, T]) Check(b,a SpanBoundry[E,T]) {
+  if(!s.Validate) {
+    return
+  }
+  // we are all ready in an error state
+  if(s.Err!=nil) {
+    return
+  }
+  
+  if(a.GetBeginP()==nil || a.GetEndP()==nil) {
+    s.Err=errors.New("GetBeginP and GetEndP must not return nil")
+    return;
+  }
+  if(s.Cmp(a.GetBegin(),a.GetEnd())>0) {
+    s.Err=errors.New("GetBegin must be less than or equal to GetEnd")
+  }
+  if(a!=nil && s.Compare(a,b)>0) {
+    s.Err=errors.New("Next SpanBoundry must come after the current SpanBoundry")
+  }
 }
 
 // The Accumulate method.
@@ -232,6 +256,8 @@ func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, 
 // When the span overlaps with the current Span[E,T], the OverlappingSpanSets is expanded and the span is appened to the Contains slice.
 // When the span is outside of the current Span[E,T], then a new OverlappingSpanSets is created with this span as its current span.
 func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundry[E, T]) *OverlappingSpanSets[E, T] {
+  s.Pos++
+  s.Check(span,s.Rss.Span)
 	if s.Rss.Span == nil {
 		s.Rss.Span = span
 		return s.Rss
@@ -342,7 +368,8 @@ func (s *SpanOverlapAccumulator[E, T]) ColumnOverlapSliceFactory(list *[]SpanBou
 
 // Contains the current iterator control functions and represents the column position in the iterator process.
 type SpanOverlapColumnAccumulator[E any, T any] struct {
-	// Representation of the data that last intersected with an SpanBoundry passed to GetNext
+	// Representation of the data that intersected with an SpanBoundry passed to GetNext.
+  // A value of nil means no data overlaps.
 	Overlaps *[]*OverlappingSpanSets[E, T]
 
 	// Where Overlaps begins relative to our OverlappingSpanSets[E,T] iteration.
