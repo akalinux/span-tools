@@ -103,7 +103,6 @@ type SpanUtil[E any, T any] struct {
 }
 
 func (s *SpanUtil[E, T]) Check(next, current SpanBoundry[E, T]) error {
-	
 
 	if s.Cmp(next.GetBegin(), next.GetEnd()) > 0 {
 		return errors.New("GetBegin must be less than or equal to GetEnd")
@@ -249,10 +248,10 @@ func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, 
 // When the span is outside of the current Span[E,T], then a new OverlappingSpanSets is created with this span as its current span.
 func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundry[E, T]) *OverlappingSpanSets[E, T] {
 	s.Pos++
-  if(s.Validate) {
-    
-  	s.Err = s.Check(span, s.Rss.Span)
-  }
+	if s.Validate {
+
+		s.Err = s.Check(span, s.Rss.Span)
+	}
 
 	if s.Rss.Span == nil {
 		s.Rss.Span = span

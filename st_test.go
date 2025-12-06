@@ -141,7 +141,7 @@ func TestOneContainerForAllSort(t *testing.T) {
 func TestConsolidate(t *testing.T) {
 	var container = AllSet[0]
 	var s = testDriver.NewSpanOverlapAccumulator()
-  s.Validate=false;
+	s.Validate = false
 	for idx, span := range AllSet {
 		var res = s.Accumulate(span)
 		if container.GetBegin() != res.GetBegin() || container.GetEnd() != res.GetEnd() {
@@ -715,26 +715,26 @@ func TestBadOrder(t *testing.T) {
 		&Span[int, string]{Begin: 9, End: 11},
 		&Span[int, string]{Begin: 2, End: 2},
 	}
-  testDriver.Validate=true;
-  for id,span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
-    if(id>0) {
-      t.Errorf("Should stop at 0");
-      return;
-    }
-    if(span.GetBegin()!=9) {
-      t.Error("Should have span 0, got span 1")
-    } 
-  }
+	testDriver.Validate = true
+	for id, span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
+		if id > 0 {
+			t.Errorf("Should stop at 0")
+			return
+		}
+		if span.GetBegin() != 9 {
+			t.Error("Should have span 0, got span 1")
+		}
+	}
 }
 
 func TestBadInitValue(t *testing.T) {
-  var list = &[]SpanBoundry[int, string]{
-    &Span[int, string]{Begin: 13, End: 11},
-  }
-  testDriver.Validate=true;
-  for  range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
-    t.Errorf("Should have gotten no ranges!");
-    return;
-  }
+	var list = &[]SpanBoundry[int, string]{
+		&Span[int, string]{Begin: 13, End: 11},
+	}
+	testDriver.Validate = true
+	for range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
+		t.Errorf("Should have gotten no ranges!")
+		return
+	}
 
 }
