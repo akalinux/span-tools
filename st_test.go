@@ -55,6 +55,46 @@ var testSets = [][][]SpanBoundry[int, string]{
 
 var testDriver = NewOrderedSpanUtil[int, string]()
 
+type SpanInt struct {
+	Begin *int
+	End   *int
+	Tag   *string
+}
+
+func (s *SpanInt) GetTag() *string {
+	return s.Tag
+}
+
+func (s *SpanInt) GetBegin() int {
+	return *s.Begin
+}
+
+func (s *SpanInt) GetEnd() int {
+	return *s.End
+}
+
+func TestSaneSpan(t *testing.T) {
+	var begin = 2
+	var end = 1
+	var next = &SpanInt{Begin: &begin, End: &end}
+
+	if nil == testDriver.Check(next, nil) {
+		t.Errorf("Should get an error if begin is greater than end")
+		return
+	}
+	begin = 0
+	if nil != testDriver.Check(next, nil) {
+		t.Errorf("Should get not get an error")
+		return
+	}
+
+	var current = &Span[int, string]{Begin: 3, End: 3}
+	if nil == testDriver.Check(next, current) {
+		t.Errorf("current: %d->%d, should be before next: %d->%d", current.GetBegin(), current.GetEnd(), next.GetBegin(), next.GetEnd())
+	}
+
+}
+
 func TestNewSpan(t *testing.T) {
 	var span, err = testDriver.NewSpan(1, 2, &tagA)
 	if err != nil {
@@ -101,6 +141,7 @@ func TestOneContainerForAllSort(t *testing.T) {
 func TestConsolidate(t *testing.T) {
 	var container = AllSet[0]
 	var s = testDriver.NewSpanOverlapAccumulator()
+  s.Validate=false;
 	for idx, span := range AllSet {
 		var res = s.Accumulate(span)
 		if container.GetBegin() != res.GetBegin() || container.GetEnd() != res.GetEnd() {
@@ -165,18 +206,8 @@ func TestGrowth(t *testing.T) {
 	var lastRes *OverlappingSpanSets[int, string] = nil
 	for idx, span := range src {
 		res := s.Accumulate(&span)
-		var p = res.GetBeginP()
 		if res.GetTag() != nil {
 			t.Errorf("Tag should be nil")
-		}
-		if *p != res.GetBegin() {
-			t.Errorf("Bad Begin value")
-			return
-		}
-		p = res.GetEndP()
-		if *p != res.GetEnd() {
-			t.Errorf("Bad End value")
-			return
 		}
 		switch idx {
 		case 0:
@@ -676,5 +707,34 @@ func TestColumnConsolidateIter(t *testing.T) {
 		t.Error("Should not have a next!")
 		return
 	}
+
+}
+
+func TestBadOrder(t *testing.T) {
+	var list = &[]SpanBoundry[int, string]{
+		&Span[int, string]{Begin: 9, End: 11},
+		&Span[int, string]{Begin: 2, End: 2},
+	}
+  testDriver.Validate=true;
+  for id,span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
+    if(id>0) {
+      t.Errorf("Should stop at 0");
+      return;
+    }
+    if(span.GetBegin()!=9) {
+      t.Error("Should have span 0, got span 1")
+    } 
+  }
+}
+
+func TestBadInitValue(t *testing.T) {
+  var list = &[]SpanBoundry[int, string]{
+    &Span[int, string]{Begin: 13, End: 11},
+  }
+  testDriver.Validate=true;
+  for  range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
+    t.Errorf("Should have gotten no ranges!");
+    return;
+  }
 
 }
