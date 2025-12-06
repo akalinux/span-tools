@@ -27,7 +27,7 @@ type Span[E any, T any] struct {
 	Tag *T
 }
 
-type SpanBoundaries[E any, T any] interface {
+type SpanBoundry[E any, T any] interface {
 	// Returns the Begin value.
 	GetBegin() E
 	// Returns the pointer to the Begin value.
@@ -66,17 +66,17 @@ func (s *Span[E, T]) GetEnd() E {
 type OverlappingSpanSets[E any, T any] struct {
 
 	// The Span that contains all Spans in this instance.
-	Span SpanBoundaries[E, T]
+	Span SpanBoundry[E, T]
 
 	// When nil, Span is the only value representing this Span.
 	// When not nill, contains all the Spans acumulated to create this instance.
-	Contains *[]SpanBoundaries[E, T]
+	Contains *[]SpanBoundry[E, T]
 }
 
 type SpanOverlapBounds[E any, T any] interface {
-	SpanBoundaries[E, T]
+	SpanBoundry[E, T]
 	// Returns a pointer to overlapping spans, nill if thiis is a unique span.
-	GetContains() *[]SpanBoundaries[E, T]
+	GetContains() *[]SpanBoundry[E, T]
 	// If this is a uniqe span returns true, otherwise returns false.
 	IsUnique() bool
 }
@@ -85,7 +85,7 @@ func (s *OverlappingSpanSets[E, T]) IsUnique() bool {
 	return s.Contains == nil
 }
 
-func (s *OverlappingSpanSets[E, T]) GetContains() *[]SpanBoundaries[E, T] {
+func (s *OverlappingSpanSets[E, T]) GetContains() *[]SpanBoundry[E, T] {
 	return s.Contains
 }
 
@@ -131,7 +131,7 @@ func NewSpanUtil[E any, T any](cmp func(a, b E) int) *SpanUtil[E, T] {
 // For more details see: [[slices.SortFunc]]
 //
 // [slices.SortFunc]: https://pkg.go.dev/slices#SortedFunc
-func (s *SpanUtil[E, T]) Compare(a, b SpanBoundaries[E, T]) int {
+func (s *SpanUtil[E, T]) Compare(a, b SpanBoundry[E, T]) int {
 	var diff int = s.Cmp(a.GetBegin(), b.GetBegin())
 	if diff == 0 {
 		return s.Cmp(b.GetEnd(), a.GetEnd())
@@ -140,18 +140,18 @@ func (s *SpanUtil[E, T]) Compare(a, b SpanBoundaries[E, T]) int {
 }
 
 // Returns true if a contains b.
-func (s *SpanUtil[E, T]) Contains(a SpanBoundaries[E, T], b E) bool {
+func (s *SpanUtil[E, T]) Contains(a SpanBoundry[E, T], b E) bool {
 	return s.Cmp(a.GetBegin(), b) < 1 && s.Cmp(a.GetEnd(), b) > -1
 }
 
 // Returns true if a overlaps with b or if be overlaps with a.
-func (s *SpanUtil[E, T]) Overlap(a, b SpanBoundaries[E, T]) bool {
+func (s *SpanUtil[E, T]) Overlap(a, b SpanBoundry[E, T]) bool {
 	return s.Contains(a, b.GetBegin()) || s.Contains(a, b.GetEnd()) || s.Contains(b, a.GetEnd()) || s.Contains(b, a.GetEnd())
 }
 
 // This method is used to determin the outer bounds of ranges a and b.
 // The first int represents comparing a.Begin to b.Begin and the second int represents comparing a.End to b.End.
-func (s *SpanUtil[E, T]) ContainedBy(a, b SpanBoundaries[E, T]) (int, int) {
+func (s *SpanUtil[E, T]) ContainedBy(a, b SpanBoundry[E, T]) (int, int) {
 	return s.Cmp(a.GetBegin(), b.GetBegin()), s.Cmp(a.GetEnd(), b.GetEnd())
 }
 
@@ -164,7 +164,7 @@ func (s *SpanUtil[E, T]) NewSpan(a, b E, tag *T) (*Span[E, T], error) {
 }
 
 // This method returns the first smallest span from the slice of Span[E,T].
-func (s *SpanUtil[E, T]) FirstSpan(list *[]SpanBoundaries[E, T]) *Span[E, T] {
+func (s *SpanUtil[E, T]) FirstSpan(list *[]SpanBoundry[E, T]) *Span[E, T] {
 	var span = &Span[E, T]{Begin: (*list)[0].GetBegin(), End: (*list)[0].GetEnd()}
 	var last = len(*list)
 	for i := 1; i < last; i++ {
@@ -182,7 +182,7 @@ func (s *SpanUtil[E, T]) FirstSpan(list *[]SpanBoundaries[E, T]) *Span[E, T] {
 // This method acts as a stateless iterator that,
 // returns the next overlapping Span[E,T] or nill based on the start Span[E,T] and the slice of spans.
 // If all valid Span[E,T] values have been exausted, nil is returned.
-func (s *SpanUtil[E, T]) NextSpan(start SpanBoundaries[E, T], list *[]SpanBoundaries[E, T]) *Span[E, T] {
+func (s *SpanUtil[E, T]) NextSpan(start SpanBoundry[E, T], list *[]SpanBoundry[E, T]) *Span[E, T] {
 	var begin *E = nil
 	var end *E = nil
 	for _, check := range *list {
@@ -225,7 +225,7 @@ func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, 
 // For a given Span[E,T] provided:
 // When the span overlaps with the current Span[E,T], the OverlappingSpanSets is expanded and the span is appened to the Contains slice.
 // When the span is outside of the current Span[E,T], then a new OverlappingSpanSets is created with this span as its current span.
-func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundaries[E, T]) *OverlappingSpanSets[E, T] {
+func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundry[E, T]) *OverlappingSpanSets[E, T] {
 	if s.Rss.Span == nil {
 		s.Rss.Span = span
 		return s.Rss
@@ -247,7 +247,7 @@ func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundaries[E, T]) *Ov
 			s.Rss.Span = &r
 		}
 		if s.Rss.Contains == nil {
-			s.Rss.Contains = &[]SpanBoundaries[E, T]{a, span}
+			s.Rss.Contains = &[]SpanBoundry[E, T]{a, span}
 		} else {
 			*s.Rss.Contains = append(*s.Rss.Contains, span)
 		}
@@ -256,7 +256,7 @@ func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundaries[E, T]) *Ov
 }
 
 // Factory interface for converting slices of SpanBoundaries instances into iterator sequences of OverlappingSpanSets.
-func (s *SpanOverlapAccumulator[E, T]) SliceIterFactory(list *[]SpanBoundaries[E, T]) iter.Seq2[int, *OverlappingSpanSets[E, T]] {
+func (s *SpanOverlapAccumulator[E, T]) SliceIterFactory(list *[]SpanBoundry[E, T]) iter.Seq2[int, *OverlappingSpanSets[E, T]] {
 	var id int = 0
 	var current *OverlappingSpanSets[E, T] = nil
 	var next *OverlappingSpanSets[E, T] = nil
@@ -314,13 +314,13 @@ func (s *SpanOverlapAccumulator[E, T]) ColumnOverlapFactory(driver iter.Seq2[int
 	return res
 }
 
-// This is a convenience method for initalizing the iter.Seq2 stater internals based on a slice of SpanBoundries.
-func (s *SpanOverlapAccumulator[E, T]) ColumnOverlapSliceFactory(list *[]SpanBoundaries[E, T]) *SpanOverlapColumnAccumulator[E, T] {
+// This is a convenience method for initalizing the iter.Seq2 stater internals based on a slice of SpanBoundry.
+func (s *SpanOverlapAccumulator[E, T]) ColumnOverlapSliceFactory(list *[]SpanBoundry[E, T]) *SpanOverlapColumnAccumulator[E, T] {
 	return s.ColumnOverlapFactory(s.SliceIterFactory(list))
 }
 
 type SpanOverlapColumnAccumulator[E any, T any] struct {
-	Overlap    SpanBoundaries[E, T]
+	Overlap    SpanBoundry[E, T]
 	Backlog    *[]*OverlappingSpanSets[E, T]
 	Util       *SpanUtil[E, T]
 	ItrGetNext func() (int, *OverlappingSpanSets[E, T], bool)
@@ -345,7 +345,7 @@ func (s *SpanOverlapColumnAccumulator[E, T]) Close() {
 
 
 // Initalizes the data structure to represent the first span overlap.  A cal to this method must be made before a call to s.GetNext(overlap) can be made.
-func (s *SpanOverlapColumnAccumulator[E, T]) Init(overlap SpanBoundaries[E, T]) {
+func (s *SpanOverlapColumnAccumulator[E, T]) Init(overlap SpanBoundry[E, T]) {
 
   var id, current, hasnext = s.ItrGetNext()
 
@@ -357,7 +357,7 @@ func (s *SpanOverlapColumnAccumulator[E, T]) Init(overlap SpanBoundaries[E, T]) 
   }
 }
 
-func (s *SpanOverlapColumnAccumulator[E, T]) GetNext(overlap SpanBoundaries[E, T]) {
+func (s *SpanOverlapColumnAccumulator[E, T]) GetNext(overlap SpanBoundry[E, T]) {
 	s.Overlap = overlap
 	s.Backlog = &[]*OverlappingSpanSets[E, T]{}
 	var id = s.SrcPos
