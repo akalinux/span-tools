@@ -7,7 +7,7 @@
 //
 // Spans in this package are expected to contain a Begin and End value. The Begin and End values should be
 // comparable with a cmp function.  The Begin value is expected to be less than or equal to the End value.
-package spans
+package st
 
 import (
 	"cmp"

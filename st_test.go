@@ -1,4 +1,4 @@
-package spans
+package st
 
 import (
   "iter"
