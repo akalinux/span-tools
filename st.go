@@ -33,12 +33,10 @@ type Span[E any, T any] struct {
 type SpanBoundry[E any, T any] interface {
 	// Returns the Begin value.
 	GetBegin() E
-	// Returns the pointer to the Begin value.
-	GetBeginP() *E
+
 	// Returns the End value.
 	GetEnd() E
-	// Returns the pointer to the End value.
-	GetEndP() *E
+
 	// Returns the pointer to the Tag value.
 	GetTag() *T
 }
@@ -49,13 +47,6 @@ func (s *Span[E, T]) GetTag() *T {
 
 func (s *Span[E, T]) GetBegin() E {
 	return s.Begin
-}
-
-func (s *Span[E, T]) GetBeginP() *E {
-	return &s.Begin
-}
-func (s *Span[E, T]) GetEndP() *E {
-	return &s.End
 }
 
 func (s *Span[E, T]) GetEnd() E {
@@ -100,22 +91,37 @@ func (s *OverlappingSpanSets[E, T]) GetBegin() E {
 	return s.Span.GetBegin()
 }
 
-func (s *OverlappingSpanSets[E, T]) GetBeginP() *E {
-	return s.Span.GetBeginP()
-}
-func (s *OverlappingSpanSets[E, T]) GetEndP() *E {
-	return s.Span.GetEndP()
-}
-
 func (s *OverlappingSpanSets[E, T]) GetEnd() E {
 	return s.Span.GetEnd()
 }
 
 // Core of the span utilties: Provides methos for processing ranges.
 type SpanUtil[E any, T any] struct {
-	Cmp func(a, b E) int
-
+	Cmp         func(a, b E) int
+	Validate    bool
 	TagRequired bool
+}
+
+func (s *SpanUtil[E, T]) Check(next, current SpanBoundry[E, T]) error {
+	
+
+	if s.Cmp(next.GetBegin(), next.GetEnd()) > 0 {
+		return errors.New("GetBegin must be less than or equal to GetEnd")
+	}
+
+	if current != nil {
+
+		if s.Compare(current, next) > 0 {
+
+			return errors.New("SpanBoundry out of sequence")
+		}
+	}
+	return nil
+}
+
+// Wrapper function to return a pointer to the value passed in.
+func (s *SpanUtil[E, T]) GetP(x E) *E {
+	return &x
 }
 
 // Creates a instance of *SpanUtil[E cmp.Ordered,T], this can be used to process most span data sets.
@@ -125,6 +131,8 @@ func NewOrderedSpanUtil[E cmp.Ordered, T any]() *SpanUtil[E, T] {
 
 // Creates an instance of *SpanUtil[E,T], the value of cmp is expected to be able to compare the Span.Begin and Span.End values.
 // See: [cmp.Compare] for more info.
+//
+// The default SpanFormat is set to: "Span: [%s -> %s], Tag: %s"
 //
 // [cmp.Compare]: https://pkg.go.dev/github.com/google/go-cmp/cmp#Comparer
 func NewSpanUtil[E any, T any](cmp func(a, b E) int) *SpanUtil[E, T] {
@@ -189,21 +197,22 @@ func (s *SpanUtil[E, T]) FirstSpan(list *[]SpanBoundry[E, T]) *Span[E, T] {
 func (s *SpanUtil[E, T]) NextSpan(start SpanBoundry[E, T], list *[]SpanBoundry[E, T]) *Span[E, T] {
 	var begin *E = nil
 	var end *E = nil
+
 	for _, check := range *list {
 		if begin == nil {
 			if s.Cmp(check.GetBegin(), start.GetEnd()) > 0 {
-				begin = check.GetBeginP()
-				end = check.GetEndP()
+				begin = s.GetP(check.GetBegin())
+				end = s.GetP(check.GetEnd())
 			} else if s.Cmp(check.GetEnd(), start.GetEnd()) > 0 {
-				begin = check.GetEndP()
-				end = check.GetEndP()
+				begin = s.GetP(check.GetEnd())
+				end = s.GetP(check.GetEnd())
 			}
 		} else {
 			if s.Cmp(check.GetBegin(), start.GetEnd()) > 0 && s.Cmp(*begin, check.GetBegin()) > 0 {
-				begin = check.GetBeginP()
+				begin = s.GetP(check.GetBegin())
 			}
 			if s.Cmp(*begin, check.GetEnd()) < 1 && s.Cmp(check.GetEnd(), start.GetEnd()) > 0 && s.Cmp(*end, check.GetEnd()) > 0 {
-				end = check.GetEndP()
+				end = s.GetP(check.GetEnd())
 			}
 		}
 	}
@@ -218,36 +227,19 @@ type SpanOverlapAccumulator[E any, T any] struct {
 	Rss *OverlappingSpanSets[E, T]
 	*SpanUtil[E, T]
 	// When true slices passed in will be sorted.
-	Sort bool
-  Validate bool
-  Err error
-  Pos int
+	Sort     bool
+	Err      error
+	Pos      int
+	Validate bool
 }
 
 // Factory interface for the creation of SpanOverlapAccumulator[E,T].
 func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, T] {
-	return &SpanOverlapAccumulator[E, T]{SpanUtil: s, Rss: &OverlappingSpanSets[E, T]{Contains: nil, Span: nil}}
-}
-
-func (s *SpanOverlapAccumulator[E, T]) Check(b,a SpanBoundry[E,T]) {
-  if(!s.Validate) {
-    return
-  }
-  // we are all ready in an error state
-  if(s.Err!=nil) {
-    return
-  }
-  
-  if(a.GetBeginP()==nil || a.GetEndP()==nil) {
-    s.Err=errors.New("GetBeginP and GetEndP must not return nil")
-    return;
-  }
-  if(s.Cmp(a.GetBegin(),a.GetEnd())>0) {
-    s.Err=errors.New("GetBegin must be less than or equal to GetEnd")
-  }
-  if(a!=nil && s.Compare(a,b)>0) {
-    s.Err=errors.New("Next SpanBoundry must come after the current SpanBoundry")
-  }
+	return &SpanOverlapAccumulator[E, T]{
+		Validate: s.Validate,
+		SpanUtil: s,
+		Rss:      &OverlappingSpanSets[E, T]{Contains: nil, Span: nil},
+	}
 }
 
 // The Accumulate method.
@@ -256,8 +248,12 @@ func (s *SpanOverlapAccumulator[E, T]) Check(b,a SpanBoundry[E,T]) {
 // When the span overlaps with the current Span[E,T], the OverlappingSpanSets is expanded and the span is appened to the Contains slice.
 // When the span is outside of the current Span[E,T], then a new OverlappingSpanSets is created with this span as its current span.
 func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundry[E, T]) *OverlappingSpanSets[E, T] {
-  s.Pos++
-  s.Check(span,s.Rss.Span)
+	s.Pos++
+  if(s.Validate) {
+    
+  	s.Err = s.Check(span, s.Rss.Span)
+  }
+
 	if s.Rss.Span == nil {
 		s.Rss.Span = span
 		return s.Rss
@@ -316,6 +312,9 @@ func (s *SpanOverlapAccumulator[E, T]) SliceIterFactory(list *[]SpanBoundry[E, T
 		}
 
 		for {
+			if s.Err != nil {
+				return
+			}
 			if !yeild(id, current) {
 				return
 			}
@@ -369,7 +368,7 @@ func (s *SpanOverlapAccumulator[E, T]) ColumnOverlapSliceFactory(list *[]SpanBou
 // Contains the current iterator control functions and represents the column position in the iterator process.
 type SpanOverlapColumnAccumulator[E any, T any] struct {
 	// Representation of the data that intersected with an SpanBoundry passed to GetNext.
-  // A value of nil means no data overlaps.
+	// A value of nil means no data overlaps.
 	Overlaps *[]*OverlappingSpanSets[E, T]
 
 	// Where Overlaps begins relative to our OverlappingSpanSets[E,T] iteration.
