@@ -6,7 +6,7 @@ import (
   "testing"
 )
 
-var AllSet = []SpanBoundaries[int, string]{
+var AllSet = []SpanBoundry[int, string]{
   // sorted
   &Span[int, string]{Begin: -2, End: 2},
   &Span[int, string]{Begin: -1, End: 0},
@@ -17,7 +17,7 @@ var AllSet = []SpanBoundaries[int, string]{
 
 var tagA = "a"
 var tagB = "b"
-var MultiSet = []SpanBoundaries[int, string]{
+var MultiSet = []SpanBoundry[int, string]{
   &Span[int, string]{Begin: -1, End: 0},            // 0
   &Span[int, string]{Begin: 2, End: 2, Tag: &tagA}, //1
   &Span[int, string]{Begin: 2, End: 2, Tag: &tagB}, //1
@@ -27,7 +27,7 @@ var MultiSet = []SpanBoundaries[int, string]{
 }
 
 // Data sets used to verify the range sort method works as expected
-var testSets = [][][]SpanBoundaries[int, string]{
+var testSets = [][][]SpanBoundry[int, string]{
   {
     // test set 0, All consumed by 1 range
     {
@@ -82,7 +82,7 @@ func TestNewSpan(t *testing.T) {
 // Validates sort operation, by sorting slices and compairing the the sorted elements to a manually sorted array.
 func TestOneContainerForAllSort(t *testing.T) {
   for setId, testSet := range testSets {
-    var unsorted = make([]SpanBoundaries[int, string], len(testSet[0]))
+    var unsorted = make([]SpanBoundry[int, string], len(testSet[0]))
     copy(unsorted, testSet[0])
     slices.SortFunc(unsorted, testDriver.Compare)
 
@@ -211,7 +211,7 @@ func TestGrowth(t *testing.T) {
 
 // Validates the inital range of a list of ranges
 func TestFirstRange(t *testing.T) {
-  var src *[]SpanBoundaries[int, string] = &[]SpanBoundaries[int, string]{
+  var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
     &Span[int, string]{Begin: 2, End: 2},
     &Span[int, string]{Begin: 0, End: 1},
   }
@@ -223,7 +223,7 @@ func TestFirstRange(t *testing.T) {
 
 // Validates the creation of the next span based on the current span.
 func TestNextRange(t *testing.T) {
-  var src = &[]SpanBoundaries[int, string]{
+  var src = &[]SpanBoundry[int, string]{
     &Span[int, string]{Begin: 3, End: 4}, // 3,4, last valid range, should get nil after this
     &Span[int, string]{Begin: 2, End: 2}, // 2,2, first range
     &Span[int, string]{Begin: 0, End: 1}, // should ignore
@@ -254,7 +254,7 @@ func TestNextRange(t *testing.T) {
 
 // Validates the creation of the next span when there are gaps.
 func TestNextRangeGap(t *testing.T) {
-  var src *[]SpanBoundaries[int, string] = &[]SpanBoundaries[int, string]{
+  var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
     &Span[int, string]{Begin: 4, End: 5}, // 3,4, last valid range, should get nil after this
     &Span[int, string]{Begin: 2, End: 2}, // 2,2, first range
     &Span[int, string]{Begin: 0, End: 1}, // should ignore
@@ -286,7 +286,7 @@ func TestNextRangeGap(t *testing.T) {
 }
 
 // Used to test overlaping span generation.
-func testNextOverlaps(t *testing.T, src *[]SpanBoundaries[int, string]) {
+func testNextOverlaps(t *testing.T, src *[]SpanBoundry[int, string]) {
 
   var first = &Span[int, string]{Begin: -1, End: 0}
   var span = testDriver.NextSpan(first, src)
@@ -315,7 +315,7 @@ func testNextOverlaps(t *testing.T, src *[]SpanBoundaries[int, string]) {
 
 // Validates the creation of the next span with overlaps.
 func TestNextRangeOverlaps(t *testing.T) {
-  var src *[]SpanBoundaries[int, string] = &[]SpanBoundaries[int, string]{
+  var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
     &Span[int, string]{Begin: 2, End: 3}, // 2,3, next range is nil
     &Span[int, string]{Begin: 1, End: 3}, // overlaps with 0 and 2
     &Span[int, string]{Begin: 0, End: 1}, // 1,1, first range
@@ -325,7 +325,7 @@ func TestNextRangeOverlaps(t *testing.T) {
 
 // Validates the creation of the next span with a different data set.
 func TestNextRangeOverlapsReverseOrder(t *testing.T) {
-  var src *[]SpanBoundaries[int, string] = &[]SpanBoundaries[int, string]{
+  var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
     &Span[int, string]{Begin: 0, End: 1}, // 1,1, first range
     &Span[int, string]{Begin: 1, End: 3}, // overlaps with 0 and 2
     &Span[int, string]{Begin: 2, End: 3}, // 2,3, next range is nil
@@ -334,7 +334,7 @@ func TestNextRangeOverlapsReverseOrder(t *testing.T) {
 }
 
 func TestNextRangeOverlapsMixedOrder(t *testing.T) {
-  var src *[]SpanBoundaries[int, string] = &[]SpanBoundaries[int, string]{
+  var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
     &Span[int, string]{Begin: 1, End: 3}, // overlaps with 1 and 2
     &Span[int, string]{Begin: 0, End: 1}, // 1,1, first range
     &Span[int, string]{Begin: 2, End: 3}, // 2,3, next range is nil
