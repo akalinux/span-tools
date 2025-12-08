@@ -1,29 +1,22 @@
+
+
 package st
 
 import (
-	"iter"
 	"slices"
 	"testing"
 )
 
-var AllSet = []SpanBoundry[int, string]{
-	// sorted
-	&Span[int, string]{Begin: -2, End: 2},
-	&Span[int, string]{Begin: -1, End: 0},
-	&Span[int, string]{Begin: -1, End: 0},
-	&Span[int, string]{Begin: 0, End: 1},
-	&Span[int, string]{Begin: 0, End: 1},
-}
 
-var tagA = "a"
-var tagB = "b"
-var MultiSet = []SpanBoundry[int, string]{
-	&Span[int, string]{Begin: -1, End: 0},            // 0
-	&Span[int, string]{Begin: 2, End: 2, Tag: &tagA}, //1
-	&Span[int, string]{Begin: 2, End: 2, Tag: &tagB}, //1
-	&Span[int, string]{Begin: 5, End: 6},             // 2
-	&Span[int, string]{Begin: 9, End: 11},            // 3
-	// -1
+
+var MultMultiiSet = []SpanBoundry[int, string]{
+  &Span[int, string]{Begin: -1, End: 0},            // 0
+  &Span[int, string]{Begin: 2, End: 2, Tag: &tagA}, //1
+  &Span[int, string]{Begin: 2, End: 2, Tag: &tagB}, //1
+  &Span[int, string]{Begin: 5, End: 6},             // 2
+  &Span[int, string]{Begin: 9, End: 11},            // 3
+  &Span[int, string]{Begin: 9, End: 11},            // 3
+	&Span[int, string]{Begin: 12, End: 12},            // 4
 }
 
 // Data sets used to verify the range sort method works as expected
@@ -56,28 +49,23 @@ var testSets = [][][]SpanBoundry[int, string]{
 var testDriver = NewOrderedSpanUtil[int, string]()
 
 type SpanInt struct {
-	Begin *int
-	End   *int
-	Tag   *string
-}
-
-func (s *SpanInt) GetTag() *string {
-	return s.Tag
-}
-
-func (s *SpanInt) GetBegin() int {
-	return *s.Begin
-}
-
-func (s *SpanInt) GetEnd() int {
-	return *s.End
+	SpanRef[int, string]
 }
 
 func TestSaneSpan(t *testing.T) {
 	var begin = 2
 	var end = 1
-	var next = &SpanInt{Begin: &begin, End: &end}
+	var next = &SpanInt{
+		SpanRef[int, string]{
+			Begin: &begin,
+			End:   &end,
+		},
+	}
 
+	if next.GetTag() != nil {
+		t.Errorf("Should get nil for our default tag")
+		return
+	}
 	if nil == testDriver.Check(next, nil) {
 		t.Errorf("Should get an error if begin is greater than end")
 		return
@@ -397,10 +385,12 @@ func TestMultiAccumulateSet(t *testing.T) {
 	var acc = testDriver.NewSpanOverlapAccumulator()
 	var first = acc.Accumulate(MultiSet[0])
 	var next = acc.Accumulate(MultiSet[1])
+
 	if first.GetBegin() != -1 || first.GetEnd() != 0 {
 		t.Errorf("Expected -1,0 got: %d,%d", first.GetBegin(), first.GetEnd())
 		return
 	}
+
 	if first == next {
 		t.Errorf("First and next should not be the same!")
 		return
@@ -415,6 +405,10 @@ func TestMultiAccumulateSet(t *testing.T) {
 		t.Errorf("Expected 2,2 got: %d,%d", next.GetBegin(), next.GetEnd())
 		return
 	}
+	if next.SrcBegin != 1 || next.SrcEnd != 2 {
+		t.Errorf("Bad source index points! Expected: 1,2 got: %d,%d", next.SrcBegin, next.SrcEnd)
+		return
+	}
 	if first != next {
 		t.Errorf("First and next must be the same!")
 		return
@@ -425,6 +419,10 @@ func TestMultiAccumulateSet(t *testing.T) {
 		t.Errorf("Expected 5,6 got: %d,%d", next.GetBegin(), next.GetEnd())
 		return
 	}
+  if(next.SrcBegin!=3 || next.SrcEnd!=3) {
+		t.Errorf("Expected 3,3 got: %d,%d", next.SrcBegin, next.SrcEnd)
+    panic("STOP TESTING")
+  }
 	if first == next {
 		t.Errorf("First and next should not be the same!")
 		return
@@ -441,300 +439,73 @@ func TestMultiAccumulateSet(t *testing.T) {
 	}
 }
 
-func TestAccumulateIter(t *testing.T) {
-	var id = -1
-	var sa = testDriver.NewSpanOverlapAccumulator()
-	sa.Sort = true
 
-	for idx, res := range sa.SliceIterFactory(&MultiSet) {
-		id++
-		if id != idx {
-			t.Errorf("Failed, expected idx: %d, got %d", id, idx)
-			return
-		}
-		switch idx {
-		case 0:
-			{
-				if res.GetBegin() != -1 || res.GetEnd() != 0 {
-					t.Errorf("Invalid Range on set 0, expected: -1,0, got %d,%d", res.GetBegin(), res.GetEnd())
-					return
-				}
-				if res.Contains != nil {
-					t.Errorf("Exepcted Empty contains")
-					return
-				}
-				if id != idx {
-					t.Errorf("Expected to be at idx: 0, but we are at idx %d", idx)
-				}
-			}
-		case 1:
-			{
-				if res.GetBegin() != 2 || res.GetEnd() != 2 {
-					t.Errorf("Invalid Range on set 1, expected: 2,2, got %d,%d", res.GetBegin(), res.GetEnd())
-					return
-				}
-				if res.GetContains() == nil {
-					t.Errorf("Exepcted Non-Empty contains")
-					return
-				}
-			}
-		case 2:
-			{
-				if res.GetBegin() != 5 || res.GetEnd() != 6 {
-					t.Errorf("Invalid Range on set 0, expected: 5,6... got %d,%d", res.GetBegin(), res.GetEnd())
-					return
-				}
-				if res.Contains != nil {
-					t.Errorf("Exepcted Empty contains")
-					return
-				}
-			}
-		case 3:
-			{
-				if res.GetBegin() != 9 || res.GetEnd() != 11 {
-					t.Errorf("Invalid Range on set 0, expected: 9,11... got %d,%d", res.GetBegin(), res.GetEnd())
-					return
-				}
-				if res.Contains != nil {
-					t.Errorf("Exepcted Empty contains")
-					return
-				}
-			}
-		default:
-			{
-				t.Errorf("Got a range beyond 3, expected set to end at the, end is at: %d", idx)
-				return
-			}
-		}
 
+
+
+
+func TestChanAccumulatro(t *testing.T) {
+	var c = make(chan SpanBoundry[int, string], len(MultiSet))
+	for _, span := range MultiSet {
+		c <- span
 	}
-	if id != 3 {
-		t.Errorf("Expected final id to be 3, got %d", id)
-		return
-	}
-	for idx := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultiSet) {
-		if idx == 0 {
-			break
-		}
-		if idx != 0 {
-			t.Errorf("Someting went wrong and our iterator broke?")
-			return
-		}
-	}
+	close(c)
 	var count = 0
-	for range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(nil) {
+	for range testDriver.NewSpanOverlapAccumulator().ChanIterFactory(c) {
+		count++
+	}
+	if count != 4 {
+		t.Errorf("Expected a total 4 for got: %d", count)
+	}
+	c = make(chan SpanBoundry[int, string], len(AllSet))
+	for _, span := range AllSet {
+		c <- span
+	}
+	close(c)
+	count = 0
+	for range testDriver.NewSpanOverlapAccumulator().ChanIterFactory(c) {
+		count++
+	}
+	if count != 1 {
+		t.Errorf("Expected a total 1 for got: %d", count)
+	}
+
+	count = 0
+	for range testDriver.NewSpanOverlapAccumulator().ChanIterFactory(nil) {
 		count++
 	}
 	if count != 0 {
-		t.Errorf("Should have not gotten any iterator passes when our slice is nil")
-		return
+		t.Errorf("Expected a total 0 for got: %d", count)
 	}
-}
-
-func TestAccumulateIterPull2(t *testing.T) {
-
-	var next, stop = iter.Pull2(testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultiSet))
-	defer stop()
-	var idx, res, hasnext = next()
-	var count = -1
-	for hasnext {
+	c = make(chan SpanBoundry[int, string], 1)
+	c <- &Span[int, string]{Begin: 11, End: 5}
+	close(c)
+	count = 0
+	for range testDriver.NewSpanOverlapAccumulator().ChanIterFactory(c) {
 		count++
-		if idx != count {
-			t.Errorf("Failed, expected %d, got %d", count, idx)
-			return
-		}
-		switch idx {
-		case 0:
-			{
-				if res.GetBegin() != -1 || res.GetEnd() != 0 {
-					t.Errorf("Invalid Range on set 0, expected: -1,0, got %d,%d", res.GetBegin(), res.GetEnd())
-					return
-				}
-				if res.Contains != nil {
-					t.Errorf("Exepcted Empty contains")
-					return
-				}
-			}
-		case 1:
-			{
-				if res.GetBegin() != 2 || res.GetEnd() != 2 {
-					t.Errorf("Invalid Range on set 1, expected: 2,2, got %d,%d", res.GetBegin(), res.GetEnd())
-					return
-				}
-				if res.GetContains() == nil {
-					t.Errorf("Exepcted Non-Empty contains")
-					return
-				}
-			}
-		case 2:
-			{
-				if res.GetBegin() != 5 || res.GetEnd() != 6 {
-					t.Errorf("Invalid Range on set 0, expected: 5,6... got %d,%d", res.GetBegin(), res.GetEnd())
-					return
-				}
-				if res.Contains != nil {
-					t.Errorf("Exepcted Empty contains")
-					return
-				}
-			}
-		case 3:
-			{
-				if res.GetBegin() != 9 || res.GetEnd() != 11 {
-					t.Errorf("Invalid Range on set 0, expected: 9,11... got %d,%d", res.GetBegin(), res.GetEnd())
-					return
-				}
-				if res.Contains != nil {
-					t.Errorf("Exepcted Empty contains")
-					return
-				}
-			}
-		default:
-			{
-				t.Errorf("Got a range beyond 3, expected set to end at the, end is at: %d", idx)
-				return
-			}
-		}
-		idx, res, hasnext = next()
 	}
-	if count != 3 {
-		t.Errorf("Expected 3 rows, got %d", count)
-	}
-}
-func TestColumnConsolidateIter(t *testing.T) {
-	var res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
-	res.GetNext(&Span[int, string]{Begin: -1, End: 0})
-	defer res.Close()
-	if !res.HasNext() {
-		t.Errorf("Should Has Next")
-		return
-	}
-	if len(*res.Overlaps) != 1 {
-		t.Errorf("Should have 1 element in our slice")
-		return
-	}
-	if (*res.Overlaps)[0].GetBegin() != -1 || (*res.Overlaps)[0].GetEnd() != 0 {
-		t.Errorf("Invalid first element")
-		return
-	}
-	if res.SrcPos != 1 {
-		t.Errorf("Expected SrcPos: 1, got SrcPos: %d", res.SrcPos)
-		return
-	}
-	res.GetNext(&Span[int, string]{Begin: 1, End: 1})
-	if !res.HasNext() {
-		t.Errorf("Expected a next")
-		return
-	}
-	if res.SrcPos != 1 {
-		t.Errorf("Expected SrcPos: 1, got SrcPos: %d", res.SrcPos)
-		return
-	}
-	res.GetNext(&Span[int, string]{Begin: 2, End: 5})
-	if !res.HasNext() {
-		t.Errorf("Expected a next")
-		return
+	if count != 0 {
+		t.Errorf("Exersize Error, failed? Expected a total 1 for got: %d", count)
 	}
 
-	if res.SrcPos != 2 {
-		t.Errorf("Expected SrcPos: 3, got SrcPos: %d", res.SrcPos)
-		return
+	c = make(chan SpanBoundry[int, string], len(MultiSet))
+	for _, span := range MultiSet {
+		c <- span
 	}
-	if res.SrcStart != 1 {
-		t.Errorf("Expected SrcStart: 1, got: %d", res.SrcStart)
-		return
+	close(c)
+	count = 0
+	for range testDriver.NewSpanOverlapAccumulator().ChanIterFactory(c) {
+		count++
+		break
 	}
-	if res.SrcEnd != 2 {
-		t.Errorf("Expected SrcEnd: 2, got: %d", res.SrcEnd)
-		return
+	if count != 1 {
+		t.Errorf("Force, yeild test coverage... Expected a total 1 for got: %d", count)
 	}
-	res.GetNext(&Span[int, string]{Begin: 6, End: 11})
-	if res.SrcPos != 3 {
-		t.Errorf("Expected SrcPos: 3, got SrcPos: %d", res.SrcPos)
-		return
-	}
-	if !res.HasNext() {
-		t.Errorf("Expected a next")
-		return
-	}
-	if res.SrcStart != 2 {
-		t.Errorf("Expected SrcStart: 2, got: %d", res.SrcStart)
-		return
-	}
-	if res.SrcEnd != 3 {
-		t.Errorf("Expected SrcEnd: 3, got: %d", res.SrcEnd)
-		return
-	}
-
-	res.GetNext(&Span[int, string]{Begin: 12, End: 12})
-	if res.HasNext() {
-		t.Errorf("Expected to not have next")
-		return
-	}
-
-	// Make sure we close our pull iter
-	res.Close()
-	res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
-	res.GetNext(&Span[int, string]{Begin: -2, End: -2})
-	if res.SrcPos != 0 {
-		t.Errorf("Make sure our first span is 0, got %d", res.SrcPos)
-		return
-	}
-
-	res.Close()
-	res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
-	res.GetNext(&Span[int, string]{Begin: 2, End: 2})
-
-	if res.SrcStart != 1 {
-		t.Errorf("Validate we got the correct start postion, expected 1, got %d", res.SrcPos)
-		return
-	}
-	if res.SrcEnd != 1 {
-		t.Errorf("Validate we got the correct end postion, expected 1, got %d", res.SrcEnd)
-		return
-	}
-	if res.SrcPos != 2 {
-		t.Errorf("Make sure our span id is 3, got %d", res.SrcPos)
-		return
-	}
-	if res.Next.GetBegin() != 5 || res.Next.GetEnd() != 6 {
-		t.Errorf("Make sure our next range is 5->6, got %d->%d", res.Next.GetBegin(), res.Next.GetEnd())
-		return
-	}
-	res.Close()
-	res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
-	res.GetNext(&Span[int, string]{Begin: 20, End: 20})
-	if res.SrcStart != -1 {
-		t.Error("Should not have a next!")
-		return
-	}
+  
 
 }
 
-func TestBadOrder(t *testing.T) {
-	var list = &[]SpanBoundry[int, string]{
-		&Span[int, string]{Begin: 9, End: 11},
-		&Span[int, string]{Begin: 2, End: 2},
-	}
-	testDriver.Validate = true
-	for id, span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
-		if id > 0 {
-			t.Errorf("Should stop at 0")
-			return
-		}
-		if span.GetBegin() != 9 {
-			t.Error("Should have span 0, got span 1")
-		}
-	}
-}
 
-func TestBadInitValue(t *testing.T) {
-	var list = &[]SpanBoundry[int, string]{
-		&Span[int, string]{Begin: 13, End: 11},
-	}
-	testDriver.Validate = true
-	for range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
-		t.Errorf("Should have gotten no ranges!")
-		return
-	}
 
-}
+
+

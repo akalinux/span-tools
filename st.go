@@ -30,6 +30,28 @@ type Span[E any, T any] struct {
 	Tag *T
 }
 
+// Pure pointer Span struct
+type SpanRef[E any, T any] struct {
+	// Start of the Span.
+	Begin *E
+	// End of the Span.
+	End *E
+	// Pointer to data set used to identify this SpanRef[E,T]
+	Tag *T
+}
+
+func (s *SpanRef[E, T]) GetTag() *T {
+	return s.Tag
+}
+
+func (s *SpanRef[E, T]) GetBegin() E {
+	return *s.Begin
+}
+
+func (s *SpanRef[E, T]) GetEnd() E {
+	return *s.End
+}
+
 type SpanBoundry[E any, T any] interface {
 	// Returns the Begin value.
 	GetBegin() E
@@ -41,14 +63,17 @@ type SpanBoundry[E any, T any] interface {
 	GetTag() *T
 }
 
+// Returns a pointer to the current tag value
 func (s *Span[E, T]) GetTag() *T {
 	return s.Tag
 }
 
+// Returns the Begin value
 func (s *Span[E, T]) GetBegin() E {
 	return s.Begin
 }
 
+// Returns the End value
 func (s *Span[E, T]) GetEnd() E {
 	return s.End
 }
@@ -65,6 +90,12 @@ type OverlappingSpanSets[E any, T any] struct {
 	// When nil, Span is the only value representing this Span.
 	// When not nill, contains all the Spans acumulated to create this instance.
 	Contains *[]SpanBoundry[E, T]
+
+	// Starting position in the original data set
+	SrcBegin int
+
+	// Ending position in the original data set
+	SrcEnd int
 }
 
 type SpanOverlapBounds[E any, T any] interface {
@@ -238,6 +269,7 @@ func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, 
 		Validate: s.Validate,
 		SpanUtil: s,
 		Rss:      &OverlappingSpanSets[E, T]{Contains: nil, Span: nil},
+		Pos:      -1,
 	}
 }
 
@@ -249,7 +281,6 @@ func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, 
 func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundry[E, T]) *OverlappingSpanSets[E, T] {
 	s.Pos++
 	if s.Validate {
-
 		s.Err = s.Check(span, s.Rss.Span)
 	}
 
@@ -260,7 +291,12 @@ func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundry[E, T]) *Overl
 
 	a := s.Rss.Span
 	if s.Cmp(a.GetEnd(), span.GetBegin()) < 0 {
-		s.Rss = &OverlappingSpanSets[E, T]{Span: span, Contains: nil}
+		s.Rss = &OverlappingSpanSets[E, T]{
+			Span:     span,
+			Contains: nil,
+			SrcBegin: s.Pos,
+			SrcEnd:   s.Pos,
+		}
 	} else {
 		x, y := s.ContainedBy(a, span)
 		if x|y != 0 {
@@ -273,34 +309,117 @@ func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundry[E, T]) *Overl
 			}
 			s.Rss.Span = &r
 		}
+
 		if s.Rss.Contains == nil {
 			s.Rss.Contains = &[]SpanBoundry[E, T]{a, span}
 		} else {
 			*s.Rss.Contains = append(*s.Rss.Contains, span)
 		}
+		s.Rss.SrcEnd = s.Pos
 	}
 	return s.Rss
 }
 
+// Generates a iter.Seq2 iterator, for a chanel.
+func (s *SpanOverlapAccumulator[E, T]) ChanIterFactory(c <-chan SpanBoundry[E, T]) iter.Seq2[int, *OverlappingSpanSets[E, T]] {
+	var sa = s.SpanStatefulAccumulator()
+	if c != nil {
+		var span, ok = <-c
+		for ok {
+			if sa.SetNext(span) {
+				break
+			}
+			span, ok = <-c
+		}
+	}
+	return func(yeild func(int, *OverlappingSpanSets[E, T]) bool) {
+		// no chan??? stop here
+		if !sa.HasNext() {
+			return
+		}
+
+		for {
+			if s.Err != nil {
+				return
+			}
+			if sa.HasNext() {
+				var id, current = sa.GetNext()
+				if !yeild(id, current) {
+					return
+				}
+				var span, ok = <-c
+				for ok {
+					if sa.SetNext(span) {
+						break
+					}
+					span, ok = <-c
+				}
+			} else {
+				return
+			}
+		}
+	}
+}
+
+type SpanIterSeq2Stater[E any, T any] struct {
+	Current *OverlappingSpanSets[E, T]
+	Next    *OverlappingSpanSets[E, T]
+	Sa      *SpanOverlapAccumulator[E, T]
+	Id      int
+}
+
+func (s *SpanIterSeq2Stater[E, T]) SetNext(span SpanBoundry[E, T]) bool {
+	var cmp = s.Sa.Accumulate(span)
+	if s.Current == nil {
+		s.Current = cmp
+		return false
+	}
+	if s.Current == cmp {
+		return false
+	}
+	s.Next = cmp
+	return true
+}
+
+func (s *SpanIterSeq2Stater[E, T]) HasNext() bool {
+	return s.Current != nil
+}
+
+func (s *SpanIterSeq2Stater[E, T]) GetNext() (int, *OverlappingSpanSets[E, T]) {
+	var next = s.Current
+	s.Current = s.Next
+	s.Next = nil
+	s.Id++
+
+	return s.Id, next
+}
+
+func (s *SpanOverlapAccumulator[E, T]) SpanStatefulAccumulator() *SpanIterSeq2Stater[E, T] {
+	var si = &SpanIterSeq2Stater[E, T]{
+		Sa:      s,
+		Current: nil,
+		Next:    nil,
+		Id:      -1,
+	}
+	return si
+}
+
 // Factory interface for converting slices of SpanBoundaries instances into iterator sequences of OverlappingSpanSets.
 func (s *SpanOverlapAccumulator[E, T]) SliceIterFactory(list *[]SpanBoundry[E, T]) iter.Seq2[int, *OverlappingSpanSets[E, T]] {
-	var id int = 0
-	var current *OverlappingSpanSets[E, T] = nil
-	var next *OverlappingSpanSets[E, T] = nil
 	var end = -1
-	var pos = 1
+	var pos = 0
+	var au = s.SpanStatefulAccumulator()
 	if list != nil {
 		if s.Sort {
 			slices.SortFunc(*list, s.Compare)
 		}
 		end = len(*list)
-		current = s.Accumulate((*list)[0])
 		for pos < end {
-			next = s.Accumulate((*list)[pos])
-			pos++
-			if next != current {
+			if au.SetNext((*list)[pos]) {
+				pos++
 				break
 			}
+			pos++
 		}
 	}
 
@@ -314,22 +433,22 @@ func (s *SpanOverlapAccumulator[E, T]) SliceIterFactory(list *[]SpanBoundry[E, T
 			if s.Err != nil {
 				return
 			}
-			if !yeild(id, current) {
+			if au.HasNext() {
+				var id, current = au.GetNext()
+				if !yeild(id, current) {
+					return
+				}
+			} else {
 				return
 			}
 
 			for pos < end {
-				next = s.Accumulate((*list)[pos])
-				pos++
-				if next != current {
+				if au.SetNext((*list)[pos]) {
+					pos++
 					break
 				}
+				pos++
 			}
-			if current == next {
-				return
-			}
-			current = next
-			id++
 		}
 	}
 }
