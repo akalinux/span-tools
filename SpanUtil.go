@@ -158,8 +158,8 @@ func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, 
 //
 // # Warning
 //
-// This methos creates an [iter.Pull2] and exposes the resulting functions in the returned reference. If you are using this methos outside of the normal
-// operations, you should a setup a defer call to  SpanOverlapAccumulator[E, T].Close() method to clean the instance up in order to prevent memory leaks or undefined behavior.
+// This methos creates an [iter.Pull2] and exposes the resulting functions in the returned struct pointer. If you are using this method outside of the normal
+// operations, you should a setup a defer call to  ColumnOverlapAccumulator[E, T].Close() method to clean the instance up in order to prevent memory leaks or undefined behavior.
 //
 // [iter.Pull2]: https://pkg.go.dev/iter#hdr-Pulling_Values
 func (s *SpanUtil[E, T]) ColumnOverlapFactory(driver iter.Seq2[int, *OverlappingSpanSets[E, T]]) *ColumnOverlapAccumulator[E, T] {
@@ -167,7 +167,7 @@ func (s *SpanUtil[E, T]) ColumnOverlapFactory(driver iter.Seq2[int, *Overlapping
 	return s.ColumnOverlapFactoryBuilder(next, stop)
 }
 
-// This method takes the next and stop functions and creates a new fully initalized instance of SpanOverlapColumnAccumulator[E, T].
+// This method takes the next and stop functions and creates a new fully initalized instance of ColumnOverlapAccumulator[E, T].
 func (s *SpanUtil[E, T]) ColumnOverlapFactoryBuilder(next func() (int, *OverlappingSpanSets[E, T], bool), stop func()) *ColumnOverlapAccumulator[E, T] {
 	var res = &ColumnOverlapAccumulator[E, T]{}
 	res.ItrStop = stop
@@ -179,8 +179,11 @@ func (s *SpanUtil[E, T]) ColumnOverlapFactoryBuilder(next func() (int, *Overlapp
 	return res
 }
 
-// This is a convenience method for initalizing the iter.Seq2 stater internals based on a slice of SpanBoundry.
-func (s *SpanUtil[E, T]) ColumnOverlapSliceFactory(list *[]SpanBoundry[E, T]) *ColumnOverlapAccumulator[E, T] {
-	return s.ColumnOverlapFactory(s.NewSpanOverlapAccumulator().SliceIterFactory(list))
+func (s *SpanUtil[E, T]) NewColumnSets() *ColumnSets[E,T] {
+	return &ColumnSets[E, T]{
+		Columns: &[]*ColumnOverlapAccumulator[E,T]{},
+		Active: &[]bool{},
+		Util: s,
+	}
 }
 

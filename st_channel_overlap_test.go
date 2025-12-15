@@ -19,12 +19,23 @@ func TestOverlapChannel(t *testing.T) {
 	for id, value := range ac.ChanIterFactoryOverlaps(ch) {
 		count++
 		if list[id] != value {
-			t.Errorf("Error, wrong object ref??")
+			t.Errorf("Error, wrong object ref in chan iter??")
 			return
 		}
 	}
 	if count != len(list) {
-		t.Errorf("Iterator count mismatch??")
+		t.Errorf("Iterator count mismatch in chan iter??")
 	}
-
+	var itb=testDriver.NewSpanOverlapAccumulator().SliceIterFactoryOverlaps(&list);
+  count=0
+	for id, value := range itb  {
+		count++
+		if list[id] != value {
+			t.Errorf("Error, wrong object ref in slice iter??")
+			return
+		}
+	}
+	if count != len(list) {
+		t.Errorf("Iterator count mismatch in slice iter??")
+	}
 }
