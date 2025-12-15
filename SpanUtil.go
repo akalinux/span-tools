@@ -3,15 +3,28 @@ package st
 import (
 	"cmp"
 	"errors"
+	"iter"
 )
 
 // Core of the span utilties: Provides methos for processing ranges.
+// Its recommended that an instance of this structure be created via the constructor util methods such as NewSpanUtil(Cmp) or NewOrderedSpanUtil(),
 type SpanUtil[E any, T any] struct {
+	
+	// Compare function.  This function should be atomic and be able t compare the E type by return -1,0,1.
 	Cmp         func(a, b E) int
+	
+	// Turns validation on for new child objects created.
 	Validate    bool
+	
+	// Denots if a tag is required, when true tag values cannot be nil.
 	TagRequired bool
 }
 
+// This method is used to verify the sanyty of the next and current value.
+// The comparison operation is performed in 2 stages:
+// 1. next.GetBegin() must be less than or equal to next.GetEnd().
+// 2. When the current value is not nil, then next must come after current.
+// Returns nil when checks pass, the error is not nill when checks fail.
 func (s *SpanUtil[E, T]) Check(next, current SpanBoundry[E, T]) error {
 
 	if s.Cmp(next.GetBegin(), next.GetEnd()) > 0 {
@@ -101,8 +114,8 @@ func (s *SpanUtil[E, T]) FirstSpan(list *[]SpanBoundry[E, T]) *Span[E, T] {
 }
 
 // This method acts as a stateless iterator that,
-// returns the next overlapping Span[E,T] or nill based on the start Span[E,T] and the slice of spans.
-// If all valid Span[E,T] values have been exausted, nil is returned.
+// returns the next overlapping Span[E,T] or nill based on the start SpanBoundry[E,T] and the slice of spans.
+// If all valid SpanBoundry[E,T] values have been exausted, nil is returned.
 func (s *SpanUtil[E, T]) NextSpan(start SpanBoundry[E, T], list *[]SpanBoundry[E, T]) *Span[E, T] {
 	var begin *E = nil
 	var end *E = nil
@@ -139,5 +152,35 @@ func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, 
 		Rss:      &OverlappingSpanSets[E, T]{Contains: nil, Span: nil},
 		Pos:      -1,
 	}
+}
+
+// This method takes a iter.Seq2 iterator of OverlappingSpanSets and initalizes the ColumnOverlapAccumulator struct.
+//
+// # Warning
+//
+// This methos creates an [iter.Pull2] and exposes the resulting functions in the returned reference. If you are using this methos outside of the normal
+// operations, you should a setup a defer call to  SpanOverlapAccumulator[E, T].Close() method to clean the instance up in order to prevent memory leaks or undefined behavior.
+//
+// [iter.Pull2]: https://pkg.go.dev/iter#hdr-Pulling_Values
+func (s *SpanUtil[E, T]) ColumnOverlapFactory(driver iter.Seq2[int, *OverlappingSpanSets[E, T]]) *ColumnOverlapAccumulator[E, T] {
+	var next, stop = iter.Pull2(driver)
+	return s.ColumnOverlapFactoryBuilder(next, stop)
+}
+
+// This method takes the next and stop functions and creates a new fully initalized instance of SpanOverlapColumnAccumulator[E, T].
+func (s *SpanUtil[E, T]) ColumnOverlapFactoryBuilder(next func() (int, *OverlappingSpanSets[E, T], bool), stop func()) *ColumnOverlapAccumulator[E, T] {
+	var res = &ColumnOverlapAccumulator[E, T]{}
+	res.ItrStop = stop
+	res.ItrGetNext = next
+	res.Util = s
+	var id, current, _ = res.ItrGetNext()
+	res.SrcPos = id
+	res.Next = current
+	return res
+}
+
+// This is a convenience method for initalizing the iter.Seq2 stater internals based on a slice of SpanBoundry.
+func (s *SpanUtil[E, T]) ColumnOverlapSliceFactory(list *[]SpanBoundry[E, T]) *ColumnOverlapAccumulator[E, T] {
+	return s.ColumnOverlapFactory(s.NewSpanOverlapAccumulator().SliceIterFactory(list))
 }
 

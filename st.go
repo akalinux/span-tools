@@ -7,7 +7,10 @@
 // # How this package works
 //
 // Spans in this package are expected to contain a Begin and End value. The Begin and End values should be
-// comparable with a cmp function, see the go standard [cmp.Compare] function for more details.  The only constraint on the data sets are that the Begin value is required to be less than or equal to the End value.
+// comparable with a cmp function, see the go standard [cmp.Compare] function for more details.  
+// 
+// The only constraints on the this package that the Begin value is required to be less than or equal to the End value
+// and the Cmp function should be atomic or your code will not be thread safe.
 //
 // [cmp.Compare]: https://pkg.go.dev/cmp#Compare
 package st

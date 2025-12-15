@@ -4,6 +4,18 @@ import (
 	"iter"
 	"slices"
 )
+// This is a stater structure, used to driverthe creation of new OverlappingSpanSets.
+type SpanOverlapAccumulator[E any, T any] struct {
+	Rss *OverlappingSpanSets[E, T]
+	*SpanUtil[E, T]
+	// When true slices passed in will be sorted.
+	Sort     bool
+	Err      error
+	Pos      int
+	Validate bool
+}
+
+
 
 // The Accumulate method.
 //
@@ -52,7 +64,29 @@ func (s *SpanOverlapAccumulator[E, T]) Accumulate(span SpanBoundry[E, T]) *Overl
 	return s.Rss
 }
 
-// Generates a iter.Seq2 iterator, for a chanel.
+// Creates a channel iteraotr for channels of OverlappingSpanSets.
+func (s *SpanOverlapAccumulator[E, T]) ChanIterFactoryOverlaps(c <-chan *OverlappingSpanSets[E, T]) iter.Seq2[int, *OverlappingSpanSets[E, T]] {
+
+	if c == nil {
+		return func(yeild func(int, *OverlappingSpanSets[E, T]) bool) {
+		}
+	}
+	var i = 0
+	return func(yeild func(int, *OverlappingSpanSets[E, T]) bool) {
+		var ol, ok = <-c
+		for ok {
+
+			if !yeild(i, ol) {
+				return
+			}
+			i++
+		  ol, ok = <-c
+		}
+
+	}
+}
+
+// Generates a iter.Seq2 iterator, for a channel of SpanBoundry instances.
 func (s *SpanOverlapAccumulator[E, T]) ChanIterFactory(c <-chan SpanBoundry[E, T]) iter.Seq2[int, *OverlappingSpanSets[E, T]] {
 	var sa = s.SpanStatefulAccumulator()
 	if c != nil {
@@ -152,113 +186,6 @@ func (s *SpanOverlapAccumulator[E, T]) SliceIterFactory(list *[]SpanBoundry[E, T
 	}
 }
 
-// This method takes a iter.Seq2 iterator of OverlappingSpanSets and initalizes the SpanOverlapAccumulator struct.
-//
-// # Warning
-//
-// This methos creates an [iter.Pull2] and exposes the resulting functions in the returned reference. If you are using this methos outside of the normal
-// operations, you should a setup a defer call to  SpanOverlapAccumulator[E, T].Close() method to clean the instance up in order to prevent memory leaks or undefined behavior.
-//
-// [iter.Pull2]: https://pkg.go.dev/iter#hdr-Pulling_Values
-func (s *SpanOverlapAccumulator[E, T]) ColumnOverlapFactory(driver iter.Seq2[int, *OverlappingSpanSets[E, T]]) *SpanOverlapColumnAccumulator[E, T] {
-	var next, stop = iter.Pull2(driver)
-	return s.Init(next, stop)
-}
 
-// This method takes the next and stop functions and creates a new fully initalized instance of SpanOverlapColumnAccumulator[E, T].
-func (s *SpanOverlapAccumulator[E, T]) Init(next func() (int, *OverlappingSpanSets[E, T], bool), stop func()) *SpanOverlapColumnAccumulator[E, T] {
-	var res = &SpanOverlapColumnAccumulator[E, T]{}
-	res.ItrStop = stop
-	res.ItrGetNext = next
-	res.Util = s.SpanUtil
-	var id, current, _ = res.ItrGetNext()
-	res.SrcPos = id
-	res.Next = current
-	return res
-}
 
-// This is a convenience method for initalizing the iter.Seq2 stater internals based on a slice of SpanBoundry.
-func (s *SpanOverlapAccumulator[E, T]) ColumnOverlapSliceFactory(list *[]SpanBoundry[E, T]) *SpanOverlapColumnAccumulator[E, T] {
-	return s.ColumnOverlapFactory(s.SliceIterFactory(list))
-}
 
-// Contains the current iterator control functions and represents the column position in the iterator process.
-type SpanOverlapColumnAccumulator[E any, T any] struct {
-	// Representation of the data that intersected with an SpanBoundry passed to GetNext.
-	// A value of nil means no data overlaps.
-	Overlaps *[]*OverlappingSpanSets[E, T]
-
-	// Where Overlaps begins relative to our OverlappingSpanSets[E,T] iteration.
-	// A value of -1 means there was no overlap with the last SpanBoundry[E,T] compared.
-	SrcStart int
-	// Where Overlaps ends relative to our OverlappingSpanSets[E,T] iteration.
-	// A value of -1 means there was no overlap with the last SpanBoundry[E,T] compared.
-	SrcEnd int
-
-	// Span utility instance
-	Util *SpanUtil[E, T]
-
-	// The iter.Pull2 "next" method generated from the iter.Seq2 instance.
-	ItrGetNext func() (int, *OverlappingSpanSets[E, T], bool)
-	// The iter.Pull2 "stop" method generated from the iter.Seq2 instance.
-	ItrStop func()
-
-	// The next set to operate on, when nil.
-	Next *OverlappingSpanSets[E, T]
-
-	// Denotes where we are in the orginal OverlappingSpanSets[E,T] instance.
-	SrcPos int
-}
-
-// Returns true if there are more elements in this column.
-func (s *SpanOverlapColumnAccumulator[E, T]) HasNext() bool {
-	return s.Next != nil
-}
-
-// This method is used to call the stop method of the iter.Pull2 iterator method.
-// If you are managing an instance of SpanOverlapColumnAccumulator[E,T] on your own, make sure
-// to setup a defer SpanOverlapColumnAccumulator[E,T].Close() to ensure your code does not leak memory
-// or run into undefined behaviors.
-func (s *SpanOverlapColumnAccumulator[E, T]) Close() {
-	if s.ItrStop != nil {
-		s.ItrStop()
-	}
-}
-
-// This method updates the currrent SpanOverlapColumnAccumulator[E, T] to represent what data intersects with the overlap SpanBoundry[E,T].
-func (s *SpanOverlapColumnAccumulator[E, T]) GetNext(overlap SpanBoundry[E, T]) {
-	s.Overlaps = &[]*OverlappingSpanSets[E, T]{}
-	var id = s.SrcPos
-	var current = s.Next
-	var hasnext = current != nil
-	var u = *s.Util
-	s.SrcPos = -1
-	s.SrcStart = -1
-
-	for hasnext {
-		s.SrcPos = id
-		s.Next = current
-		if u.Overlap(overlap, current) {
-			if s.SrcStart == -1 {
-				s.SrcStart = id
-			}
-			s.SrcEnd = id
-			*s.Overlaps = append(*s.Overlaps, current)
-			if u.Cmp(current.GetEnd(), overlap.GetEnd()) > 0 {
-				return
-			}
-		} else if u.Cmp(current.GetBegin(), overlap.GetEnd()) > 0 {
-			// current is after next, then we are done!
-			return
-		}
-		id, current, hasnext = s.ItrGetNext()
-
-		if !hasnext {
-			if s.SrcStart == -1 {
-				s.Next = nil
-				s.SrcPos = -1
-			}
-			return
-		}
-	}
-}
