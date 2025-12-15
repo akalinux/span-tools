@@ -41,14 +41,5 @@ func (s *OverlappingSpanSets[E, T]) GetEnd() E {
 	return s.Span.GetEnd()
 }
 
-// This is a stater structure, used to driverthe creation of new OverlappingSpanSets.
-type SpanOverlapAccumulator[E any, T any] struct {
-	Rss *OverlappingSpanSets[E, T]
-	*SpanUtil[E, T]
-	// When true slices passed in will be sorted.
-	Sort     bool
-	Err      error
-	Pos      int
-	Validate bool
-}
+
 

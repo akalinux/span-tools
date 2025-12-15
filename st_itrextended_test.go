@@ -266,7 +266,7 @@ func TestSpanIterFactory(t *testing.T) {
 
 func TestColumnConsolidateIter(t *testing.T) {
   var res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
-  res.GetNext(&Span[int, string]{Begin: -1, End: 0})
+  res.SetNext(&Span[int, string]{Begin: -1, End: 0})
   defer res.Close()
   if !res.HasNext() {
     t.Errorf("Should Has Next")
@@ -284,7 +284,7 @@ func TestColumnConsolidateIter(t *testing.T) {
     t.Errorf("Expected SrcPos: 1, got SrcPos: %d", res.SrcPos)
     return
   }
-  res.GetNext(&Span[int, string]{Begin: 1, End: 1})
+  res.SetNext(&Span[int, string]{Begin: 1, End: 1})
   if !res.HasNext() {
     t.Errorf("Expected a next")
     return
@@ -293,7 +293,7 @@ func TestColumnConsolidateIter(t *testing.T) {
     t.Errorf("Expected SrcPos: 1, got SrcPos: %d", res.SrcPos)
     return
   }
-  res.GetNext(&Span[int, string]{Begin: 2, End: 5})
+  res.SetNext(&Span[int, string]{Begin: 2, End: 5})
   if !res.HasNext() {
     t.Errorf("Expected a next")
     return
@@ -311,7 +311,7 @@ func TestColumnConsolidateIter(t *testing.T) {
     t.Errorf("Expected SrcEnd: 2, got: %d", res.SrcEnd)
     return
   }
-  res.GetNext(&Span[int, string]{Begin: 6, End: 11})
+  res.SetNext(&Span[int, string]{Begin: 6, End: 11})
   if res.SrcPos != 3 {
     t.Errorf("Expected SrcPos: 3, got SrcPos: %d", res.SrcPos)
     return
@@ -329,7 +329,7 @@ func TestColumnConsolidateIter(t *testing.T) {
     return
   }
 
-  res.GetNext(&Span[int, string]{Begin: 12, End: 12})
+  res.SetNext(&Span[int, string]{Begin: 12, End: 12})
   if res.HasNext() {
     t.Errorf("Expected to not have next")
     return
@@ -338,7 +338,7 @@ func TestColumnConsolidateIter(t *testing.T) {
   // Make sure we close our pull iter
   res.Close()
   res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
-  res.GetNext(&Span[int, string]{Begin: -2, End: -2})
+  res.SetNext(&Span[int, string]{Begin: -2, End: -2})
   if res.SrcPos != 0 {
     t.Errorf("Make sure our first span is 0, got %d", res.SrcPos)
     return
@@ -346,7 +346,7 @@ func TestColumnConsolidateIter(t *testing.T) {
 
   res.Close()
   res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
-  res.GetNext(&Span[int, string]{Begin: 2, End: 2})
+  res.SetNext(&Span[int, string]{Begin: 2, End: 2})
 
   if res.SrcStart != 1 {
     t.Errorf("Validate we got the correct start postion, expected 1, got %d", res.SrcPos)
@@ -366,7 +366,7 @@ func TestColumnConsolidateIter(t *testing.T) {
   }
   res.Close()
   res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(&MultiSet)
-  res.GetNext(&Span[int, string]{Begin: 20, End: 20})
+  res.SetNext(&Span[int, string]{Begin: 20, End: 20})
   if res.SrcStart != -1 {
     t.Error("Should not have a next!")
     return
