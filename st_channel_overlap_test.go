@@ -4,12 +4,18 @@ import (
 	"testing"
 )
 
-func TestOverlapChannel(t *testing.T) {
+func MakeOverlapTestList() *[]*OverlappingSpanSets[int,string] {
 	var ac = testDriver.NewSpanOverlapAccumulator()
 	var list = []*OverlappingSpanSets[int, string]{}
 	for _, ol := range ac.SliceIterFactory(&MultMultiiSet) {
 		list = append(list, ol)
 	}
+	return &list
+}
+
+func TestOverlapChannel(t *testing.T) {
+	var ac = testDriver.NewSpanOverlapAccumulator()
+	var list =*MakeOverlapTestList() 
 	ch := make(chan *OverlappingSpanSets[int, string], len(list))
 	for _, ol := range list {
 		ch <- ol
@@ -26,8 +32,63 @@ func TestOverlapChannel(t *testing.T) {
 	if count != len(list) {
 		t.Errorf("Iterator count mismatch in chan iter??")
 	}
+}
+func TestBreakLoopOverlapChannel(t *testing.T) {
+	var ac = testDriver.NewSpanOverlapAccumulator()
+	var list =*MakeOverlapTestList() 
+	ch := make(chan *OverlappingSpanSets[int, string], len(list))
+	for _, ol := range list {
+		ch <- ol
+	}
+	close(ch)
+	var count = 0
+	for range ac.ChanIterFactoryOverlaps(ch) {
+		count++
+		break
+	}
+	if count != 1 {
+		t.Errorf("Iterator count mismatch in chan iter??")
+	}
+}
+func TestNilOverlapChannel(t *testing.T) {
+	var itb=testDriver.NewSpanOverlapAccumulator().ChanIterFactoryOverlaps(nil);
+	var count=0
+	for  range itb  {
+	  count++
+	}
+	if(count!=0) {
+		t.Error("Should Not get any elements in our loop")
+	}
+}
+func TestNilOverlapSlice(t *testing.T) {
+	var itb=testDriver.NewSpanOverlapAccumulator().SliceIterFactoryOverlaps(nil);
+
+  var count=0
+	for  range itb  {
+	  count++
+  }
+	if(count!=0) {
+		t.Error("Should Not get any elements in our loop")
+	}
+}
+
+func TestBreakLoopOverlapSlice(t *testing.T) {
+	var list =*MakeOverlapTestList() 
 	var itb=testDriver.NewSpanOverlapAccumulator().SliceIterFactoryOverlaps(&list);
-  count=0
+  var count=0
+	for range itb  {
+		count++
+		break
+	}
+	if count != 1 {
+		t.Errorf("Iterator count mismatch in slice iter??")
+	}
+}
+
+func TestOverlapSlice(t *testing.T) {
+	var list =*MakeOverlapTestList() 
+	var itb=testDriver.NewSpanOverlapAccumulator().SliceIterFactoryOverlaps(&list);
+  var count=0
 	for id, value := range itb  {
 		count++
 		if list[id] != value {

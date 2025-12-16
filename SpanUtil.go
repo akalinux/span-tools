@@ -9,13 +9,13 @@ import (
 // Core of the span utilties: Provides methos for processing ranges.
 // Its recommended that an instance of this structure be created via the constructor util methods such as NewSpanUtil(Cmp) or NewOrderedSpanUtil(),
 type SpanUtil[E any, T any] struct {
-	
+
 	// Compare function.  This function should be atomic and be able t compare the E type by return -1,0,1.
-	Cmp         func(a, b E) int
-	
+	Cmp func(a, b E) int
+
 	// Turns validation on for new child objects created.
-	Validate    bool
-	
+	Validate bool
+
 	// Denots if a tag is required, when true tag values cannot be nil.
 	TagRequired bool
 }
@@ -113,37 +113,6 @@ func (s *SpanUtil[E, T]) FirstSpan(list *[]SpanBoundry[E, T]) *Span[E, T] {
 	return span
 }
 
-// This method acts as a stateless iterator that,
-// returns the next overlapping Span[E,T] or nill based on the start SpanBoundry[E,T] and the slice of spans.
-// If all valid SpanBoundry[E,T] values have been exausted, nil is returned.
-func (s *SpanUtil[E, T]) NextSpan(start SpanBoundry[E, T], list *[]SpanBoundry[E, T]) *Span[E, T] {
-	var begin *E = nil
-	var end *E = nil
-
-	for _, check := range *list {
-		if begin == nil {
-			if s.Cmp(check.GetBegin(), start.GetEnd()) > 0 {
-				begin = s.GetP(check.GetBegin())
-				end = s.GetP(check.GetEnd())
-			} else if s.Cmp(check.GetEnd(), start.GetEnd()) > 0 {
-				begin = s.GetP(check.GetEnd())
-				end = s.GetP(check.GetEnd())
-			}
-		} else {
-			if s.Cmp(check.GetBegin(), start.GetEnd()) > 0 && s.Cmp(*begin, check.GetBegin()) > 0 {
-				begin = s.GetP(check.GetBegin())
-			}
-			if s.Cmp(*begin, check.GetEnd()) < 1 && s.Cmp(check.GetEnd(), start.GetEnd()) > 0 && s.Cmp(*end, check.GetEnd()) > 0 {
-				end = s.GetP(check.GetEnd())
-			}
-		}
-	}
-	if begin != nil {
-		return &Span[E, T]{Begin: *begin, End: *end}
-	}
-	return nil
-}
-
 // Factory interface for the creation of SpanOverlapAccumulator[E,T].
 func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, T] {
 	return &SpanOverlapAccumulator[E, T]{
@@ -173,17 +142,70 @@ func (s *SpanUtil[E, T]) ColumnOverlapFactoryBuilder(next func() (int, *Overlapp
 	res.ItrStop = stop
 	res.ItrGetNext = next
 	res.Util = s
-	var id, current, _ = res.ItrGetNext()
-	res.SrcPos = id
-	res.Next = current
+	var id, current, ok = res.ItrGetNext()
+	if ok {
+		res.SrcPos = id
+		res.Next = current
+	}
 	return res
 }
 
-func (s *SpanUtil[E, T]) NewColumnSets() *ColumnSets[E,T] {
+func (s *SpanUtil[E, T]) NewColumnSets() *ColumnSets[E, T] {
 	return &ColumnSets[E, T]{
-		Columns: &[]*ColumnOverlapAccumulator[E,T]{},
-		Active: &[]bool{},
-		Util: s,
+		Columns: &[]*ColumnOverlapAccumulator[E, T]{},
+		Active:  &[]bool{},
+		Util:    s,
 	}
 }
 
+func (s *SpanUtil[E, T]) GetNextBegin(current E, list *[]SpanBoundry[E, T]) *E {
+	var next *E = nil
+	for _, span := range *list {
+		var cmp = s.Cmp(span.GetBegin(), current)
+		if next == nil {
+			if cmp > 0 {
+				next = s.GetP(span.GetBegin())
+			}
+		} else if cmp > 0 && s.Cmp(span.GetBegin(), *next) < 0 {
+			next = s.GetP(span.GetBegin())
+		}
+	}
+	return next
+}
+
+func (s *SpanUtil[E, T]) GetNextEnd(current E, list *[]SpanBoundry[E, T]) *E {
+	var next *E = nil
+	for _, span := range *list {
+		var cmp = s.Cmp(span.GetEnd(), current)
+		if next == nil {
+			if cmp > 0 {
+				next = s.GetP(span.GetEnd())
+			}
+		} else if cmp > 0 && s.Cmp(span.GetEnd(), *next) < 0 {
+			next = s.GetP(span.GetEnd())
+		}
+	}
+	return next
+}
+
+// This method acts as a stateless iterator that,
+// returns the next overlapping Span[E,T] or nill based on the start SpanBoundry[E,T] and the slice of spans.
+// If all valid SpanBoundry[E,T] values have been exausted, nil is returned.
+func (s *SpanUtil[E, T]) NextSpan(start SpanBoundry[E, T], list *[]SpanBoundry[E, T]) *Span[E, T] {
+	var begin *E = s.GetNextBegin(start.GetEnd(), list)
+	var end *E = s.GetNextEnd(start.GetEnd(), list)
+
+	if begin != nil {
+		var nextEnd *E = s.GetNextBegin(*begin, list)
+		if nextEnd != nil {
+			if s.Cmp(*nextEnd, *end) < 0 {
+				end = nextEnd
+			}
+		}
+
+		return &Span[E, T]{Begin: *begin, End: *end}
+	} else if end != nil {
+		return &Span[E, T]{Begin: start.GetEnd(), End: *end}
+	}
+	return nil
+}
