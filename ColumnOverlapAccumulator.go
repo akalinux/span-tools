@@ -30,39 +30,6 @@ type ColumnOverlapAccumulator[E any, T any] struct {
 	Closed bool
 }
 
-type ResolvedColumn[E any, T any] interface {
-	SpanBoundry[E,T]
-	GetOverlaps() *[]*OverlappingSpanSets[E, T]
-	GetOverLapStart() int
-	GetOverlapEnd() int
-}
-
-
-func (s *ColumnOverlapAccumulator[E, T]) GetOverlapStart() int {
-	return s.SrcPos
-}
-
-func (s *ColumnOverlapAccumulator[E, T]) GetOverlapEnd() int {
-	return s.SrcEnd
-}
-
-func (s *ColumnOverlapAccumulator[E, T]) GetOverlaps() *[]*OverlappingSpanSets[E,T] {
-	return s.Overlaps
-}
-
-// Interface Implementation Method
-func (s *ColumnOverlapAccumulator[E, T]) GetBegin() E {
-	return s.Next.GetBegin()
-}
-
-func (s *ColumnOverlapAccumulator[E, T]) GetEnd() E {
-	return s.Next.GetEnd()
-}
-
-func (s *ColumnOverlapAccumulator[E, T]) GetTag() *T {
-	return s.Next.GetTag()
-}
-
 
 // Returns true if there are more elements in this column.
 func (s *ColumnOverlapAccumulator[E, T]) HasNext() bool {
