@@ -4,9 +4,9 @@ import (
 	"testing"
 )
 
-func MakeOverlapTestList() *[]*OverlappingSpanSets[int,string] {
+func MakeOverlapTestList() *[]*OverlappingSpanSets[int] {
 	var ac = testDriver.NewSpanOverlapAccumulator()
-	var list = []*OverlappingSpanSets[int, string]{}
+	var list = []*OverlappingSpanSets[int]{}
 	for _, ol := range ac.SliceIterFactory(&MultMultiiSet) {
 		list = append(list, ol)
 	}
@@ -16,7 +16,7 @@ func MakeOverlapTestList() *[]*OverlappingSpanSets[int,string] {
 func TestOverlapChannel(t *testing.T) {
 	var ac = testDriver.NewSpanOverlapAccumulator()
 	var list =*MakeOverlapTestList() 
-	ch := make(chan *OverlappingSpanSets[int, string], len(list))
+	ch := make(chan *OverlappingSpanSets[int], len(list))
 	for _, ol := range list {
 		ch <- ol
 	}
@@ -36,7 +36,7 @@ func TestOverlapChannel(t *testing.T) {
 func TestBreakLoopOverlapChannel(t *testing.T) {
 	var ac = testDriver.NewSpanOverlapAccumulator()
 	var list =*MakeOverlapTestList() 
-	ch := make(chan *OverlappingSpanSets[int, string], len(list))
+	ch := make(chan *OverlappingSpanSets[int], len(list))
 	for _, ol := range list {
 		ch <- ol
 	}

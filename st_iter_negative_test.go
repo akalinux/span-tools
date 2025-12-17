@@ -2,9 +2,9 @@ package st
 
 import "testing"
 func TestBadOrder(t *testing.T) {
-  var list = &[]SpanBoundry[int, string]{
-    &Span[int, string]{Begin: 9, End: 11},
-    &Span[int, string]{Begin: 2, End: 2},
+  var list = &[]SpanBoundry[int]{
+    &Span[int]{Begin: 9, End: 11},
+    &Span[int]{Begin: 2, End: 2},
   }
   testDriver.Validate = true
   for id, span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
@@ -26,8 +26,8 @@ func TestNilSliceIter(t *testing.T) {
 }
 
 func TestBadInitValue(t *testing.T) {
-  var list = &[]SpanBoundry[int, string]{
-    &Span[int, string]{Begin: 13, End: 11},
+  var list = &[]SpanBoundry[int]{
+    &Span[int]{Begin: 13, End: 11},
   }
   testDriver.Validate = true
   for range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {

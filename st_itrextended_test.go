@@ -4,22 +4,22 @@ import (
 	"testing"
 )
 
-var AllSet = []SpanBoundry[int, string]{
+var AllSet = []SpanBoundry[int]{
 	// sorted
-	&Span[int, string]{Begin: -2, End: 2},
-	&Span[int, string]{Begin: -1, End: 0},
-	&Span[int, string]{Begin: -1, End: 0},
-	&Span[int, string]{Begin: 0, End: 1},
-	&Span[int, string]{Begin: 0, End: 1},
+	&Span[int]{Begin: -2, End: 2},
+	&Span[int]{Begin: -1, End: 0},
+	&Span[int]{Begin: -1, End: 0},
+	&Span[int]{Begin: 0, End: 1},
+	&Span[int]{Begin: 0, End: 1},
 }
 var tagA = "a"
 var tagB = "b"
-var MultiSet = []SpanBoundry[int, string]{
-	&Span[int, string]{Begin: -1, End: 0},            // 0
-	&Span[int, string]{Begin: 2, End: 2, Tag: &tagA}, //1
-	&Span[int, string]{Begin: 2, End: 2, Tag: &tagB}, //1
-	&Span[int, string]{Begin: 5, End: 6},             // 2
-	&Span[int, string]{Begin: 9, End: 11},            // 3
+var MultiSet = []SpanBoundry[int]{
+	&Span[int]{Begin: -1, End: 0},            // 0
+	&Span[int]{Begin: 2, End: 2}, //1
+	&Span[int]{Begin: 2, End: 2}, //1
+	&Span[int]{Begin: 5, End: 6},             // 2
+	&Span[int]{Begin: 9, End: 11},            // 3
 	// -1
 }
 
@@ -27,9 +27,9 @@ func TestAccumulateIter(t *testing.T) {
 	var sa = testDriver.NewSpanOverlapAccumulator()
 	sa.Sort = true
 
-	var exp = []*OverlappingSpanSets[int, string]{
+	var exp = []*OverlappingSpanSets[int]{
 		{
-			Span:     &Span[int, string]{Begin: -1, End: 0},
+			Span:     &Span[int]{Begin: -1, End: 0},
 			SrcBegin: 0,
 			SrcEnd:   0,
 			Contains: nil,
@@ -37,20 +37,20 @@ func TestAccumulateIter(t *testing.T) {
 		{
 			SrcBegin: 1,
 			SrcEnd:   2,
-			Span:     &Span[int, string]{Begin: 2, End: 2},
-			Contains: &[]SpanBoundry[int, string]{
+			Span:     &Span[int]{Begin: 2, End: 2},
+			Contains: &[]SpanBoundry[int]{
 				MultiSet[1],
 				MultiSet[2],
 			},
 		},
 		{
-			Span:     &Span[int, string]{Begin: 5, End: 6},
+			Span:     &Span[int]{Begin: 5, End: 6},
 			SrcBegin: 3,
 			SrcEnd:   3,
 			Contains: nil,
 		},
 		{
-			Span:     &Span[int, string]{Begin: 9, End: 11},
+			Span:     &Span[int]{Begin: 9, End: 11},
 			SrcBegin: 4,
 			SrcEnd:   4,
 			Contains: nil,
@@ -150,7 +150,7 @@ func TestMultiMultiAccumulateSet(t *testing.T) {
 
 func TestExersizeSubIterator(t *testing.T) {
 
-	var c = make(chan SpanBoundry[int, string], len(MultMultiiSet))
+	var c = make(chan SpanBoundry[int], len(MultMultiiSet))
 	for _, span := range MultMultiiSet {
 		c <- span
 	}
