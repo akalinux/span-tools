@@ -10,13 +10,13 @@ import (
 
 
 var MultMultiiSet = []SpanBoundry[int, string]{
-  &Span[int, string]{Begin: -1, End: 0},            // 0
-  &Span[int, string]{Begin: 2, End: 2, Tag: &tagA}, //1
-  &Span[int, string]{Begin: 2, End: 2, Tag: &tagB}, //1
-  &Span[int, string]{Begin: 5, End: 6},             // 2
-  &Span[int, string]{Begin: 9, End: 11},            // 3
-  &Span[int, string]{Begin: 9, End: 11},            // 3
-	&Span[int, string]{Begin: 12, End: 12},            // 4
+  &Span[int, string]{Begin: -1, End: 0},            // 0, 0
+  &Span[int, string]{Begin: 2, End: 2, Tag: &tagA}, //1, 1
+  &Span[int, string]{Begin: 2, End: 2, Tag: &tagB}, //2, 1
+  &Span[int, string]{Begin: 5, End: 6},             //3, 2
+  &Span[int, string]{Begin: 9, End: 11,Tag: &tagA}, //4, 3
+  &Span[int, string]{Begin: 9, End: 11, Tag: &tagB},//5, 3
+	&Span[int, string]{Begin: 12, End: 12},           //6, 4
 }
 
 // Data sets used to verify the range sort method works as expected

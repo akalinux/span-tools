@@ -142,9 +142,8 @@ func (s *SpanUtil[E, T]) ColumnOverlapFactoryBuilder(next func() (int, *Overlapp
 	res.ItrStop = stop
 	res.ItrGetNext = next
 	res.Util = s
-	var id, current, ok = res.ItrGetNext()
+	var _, current, ok = res.ItrGetNext()
 	if ok {
-		res.SrcPos = id
 		res.Next = current
 	}
 	return res

@@ -1,5 +1,6 @@
 package st
 
+
 // Contains the current iterator control functions and represents the column position in the iterator process.
 type ColumnOverlapAccumulator[E any, T any] struct {
 	// Representation of the data that intersected with an SpanBoundry passed to GetNext.
@@ -24,16 +25,13 @@ type ColumnOverlapAccumulator[E any, T any] struct {
 	// The next set to operate on, when nil.
 	Next *OverlappingSpanSets[E, T]
 
-	// Denotes where we are in the orginal OverlappingSpanSets[E,T] instance.
-	SrcPos int
-	
+	// Denotes if theobject is closed
 	Closed bool
 }
 
-
 // Returns true if there are more elements in this column.
 func (s *ColumnOverlapAccumulator[E, T]) HasNext() bool {
-	return s.Next != nil
+	return !s.Closed && s.Next != nil
 }
 
 // This method is used to call the stop method of the iter.Pull2 iterator method.
@@ -41,33 +39,53 @@ func (s *ColumnOverlapAccumulator[E, T]) HasNext() bool {
 // to setup a defer SpanOverlapColumnAccumulator[E,T].Close() to ensure your code does not leak memory
 // or run into undefined behaviors.
 func (s *ColumnOverlapAccumulator[E, T]) Close() {
-	if(s.Closed) {
+	if s.Closed {
 		return
 	}
 	if s.ItrStop != nil {
 		s.ItrStop()
-		s.Closed=true
+		s.Closed = true
 	}
 }
 
 // This method updates the currrent instance  to represent what data intersects with the overlap SpanBoundry[E,T].
 func (s *ColumnOverlapAccumulator[E, T]) SetNext(overlap SpanBoundry[E, T]) {
-	s.Overlaps = &[]*OverlappingSpanSets[E, T]{}
-	var id = s.SrcPos
 	var current = s.Next
 	var hasnext = current != nil
 	var u = *s.Util
-	s.SrcPos = -1
-	s.SrcStart = -1
+	if hasnext && s.Overlaps != nil && len(*s.Overlaps) != 1 && u.Overlap(overlap, current) {
+		var ol = &[]*OverlappingSpanSets[E, T]{}
+		for _, span := range *s.Overlaps {
+			if span == current {
+				break
+			}
+			if u.Overlap(overlap, span) {
+
+				*ol = append(*ol, span)
+			}
+		}
+		if len(*ol) != 0 {
+			s.SrcStart = (*ol)[0].SrcBegin
+			s.Overlaps = ol
+		} else {
+			s.SrcStart = -1
+			s.SrcEnd = -1
+			s.Overlaps = &[]*OverlappingSpanSets[E, T]{}
+		}
+	} else {
+		s.SrcStart = -1
+		s.SrcEnd = -1
+		s.Overlaps = &[]*OverlappingSpanSets[E, T]{}
+	}
 
 	for hasnext {
-		s.SrcPos = id
 		s.Next = current
+
 		if u.Overlap(overlap, current) {
 			if s.SrcStart == -1 {
-				s.SrcStart = id
+				s.SrcStart = current.SrcBegin
 			}
-			s.SrcEnd = id
+			s.SrcEnd = current.SrcEnd
 			*s.Overlaps = append(*s.Overlaps, current)
 			if u.Cmp(current.GetEnd(), overlap.GetEnd()) > 0 {
 				return
@@ -76,16 +94,13 @@ func (s *ColumnOverlapAccumulator[E, T]) SetNext(overlap SpanBoundry[E, T]) {
 			// current is after next, then we are done!
 			return
 		}
-		id, current, hasnext = s.ItrGetNext()
+		_, current, hasnext = s.ItrGetNext()
 
 		if !hasnext {
 			if s.SrcStart == -1 {
 				s.Next = nil
-				s.SrcPos = -1
 			}
 			return
 		}
 	}
 }
-
-
