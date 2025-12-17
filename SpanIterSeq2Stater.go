@@ -1,5 +1,6 @@
 package st
 
+
 type SpanIterSeq2Stater[E any, T any] struct {
 	Current *OverlappingSpanSets[E, T]
 	Next    *OverlappingSpanSets[E, T]
