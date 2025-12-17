@@ -8,7 +8,7 @@ import (
 
 // Core of the span utilties: Provides methos for processing ranges.
 // Its recommended that an instance of this structure be created via the constructor util methods such as NewSpanUtil(Cmp) or NewOrderedSpanUtil(),
-type SpanUtil[E any, T any] struct {
+type SpanUtil[E any] struct {
 
 	// Compare function.  This function should be atomic and be able t compare the E type by return -1,0,1.
 	Cmp func(a, b E) int
@@ -25,7 +25,7 @@ type SpanUtil[E any, T any] struct {
 // 1. next.GetBegin() must be less than or equal to next.GetEnd().
 // 2. When the current value is not nil, then next must come after current.
 // Returns nil when checks pass, the error is not nill when checks fail.
-func (s *SpanUtil[E, T]) Check(next, current SpanBoundry[E, T]) error {
+func (s *SpanUtil[E]) Check(next, current SpanBoundry[E]) error {
 
 	if s.Cmp(next.GetBegin(), next.GetEnd()) > 0 {
 		return errors.New("GetBegin must be less than or equal to GetEnd")
@@ -42,13 +42,13 @@ func (s *SpanUtil[E, T]) Check(next, current SpanBoundry[E, T]) error {
 }
 
 // Wrapper function to return a pointer to the value passed in.
-func (s *SpanUtil[E, T]) GetP(x E) *E {
+func (s *SpanUtil[E]) GetP(x E) *E {
 	return &x
 }
 
 // Creates a instance of *SpanUtil[E cmp.Ordered,T], this can be used to process most span data sets.
-func NewOrderedSpanUtil[E cmp.Ordered, T any]() *SpanUtil[E, T] {
-	return NewSpanUtil[E, T](cmp.Compare)
+func NewOrderedSpanUtil[E cmp.Ordered]() *SpanUtil[E] {
+	return NewSpanUtil[E](cmp.Compare)
 }
 
 // Creates an instance of *SpanUtil[E,T], the value of cmp is expected to be able to compare the Span.Begin and Span.End values.
@@ -57,15 +57,15 @@ func NewOrderedSpanUtil[E cmp.Ordered, T any]() *SpanUtil[E, T] {
 // The default SpanFormat is set to: "Span: [%s -> %s], Tag: %s"
 //
 // [cmp.Compare]: https://pkg.go.dev/github.com/google/go-cmp/cmp#Comparer
-func NewSpanUtil[E any, T any](cmp func(a, b E) int) *SpanUtil[E, T] {
-	return &SpanUtil[E, T]{Cmp: cmp}
+func NewSpanUtil[E any](cmp func(a, b E) int) *SpanUtil[E] {
+	return &SpanUtil[E]{Cmp: cmp}
 }
 
 // This method is used to sort slice of spans in the accumulation order.
 // For more details see: [slices.SortFunc].
 //
 // [slices.SortFunc]: https://pkg.go.dev/slices#SortedFunc
-func (s *SpanUtil[E, T]) Compare(a, b SpanBoundry[E, T]) int {
+func (s *SpanUtil[E]) Compare(a, b SpanBoundry[E]) int {
 	var diff int = s.Cmp(a.GetBegin(), b.GetBegin())
 	if diff == 0 {
 		return s.Cmp(b.GetEnd(), a.GetEnd())
@@ -74,32 +74,32 @@ func (s *SpanUtil[E, T]) Compare(a, b SpanBoundry[E, T]) int {
 }
 
 // Returns true if a contains b.
-func (s *SpanUtil[E, T]) Contains(a SpanBoundry[E, T], b E) bool {
+func (s *SpanUtil[E]) Contains(a SpanBoundry[E], b E) bool {
 	return s.Cmp(a.GetBegin(), b) < 1 && s.Cmp(a.GetEnd(), b) > -1
 }
 
 // Returns true if a overlaps with b or if be overlaps with a.
-func (s *SpanUtil[E, T]) Overlap(a, b SpanBoundry[E, T]) bool {
+func (s *SpanUtil[E]) Overlap(a, b SpanBoundry[E]) bool {
 	return s.Contains(a, b.GetBegin()) || s.Contains(a, b.GetEnd()) || s.Contains(b, a.GetEnd()) || s.Contains(b, a.GetEnd())
 }
 
 // This method is used to determin the outer bounds of ranges a and b.
 // The first int represents comparing a.Begin to b.Begin and the second int represents comparing a.End to b.End.
-func (s *SpanUtil[E, T]) ContainedBy(a, b SpanBoundry[E, T]) (int, int) {
+func (s *SpanUtil[E]) ContainedBy(a, b SpanBoundry[E]) (int, int) {
 	return s.Cmp(a.GetBegin(), b.GetBegin()), s.Cmp(a.GetEnd(), b.GetEnd())
 }
 
 // Creates a new span, error is nill unless a is greater than b.
-func (s *SpanUtil[E, T]) NewSpan(a, b E, tag *T) (*Span[E, T], error) {
+func (s *SpanUtil[E]) NewSpan(a, b E) (*Span[E], error) {
 	if s.Cmp(a, b) > 0 {
 		return nil, errors.New("Value a is greater than value b")
 	}
-	return &Span[E, T]{Begin: a, End: b, Tag: tag}, nil
+	return &Span[E]{Begin: a, End: b}, nil
 }
 
 // This method returns the first smallest span from the slice of Span[E,T].
-func (s *SpanUtil[E, T]) FirstSpan(list *[]SpanBoundry[E, T]) *Span[E, T] {
-	var span = &Span[E, T]{Begin: (*list)[0].GetBegin(), End: (*list)[0].GetEnd()}
+func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) *Span[E] {
+	var span = &Span[E]{Begin: (*list)[0].GetBegin(), End: (*list)[0].GetEnd()}
 	var last = len(*list)
 	for i := 1; i < last; i++ {
 		var check = (*list)[i]
@@ -114,11 +114,11 @@ func (s *SpanUtil[E, T]) FirstSpan(list *[]SpanBoundry[E, T]) *Span[E, T] {
 }
 
 // Factory interface for the creation of SpanOverlapAccumulator[E,T].
-func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, T] {
-	return &SpanOverlapAccumulator[E, T]{
+func (s *SpanUtil[E]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E] {
+	return &SpanOverlapAccumulator[E]{
 		Validate: s.Validate,
 		SpanUtil: s,
-		Rss:      &OverlappingSpanSets[E, T]{Contains: nil, Span: nil},
+		Rss:      &OverlappingSpanSets[E]{Contains: nil, Span: nil},
 		Pos:      -1,
 	}
 }
@@ -128,17 +128,17 @@ func (s *SpanUtil[E, T]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E, 
 // # Warning
 //
 // This methos creates an [iter.Pull2] and exposes the resulting functions in the returned struct pointer. If you are using this method outside of the normal
-// operations, you should a setup a defer call to  ColumnOverlapAccumulator[E, T].Close() method to clean the instance up in order to prevent memory leaks or undefined behavior.
+// operations, you should a setup a defer call to  ColumnOverlapAccumulator[E].Close() method to clean the instance up in order to prevent memory leaks or undefined behavior.
 //
 // [iter.Pull2]: https://pkg.go.dev/iter#hdr-Pulling_Values
-func (s *SpanUtil[E, T]) ColumnOverlapFactory(driver iter.Seq2[int, *OverlappingSpanSets[E, T]]) *ColumnOverlapAccumulator[E, T] {
+func (s *SpanUtil[E]) ColumnOverlapFactory(driver iter.Seq2[int, *OverlappingSpanSets[E]]) *ColumnOverlapAccumulator[E] {
 	var next, stop = iter.Pull2(driver)
 	return s.ColumnOverlapFactoryBuilder(next, stop)
 }
 
-// This method takes the next and stop functions and creates a new fully initalized instance of ColumnOverlapAccumulator[E, T].
-func (s *SpanUtil[E, T]) ColumnOverlapFactoryBuilder(next func() (int, *OverlappingSpanSets[E, T], bool), stop func()) *ColumnOverlapAccumulator[E, T] {
-	var res = &ColumnOverlapAccumulator[E, T]{}
+// This method takes the next and stop functions and creates a new fully initalized instance of ColumnOverlapAccumulator[E].
+func (s *SpanUtil[E]) ColumnOverlapFactoryBuilder(next func() (int, *OverlappingSpanSets[E], bool), stop func()) *ColumnOverlapAccumulator[E] {
+	var res = &ColumnOverlapAccumulator[E]{}
 	res.ItrStop = stop
 	res.ItrGetNext = next
 	res.Util = s
@@ -149,15 +149,15 @@ func (s *SpanUtil[E, T]) ColumnOverlapFactoryBuilder(next func() (int, *Overlapp
 	return res
 }
 
-func (s *SpanUtil[E, T]) NewColumnSets() *ColumnSets[E, T] {
-	return &ColumnSets[E, T]{
-		Columns: &[]*ColumnOverlapAccumulator[E, T]{},
+func (s *SpanUtil[E]) NewColumnSets() *ColumnSets[E] {
+	return &ColumnSets[E]{
+		Columns: &[]*ColumnOverlapAccumulator[E]{},
 		Active:  &[]bool{},
 		Util:    s,
 	}
 }
 
-func (s *SpanUtil[E, T]) GetNextBegin(current E, list *[]SpanBoundry[E, T]) *E {
+func (s *SpanUtil[E]) GetNextBegin(current E, list *[]SpanBoundry[E]) *E {
 	var next *E = nil
 	for _, span := range *list {
 		var cmp = s.Cmp(span.GetBegin(), current)
@@ -172,7 +172,7 @@ func (s *SpanUtil[E, T]) GetNextBegin(current E, list *[]SpanBoundry[E, T]) *E {
 	return next
 }
 
-func (s *SpanUtil[E, T]) GetNextEnd(current E, list *[]SpanBoundry[E, T]) *E {
+func (s *SpanUtil[E]) GetNextEnd(current E, list *[]SpanBoundry[E]) *E {
 	var next *E = nil
 	for _, span := range *list {
 		var cmp = s.Cmp(span.GetEnd(), current)
@@ -190,7 +190,7 @@ func (s *SpanUtil[E, T]) GetNextEnd(current E, list *[]SpanBoundry[E, T]) *E {
 // This method acts as a stateless iterator that,
 // returns the next overlapping Span[E,T] or nill based on the start SpanBoundry[E,T] and the slice of spans.
 // If all valid SpanBoundry[E,T] values have been exausted, nil is returned.
-func (s *SpanUtil[E, T]) NextSpan(start SpanBoundry[E, T], list *[]SpanBoundry[E, T]) *Span[E, T] {
+func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) *Span[E] {
 	var begin *E = s.GetNextBegin(start.GetEnd(), list)
 	var end *E = s.GetNextEnd(start.GetEnd(), list)
 
@@ -202,9 +202,9 @@ func (s *SpanUtil[E, T]) NextSpan(start SpanBoundry[E, T], list *[]SpanBoundry[E
 			}
 		}
 
-		return &Span[E, T]{Begin: *begin, End: *end}
+		return &Span[E]{Begin: *begin, End: *end}
 	} else if end != nil {
-		return &Span[E, T]{Begin: start.GetEnd(), End: *end}
+		return &Span[E]{Begin: start.GetEnd(), End: *end}
 	}
 	return nil
 }

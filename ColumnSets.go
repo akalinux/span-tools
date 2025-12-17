@@ -1,15 +1,15 @@
 package st
 
 
-type ColumnSets[E any,T any] struct {
-	Util *SpanUtil[E,T]
-	Columns *[]*ColumnOverlapAccumulator[E,T]
+type ColumnSets[E any] struct {
+	Util *SpanUtil[E]
+	Columns *[]*ColumnOverlapAccumulator[E]
 	Active  *[]bool
-	Overlap SpanBoundry[E,T]
+	Overlap SpanBoundry[E]
 	Closed bool
 }
 
-func(s *ColumnSets[E, T]) Close() {
+func(s *ColumnSets[E]) Close() {
 	if(s.Closed) {
 		return
 	}

@@ -4,9 +4,9 @@ import "testing"
 
 // Validates the inital range of a list of ranges
 func TestFirstRange(t *testing.T) {
-	var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
-		&Span[int, string]{Begin: 2, End: 2},
-		&Span[int, string]{Begin: 0, End: 1},
+	var src *[]SpanBoundry[int] = &[]SpanBoundry[int]{
+		&Span[int]{Begin: 2, End: 2},
+		&Span[int]{Begin: 0, End: 1},
 	}
 	var span = testDriver.FirstSpan(src)
 	if span.Begin != 0 || span.End != 1 {
@@ -15,10 +15,10 @@ func TestFirstRange(t *testing.T) {
 }
 
 func TestGetNextBegin(t *testing.T) {
-	var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
-		&Span[int, string]{Begin: 3, End: 3},
-		&Span[int, string]{Begin: 2, End: 2},
-		&Span[int, string]{Begin: 0, End: 1},
+	var src *[]SpanBoundry[int] = &[]SpanBoundry[int]{
+		&Span[int]{Begin: 3, End: 3},
+		&Span[int]{Begin: 2, End: 2},
+		&Span[int]{Begin: 0, End: 1},
 	}
 	var check = testDriver.GetNextBegin(1, src)
 	if check == nil {
@@ -37,10 +37,10 @@ func TestGetNextBegin(t *testing.T) {
 }
 
 func TestGetNextEnd(t *testing.T) {
-	var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
-		&Span[int, string]{Begin: 3, End: 3},
-		&Span[int, string]{Begin: 2, End: 2},
-		&Span[int, string]{Begin: 0, End: 1},
+	var src *[]SpanBoundry[int] = &[]SpanBoundry[int]{
+		&Span[int]{Begin: 3, End: 3},
+		&Span[int]{Begin: 2, End: 2},
+		&Span[int]{Begin: 0, End: 1},
 	}
 	var check = testDriver.GetNextEnd(1, src)
 	if check == nil {
@@ -59,12 +59,12 @@ func TestGetNextEnd(t *testing.T) {
 }
 
 func TestGetNextSpan(t *testing.T) {
-	var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
-		&Span[int, string]{Begin: 0, End: 1},
-		&Span[int, string]{Begin: 2, End: 2},
-		&Span[int, string]{Begin: 3, End: 3},
+	var src *[]SpanBoundry[int] = &[]SpanBoundry[int]{
+		&Span[int]{Begin: 0, End: 1},
+		&Span[int]{Begin: 2, End: 2},
+		&Span[int]{Begin: 3, End: 3},
 	}
-	var check = testDriver.NextSpan(&Span[int, string]{Begin: -1, End: -1}, src)
+	var check = testDriver.NextSpan(&Span[int]{Begin: -1, End: -1}, src)
 	for id := 0; id < len(*src); id++ {
 		if check == nil {
 			t.Errorf("Should have gotten 2 as our next return value")
@@ -82,18 +82,18 @@ func TestGetNextSpan(t *testing.T) {
 }
 
 func TestGetNextSpanReducedColumns(t *testing.T) {
-	var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
-		&Span[int, string]{Begin: 0, End: 1},
-		&Span[int, string]{Begin: 2, End: 5},
-		&Span[int, string]{Begin: 3, End: 6},
+	var src *[]SpanBoundry[int] = &[]SpanBoundry[int]{
+		&Span[int]{Begin: 0, End: 1},
+		&Span[int]{Begin: 2, End: 5},
+		&Span[int]{Begin: 3, End: 6},
 	}
-	var expected []SpanBoundry[int, string] = []SpanBoundry[int, string]{
-		&Span[int, string]{Begin: 0, End: 1},
-		&Span[int, string]{Begin: 2, End: 3},
-		&Span[int, string]{Begin: 3, End: 5},
-		&Span[int, string]{Begin: 5, End: 6},
+	var expected []SpanBoundry[int] = []SpanBoundry[int]{
+		&Span[int]{Begin: 0, End: 1},
+		&Span[int]{Begin: 2, End: 3},
+		&Span[int]{Begin: 3, End: 5},
+		&Span[int]{Begin: 5, End: 6},
 	}
-	var check = testDriver.NextSpan(&Span[int, string]{Begin: -1, End: -1}, src)
+	var check = testDriver.NextSpan(&Span[int]{Begin: -1, End: -1}, src)
 	for id, span := range expected {
 		if check == nil {
 			t.Errorf("check should not be nil for row %d", id)
@@ -115,18 +115,18 @@ func TestGetNextSpanReducedColumns(t *testing.T) {
 }
 
 func TestGetNextSpanAllColumnsSetA(t *testing.T) {
-	var src *[]SpanBoundry[int, string] = &[]SpanBoundry[int, string]{
-		&Span[int, string]{Begin: 0, End: 7},
-		&Span[int, string]{Begin: 2, End: 5},
-		&Span[int, string]{Begin: 3, End: 6},
+	var src *[]SpanBoundry[int] = &[]SpanBoundry[int]{
+		&Span[int]{Begin: 0, End: 7},
+		&Span[int]{Begin: 2, End: 5},
+		&Span[int]{Begin: 3, End: 6},
 	}
-	var expected []SpanBoundry[int, string] = []SpanBoundry[int, string]{
-		&Span[int, string]{Begin: 0, End: 2},
-		&Span[int, string]{Begin: 3, End: 5},
-		&Span[int, string]{Begin: 5, End: 6},
-		&Span[int, string]{Begin: 6, End: 7},
+	var expected []SpanBoundry[int] = []SpanBoundry[int]{
+		&Span[int]{Begin: 0, End: 2},
+		&Span[int]{Begin: 3, End: 5},
+		&Span[int]{Begin: 5, End: 6},
+		&Span[int]{Begin: 6, End: 7},
 	}
-	var check = testDriver.NextSpan(&Span[int, string]{Begin: -1, End: -1}, src)
+	var check = testDriver.NextSpan(&Span[int]{Begin: -1, End: -1}, src)
 	for id, span := range expected {
 		if check == nil {
 			t.Errorf("check should not be nil for row %d", id)

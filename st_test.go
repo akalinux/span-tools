@@ -9,63 +9,60 @@ import (
 
 
 
-var MultMultiiSet = []SpanBoundry[int, string]{
-  &Span[int, string]{Begin: -1, End: 0},            // 0, 0
-  &Span[int, string]{Begin: 2, End: 2, Tag: &tagA}, //1, 1
-  &Span[int, string]{Begin: 2, End: 2, Tag: &tagB}, //2, 1
-  &Span[int, string]{Begin: 5, End: 6},             //3, 2
-  &Span[int, string]{Begin: 9, End: 11,Tag: &tagA}, //4, 3
-  &Span[int, string]{Begin: 9, End: 11, Tag: &tagB},//5, 3
-	&Span[int, string]{Begin: 12, End: 12},           //6, 4
+var MultMultiiSet = []SpanBoundry[int]{
+  &Span[int]{Begin: -1, End: 0},// 0, 0
+  &Span[int]{Begin: 2, End: 2}, //1, 1
+  &Span[int]{Begin: 2, End: 2}, //2, 1
+  &Span[int]{Begin: 5, End: 6},//3, 2
+  &Span[int]{Begin: 9, End: 11}, //4, 3
+  &Span[int]{Begin: 9, End: 11 },//5, 3
+	&Span[int]{Begin: 12, End: 12},//6, 4
 }
 
 // Data sets used to verify the range sort method works as expected
-var testSets = [][][]SpanBoundry[int, string]{
+var testSets = [][][]SpanBoundry[int]{
 	{
 		// test set 0, All consumed by 1 range
 		{
 			// unsorted
-			&Span[int, string]{Begin: -1, End: 0},
-			&Span[int, string]{Begin: 0, End: 1},
-			&Span[int, string]{Begin: -1, End: 0},
-			&Span[int, string]{Begin: 0, End: 1},
-			&Span[int, string]{Begin: -2, End: 2},
+			&Span[int]{Begin: -1, End: 0},
+			&Span[int]{Begin: 0, End: 1},
+			&Span[int]{Begin: -1, End: 0},
+			&Span[int]{Begin: 0, End: 1},
+			&Span[int]{Begin: -2, End: 2},
 		},
 		AllSet,
 	},
 	// test set 1, Seperate blocks with only 1 overlap
 	{
 		{
-			&Span[int, string]{Begin: 2, End: 2},
-			&Span[int, string]{Begin: 9, End: 11},
-			&Span[int, string]{Begin: 5, End: 6},
-			&Span[int, string]{Begin: 2, End: 2},
-			&Span[int, string]{Begin: -1, End: 0},
+			&Span[int]{Begin: 2, End: 2},
+			&Span[int]{Begin: 9, End: 11},
+			&Span[int]{Begin: 5, End: 6},
+			&Span[int]{Begin: 2, End: 2},
+			&Span[int]{Begin: -1, End: 0},
 		},
 		MultiSet,
 	},
 }
 
-var testDriver = NewOrderedSpanUtil[int, string]()
+var testDriver = NewOrderedSpanUtil[int]()
 
 type SpanInt struct {
-	SpanRef[int, string]
+	SpanRef[int]
 }
 
 func TestSaneSpan(t *testing.T) {
 	var begin = 2
 	var end = 1
 	var next = &SpanInt{
-		SpanRef[int, string]{
+		SpanRef[int]{
 			Begin: &begin,
 			End:   &end,
 		},
 	}
 
-	if next.GetTag() != nil {
-		t.Errorf("Should get nil for our default tag")
-		return
-	}
+
 	if nil == testDriver.Check(next, nil) {
 		t.Errorf("Should get an error if begin is greater than end")
 		return
@@ -76,7 +73,7 @@ func TestSaneSpan(t *testing.T) {
 		return
 	}
 
-	var current = &Span[int, string]{Begin: 3, End: 3}
+	var current = &Span[int]{Begin: 3, End: 3}
 	if nil == testDriver.Check(next, current) {
 		t.Errorf("current: %d->%d, should be before next: %d->%d", current.GetBegin(), current.GetEnd(), next.GetBegin(), next.GetEnd())
 	}
@@ -84,7 +81,7 @@ func TestSaneSpan(t *testing.T) {
 }
 
 func TestNewSpan(t *testing.T) {
-	var span, err = testDriver.NewSpan(1, 2, &tagA)
+	var span, err = testDriver.NewSpan(1, 2)
 	if err != nil {
 		t.Errorf("Creation of new valid span failed")
 		return
@@ -93,15 +90,12 @@ func TestNewSpan(t *testing.T) {
 		t.Errorf("Invalid return span value")
 		return
 	}
-	if span.GetTag() != &tagA {
-		t.Errorf("Invalid return span tag pointer")
-		return
-	}
-	if span.Begin != 1 || span.End != 2 || span.Tag != &tagA {
+
+	if span.Begin != 1 || span.End != 2 {
 		t.Errorf("Invalid return span content")
 		return
 	}
-	span, err = testDriver.NewSpan(2, 1, &tagA)
+	span, err = testDriver.NewSpan(2, 1 )
 	if err == nil {
 		t.Errorf("Should have an error here")
 	}
@@ -110,7 +104,7 @@ func TestNewSpan(t *testing.T) {
 // Validates sort operation, by sorting slices and compairing the the sorted elements to a manually sorted array.
 func TestOneContainerForAllSort(t *testing.T) {
 	for setId, testSet := range testSets {
-		var unsorted = make([]SpanBoundry[int, string], len(testSet[0]))
+		var unsorted = make([]SpanBoundry[int], len(testSet[0]))
 		copy(unsorted, testSet[0])
 		slices.SortFunc(unsorted, testDriver.Compare)
 
@@ -173,30 +167,23 @@ func TestMergeMultiple(t *testing.T) {
 				t.Errorf("Container should have 2 elements")
 				return
 			}
-			var list = *res.Contains
-			var check = *list[0].GetTag() + *list[1].GetTag()
-			if check != "ab" {
-				t.Errorf("tag validation failed")
-			}
 		}
 	}
 }
 
 // Tests the Accumulator function to make sure growth works as expected for accumulated spans.
 func TestGrowth(t *testing.T) {
-	src := []Span[int, string]{
+	src := []Span[int]{
 		// sorted
 		{Begin: -2, End: -1},
 		{Begin: -1, End: 0},
 		{Begin: 1, End: 1},
 	}
 	var s = testDriver.NewSpanOverlapAccumulator()
-	var lastRes *OverlappingSpanSets[int, string] = nil
+	var lastRes *OverlappingSpanSets[int] = nil
 	for idx, span := range src {
 		res := s.Accumulate(&span)
-		if res.GetTag() != nil {
-			t.Errorf("Tag should be nil")
-		}
+
 		switch idx {
 		case 0:
 			if res.GetBegin() != -2 || res.GetEnd() != -1 || res.Contains != nil {
@@ -232,16 +219,16 @@ func TestGrowth(t *testing.T) {
 
 // Negative and positive overlap span testing.
 func TestOverlaps(t *testing.T) {
-	var a = &Span[int, string]{Begin: 0, End: 1}
-	var b = &Span[int, string]{Begin: 1, End: 2}
+	var a = &Span[int]{Begin: 0, End: 1}
+	var b = &Span[int]{Begin: 1, End: 2}
 	if !testDriver.Overlap(a, b) {
 		t.Errorf("Expected a and b to overlap")
 	}
 	if !testDriver.Overlap(b, a) {
 		t.Errorf("Expected a and b to overlap")
 	}
-	a = &Span[int, string]{Begin: 0, End: 1}
-	b = &Span[int, string]{Begin: 2, End: 2}
+	a = &Span[int]{Begin: 0, End: 1}
+	b = &Span[int]{Begin: 2, End: 2}
 	if testDriver.Overlap(a, b) {
 		t.Errorf("Invalid overlap of a and b ")
 	}
@@ -314,7 +301,7 @@ func TestMultiAccumulateSet(t *testing.T) {
 
 
 func TestChanAccumulatro(t *testing.T) {
-	var c = make(chan SpanBoundry[int, string], len(MultiSet))
+	var c = make(chan SpanBoundry[int], len(MultiSet))
 	for _, span := range MultiSet {
 		c <- span
 	}
@@ -326,7 +313,7 @@ func TestChanAccumulatro(t *testing.T) {
 	if count != 4 {
 		t.Errorf("Expected a total 4 for got: %d", count)
 	}
-	c = make(chan SpanBoundry[int, string], len(AllSet))
+	c = make(chan SpanBoundry[int], len(AllSet))
 	for _, span := range AllSet {
 		c <- span
 	}
@@ -346,8 +333,8 @@ func TestChanAccumulatro(t *testing.T) {
 	if count != 0 {
 		t.Errorf("Expected a total 0 for got: %d", count)
 	}
-	c = make(chan SpanBoundry[int, string], 1)
-	c <- &Span[int, string]{Begin: 11, End: 5}
+	c = make(chan SpanBoundry[int], 1)
+	c <- &Span[int]{Begin: 11, End: 5}
 	close(c)
 	count = 0
 	for range testDriver.NewSpanOverlapAccumulator().ChanIterFactory(c) {
@@ -357,7 +344,7 @@ func TestChanAccumulatro(t *testing.T) {
 		t.Errorf("Exersize Error, failed? Expected a total 1 for got: %d", count)
 	}
 
-	c = make(chan SpanBoundry[int, string], len(MultiSet))
+	c = make(chan SpanBoundry[int], len(MultiSet))
 	for _, span := range MultiSet {
 		c <- span
 	}

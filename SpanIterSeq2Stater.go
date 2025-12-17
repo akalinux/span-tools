@@ -1,14 +1,14 @@
 package st
 
 
-type SpanIterSeq2Stater[E any, T any] struct {
-	Current *OverlappingSpanSets[E, T]
-	Next    *OverlappingSpanSets[E, T]
-	Sa      *SpanOverlapAccumulator[E, T]
+type SpanIterSeq2Stater[E any] struct {
+	Current *OverlappingSpanSets[E]
+	Next    *OverlappingSpanSets[E]
+	Sa      *SpanOverlapAccumulator[E]
 	Id      int
 }
 
-func (s *SpanIterSeq2Stater[E, T]) SetNext(span SpanBoundry[E, T]) bool {
+func (s *SpanIterSeq2Stater[E]) SetNext(span SpanBoundry[E]) bool {
 	var cmp = s.Sa.Accumulate(span)
 	if s.Current == nil {
 		s.Current = cmp
@@ -21,11 +21,11 @@ func (s *SpanIterSeq2Stater[E, T]) SetNext(span SpanBoundry[E, T]) bool {
 	return true
 }
 
-func (s *SpanIterSeq2Stater[E, T]) HasNext() bool {
+func (s *SpanIterSeq2Stater[E]) HasNext() bool {
 	return s.Current != nil
 }
 
-func (s *SpanIterSeq2Stater[E, T]) GetNext() (int, *OverlappingSpanSets[E, T]) {
+func (s *SpanIterSeq2Stater[E]) GetNext() (int, *OverlappingSpanSets[E]) {
 	var next = s.Current
 	s.Current = s.Next
 	s.Next = nil

@@ -4,14 +4,14 @@ package st
 // The *Span[E,T] represents the span that contains all SpanBoundry[E,T] in *Contains.
 // When *Contains is nil, then this struct only has 1 SpanBoundry[E,T].
 // When *Contains is not nil, the orignal *SpanBoundry[E,T] values are contained within.
-type OverlappingSpanSets[E any, T any] struct {
+type OverlappingSpanSets[E any] struct {
 
 	// The Span that contains all Spans in this instance.
-	Span SpanBoundry[E, T]
+	Span SpanBoundry[E]
 
 	// When nil, Span is the only value representing this Span.
 	// When not nill, contains all the Spans acumulated to create this instance.
-	Contains *[]SpanBoundry[E, T]
+	Contains *[]SpanBoundry[E]
 
 	// Starting position in the original data set
 	SrcBegin int
@@ -21,23 +21,19 @@ type OverlappingSpanSets[E any, T any] struct {
 }
 
 
-func (s *OverlappingSpanSets[E, T]) IsUnique() bool {
+func (s *OverlappingSpanSets[E]) IsUnique() bool {
 	return s.Contains == nil
 }
 
-func (s *OverlappingSpanSets[E, T]) GetContains() *[]SpanBoundry[E, T] {
+func (s *OverlappingSpanSets[E]) GetContains() *[]SpanBoundry[E] {
 	return s.Contains
 }
 
-func (s *OverlappingSpanSets[E, T]) GetTag() *T {
-	return s.Span.GetTag()
-}
-
-func (s *OverlappingSpanSets[E, T]) GetBegin() E {
+func (s *OverlappingSpanSets[E]) GetBegin() E {
 	return s.Span.GetBegin()
 }
 
-func (s *OverlappingSpanSets[E, T]) GetEnd() E {
+func (s *OverlappingSpanSets[E]) GetEnd() E {
 	return s.Span.GetEnd()
 }
 

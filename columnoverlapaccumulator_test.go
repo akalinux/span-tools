@@ -5,19 +5,19 @@ import (
 )
 
 type IterValidate struct {
-	Next     *Span[int, string]
+	Next     *Span[int]
 	SrcStart int
 	SrcEnd   int
 }
 
 func TestColumConsolidateChannelOverlapAccumulator(t *testing.T) {
-  var list=[]*OverlappingSpanSets[int,string]{}
+  var list=[]*OverlappingSpanSets[int]{}
 	
 	
 	for _,span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultMultiiSet) {
 		list=append(list,span)
 	}
-	var ts=make(chan *OverlappingSpanSets[int,string], len(list))
+	var ts=make(chan *OverlappingSpanSets[int], len(list))
 	for _,span := range list {
 		ts <- span
 	}
@@ -33,7 +33,7 @@ func TestColumConsolidateChannelOverlapAccumulator(t *testing.T) {
 
 }
 
-func testOverlapStruct(expected []IterValidate,t *testing.T,src *[]SpanBoundry[int,string]) {
+func testOverlapStruct(expected []IterValidate,t *testing.T,src *[]SpanBoundry[int]) {
 	var res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(src)
 	defer res.Close()
 	for pos, conf := range expected {
@@ -59,17 +59,17 @@ func testOverlapStruct(expected []IterValidate,t *testing.T,src *[]SpanBoundry[i
 func TestColumConsolidateLookBack(t *testing.T) {
 	var expected = []IterValidate{
 		{
-			Next:     &Span[int, string]{Begin: -1, End:5},
+			Next:     &Span[int]{Begin: -1, End:5},
 			SrcStart: 0,
 			SrcEnd:   3,
 		},
 		{
-			Next:     &Span[int, string]{Begin: 2, End:6},
+			Next:     &Span[int]{Begin: 2, End:6},
 			SrcStart: 1,
 			SrcEnd:   3,
 		},
 		{
-			Next:     &Span[int, string]{Begin: 13, End:13},
+			Next:     &Span[int]{Begin: 13, End:13},
 			SrcStart: -1,
 			SrcEnd:   -1,
 		},
@@ -80,27 +80,27 @@ func TestColumnConsolidateIter(t *testing.T) {
 
 	var expected = []IterValidate{
 		{
-			Next:     &Span[int, string]{Begin: -1, End: -1},
+			Next:     &Span[int]{Begin: -1, End: -1},
 			SrcStart: 0,
 			SrcEnd:   0,
 		},
 		{
-			Next:     &Span[int, string]{Begin: 1, End: 1},
+			Next:     &Span[int]{Begin: 1, End: 1},
 			SrcStart: -1,
 			SrcEnd:   -1,
 		},
 		{
-			Next:     &Span[int, string]{Begin: 2, End: 5},
+			Next:     &Span[int]{Begin: 2, End: 5},
 			SrcStart: 1,
 			SrcEnd:   3,
 		},
 		{
-			Next:     &Span[int, string]{Begin: 6, End: 11},
+			Next:     &Span[int]{Begin: 6, End: 11},
 			SrcStart: 3,
 			SrcEnd:   5,
 		},
 		{
-			Next:     &Span[int, string]{Begin: 12, End: 12},
+			Next:     &Span[int]{Begin: 12, End: 12},
 			SrcStart: 6,
 			SrcEnd:   6,
 		},
