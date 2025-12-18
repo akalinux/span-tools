@@ -3,6 +3,7 @@ package st
 import (
 	"cmp"
 	"errors"
+	"fmt"
 	"iter"
 )
 
@@ -97,7 +98,7 @@ func (s *SpanUtil[E]) NewSpan(a, b E) (*Span[E], error) {
 	return &Span[E]{Begin: a, End: b}, nil
 }
 
-// This method returns the first smallest span from the slice of Span[E].  
+// This method returns the first smallest span from the slice of Span[E].
 // The new Span[E] will contian the smallest GetBegin() and the smallest GetEnd().
 func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
 	var span = &Span[E]{Begin: (*list)[0].GetBegin(), End: (*list)[0].GetEnd()}
@@ -152,7 +153,7 @@ func (s *SpanUtil[E]) ColumnOverlapFactoryBuilder(next func() (int, *Overlapping
 
 func (s *SpanUtil[E]) NewColumnSets() *ColumnSets[E] {
 	return &ColumnSets[E]{
-		Util:    s,
+		Util: s,
 	}
 }
 
@@ -190,20 +191,38 @@ func (s *SpanUtil[E]) GetNextEnd(current E, list *[]SpanBoundry[E]) *E {
 // returns the next overlapping Span[E] or nill based on the start SpanBoundry[E] and the slice of spans.
 // If all valid SpanBoundry[E] values have been exausted, nil is returned.
 func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) SpanBoundry[E] {
-	var begin *E = s.GetNextBegin(start.GetEnd(), list)
-	var end *E = s.GetNextEnd(start.GetEnd(), list)
-
-	if begin != nil {
-		var nextEnd *E = s.GetNextBegin(*begin, list)
-		if nextEnd != nil {
-			if s.Cmp(*nextEnd, *end) < 0 {
-				end = nextEnd
+	fmt.Printf("Getting Next for: %v\n", start)
+	var begin *E = s.GetP(start.GetEnd())
+	var end *E = nil
+	var res *Span[E];
+	var Cmp = s.Cmp
+	for _, span := range *list {
+		var cmp = Cmp(span.GetBegin(), *begin)
+		fmt.Printf("  Testing: %v begin cmp: %d\n",span,cmp)
+		if end == nil {
+			if cmp > 0 {
+				end = s.GetP(span.GetBegin())
+				fmt.Printf("    New End from Begin: %v\n", *end)
+			} else if Cmp(span.GetEnd(),*begin) > 0 {
+				end = s.GetP(span.GetEnd())
+				fmt.Printf("    New End from End: %v\n", *end)
 			}
+		} else if cmp > 0 && Cmp(*end, span.GetBegin()) > 0 {
+			*end = span.GetBegin()
+			fmt.Printf("    Reducing end to: %v\n", *end)
+		} else if Cmp(*begin, span.GetEnd()) > 0 && Cmp(*end, span.GetEnd()) > 0 {
+			fmt.Printf("    Reducing end to: %v\n", *end)
+			*end = span.GetEnd()
 		}
 
-		return &Span[E]{Begin: *begin, End: *end}
-	} else if end != nil {
-		return &Span[E]{Begin: start.GetEnd(), End: *end}
 	}
-	return nil
+	if end == nil {
+		if Cmp(start.GetBegin(), start.GetEnd()) != 0 {
+			 res=&Span[E]{Begin: *begin, End: *begin}
+		}
+	} else {
+		res=&Span[E]{Begin: *begin, End: *end}
+	}
+
+	return res
 }

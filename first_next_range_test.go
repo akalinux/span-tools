@@ -64,20 +64,33 @@ func TestGetNextSpan(t *testing.T) {
 		&Span[int]{Begin: 2, End: 2},
 		&Span[int]{Begin: 3, End: 3},
 	}
-	var check = testDriver.NextSpan(&Span[int]{Begin: -1, End: -1}, src)
-	for id := 0; id < len(*src); id++ {
+	var check = testDriver.NextSpan(&Span[int]{Begin: -1, End: 0}, src)
+	var expected *[]SpanBoundry[int] = &[]SpanBoundry[int]{
+		&Span[int]{Begin: 0, End: 1},
+		&Span[int]{Begin: 1, End: 2},
+		&Span[int]{Begin: 2, End: 3},
+		&Span[int]{Begin: 3, End: 3},
+	}
+
+	for id,span := range *expected {
 		if check == nil {
-			t.Errorf("Should have gotten 2 as our next return value")
+			t.Errorf("Should have gotten as our next return value")
 			return
 		}
-		if (*src)[id].GetBegin() != check.GetBegin() {
-			t.Errorf("Invalid begin, expected: %d, got: %d", (*src)[id].GetBegin(), check.GetBegin())
+		if span.GetBegin() != check.GetBegin() {
+			t.Errorf("Invalid begin, expected: %v, got: %v for set: %d", span, check,id)
+			return
+		}
+		if span.GetEnd() != check.GetEnd() {
+			t.Errorf("Invalid end, expected: %v, got: %v for set: %d", span, check,id)
 			return
 		}
 		check = testDriver.NextSpan(check, src)
 	}
-	if check != nil {
-		t.Error("Expected last call to NextSpan to return nil")
+	var nilCheck SpanBoundry[int]=nil
+	if check == nilCheck {
+		t.Errorf("Expected last call to NextSpan to return nil, got: %v",check)
+		return
 	}
 }
 
@@ -89,11 +102,12 @@ func TestGetNextSpanReducedColumns(t *testing.T) {
 	}
 	var expected []SpanBoundry[int] = []SpanBoundry[int]{
 		&Span[int]{Begin: 0, End: 1},
+		&Span[int]{Begin: 1, End: 2},
 		&Span[int]{Begin: 2, End: 3},
 		&Span[int]{Begin: 3, End: 5},
 		&Span[int]{Begin: 5, End: 6},
 	}
-	var check = testDriver.NextSpan(&Span[int]{Begin: -1, End: -1}, src)
+	var check = testDriver.NextSpan(&Span[int]{Begin: -1, End: 0}, src)
 	for id, span := range expected {
 		if check == nil {
 			t.Errorf("check should not be nil for row %d", id)
@@ -109,7 +123,7 @@ func TestGetNextSpanReducedColumns(t *testing.T) {
 		}
 		check = testDriver.NextSpan(check, src)
 	}
-	if check != nil {
+	if check == nil {
 		t.Error("Expected last call to NextSpan to return nil")
 	}
 }
