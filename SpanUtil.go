@@ -51,7 +51,7 @@ func NewOrderedSpanUtil[E cmp.Ordered]() *SpanUtil[E] {
 	return NewSpanUtil[E](cmp.Compare)
 }
 
-// Creates an instance of *SpanUtil[E,T], the value of cmp is expected to be able to compare the Span.Begin and Span.End values.
+// Creates an instance of *SpanUtil[E], the value of cmp is expected to be able to compare the Span.Begin and Span.End values.
 // See: [cmp.Compare] for more info.
 //
 // The default SpanFormat is set to: "Span: [%s -> %s], Tag: %s"
@@ -97,8 +97,9 @@ func (s *SpanUtil[E]) NewSpan(a, b E) (*Span[E], error) {
 	return &Span[E]{Begin: a, End: b}, nil
 }
 
-// This method returns the first smallest span from the slice of Span[E,T].
-func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) *Span[E] {
+// This method returns the first smallest span from the slice of Span[E].  
+// The new Span[E] will contian the smallest GetBegin() and the smallest GetEnd().
+func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
 	var span = &Span[E]{Begin: (*list)[0].GetBegin(), End: (*list)[0].GetEnd()}
 	var last = len(*list)
 	for i := 1; i < last; i++ {
@@ -113,7 +114,7 @@ func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) *Span[E] {
 	return span
 }
 
-// Factory interface for the creation of SpanOverlapAccumulator[E,T].
+// Factory interface for the creation of SpanOverlapAccumulator[E].
 func (s *SpanUtil[E]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E] {
 	return &SpanOverlapAccumulator[E]{
 		Validate: s.Validate,
@@ -151,8 +152,6 @@ func (s *SpanUtil[E]) ColumnOverlapFactoryBuilder(next func() (int, *Overlapping
 
 func (s *SpanUtil[E]) NewColumnSets() *ColumnSets[E] {
 	return &ColumnSets[E]{
-		Columns: &[]*ColumnOverlapAccumulator[E]{},
-		Active:  &[]bool{},
 		Util:    s,
 	}
 }
@@ -188,9 +187,9 @@ func (s *SpanUtil[E]) GetNextEnd(current E, list *[]SpanBoundry[E]) *E {
 }
 
 // This method acts as a stateless iterator that,
-// returns the next overlapping Span[E,T] or nill based on the start SpanBoundry[E,T] and the slice of spans.
-// If all valid SpanBoundry[E,T] values have been exausted, nil is returned.
-func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) *Span[E] {
+// returns the next overlapping Span[E] or nill based on the start SpanBoundry[E] and the slice of spans.
+// If all valid SpanBoundry[E] values have been exausted, nil is returned.
+func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) SpanBoundry[E] {
 	var begin *E = s.GetNextBegin(start.GetEnd(), list)
 	var end *E = s.GetNextEnd(start.GetEnd(), list)
 

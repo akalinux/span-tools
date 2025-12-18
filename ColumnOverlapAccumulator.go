@@ -1,6 +1,5 @@
 package st
 
-
 // Contains the current iterator control functions and represents the column position in the iterator process.
 type ColumnOverlapAccumulator[E any] struct {
 	// Representation of the data that intersected with an SpanBoundry passed to GetNext.
@@ -29,6 +28,33 @@ type ColumnOverlapAccumulator[E any] struct {
 	Closed bool
 }
 
+func (s *ColumnOverlapAccumulator[E]) GetBegin() E {
+	return s.Next.GetBegin()
+}
+
+func (s *ColumnOverlapAccumulator[E]) GetEnd() E {
+	return s.Next.GetEnd()
+}
+
+type ColumnOverlap[E any] interface {
+	SpanBoundry[E]
+	GetSrcStart() int
+	GetSrcEnd() int
+	GetOverlaps() *[]*OverlappingSpanSets[E]
+}
+
+func (s *ColumnOverlapAccumulator[E]) GetSrcStart() int {
+	return s.SrcStart
+}
+
+func (s *ColumnOverlapAccumulator[E]) GetSrcEnd() int {
+	return s.SrcEnd
+}
+
+func (s *ColumnOverlapAccumulator[E]) GetOverlaps() *[]*OverlappingSpanSets[E] {
+	return s.Overlaps
+}
+
 // Returns true if there are more elements in this column.
 func (s *ColumnOverlapAccumulator[E]) HasNext() bool {
 	return !s.Closed && s.Next != nil
@@ -46,6 +72,10 @@ func (s *ColumnOverlapAccumulator[E]) Close() {
 		s.ItrStop()
 		s.Closed = true
 	}
+}
+
+func (s *ColumnOverlapAccumulator[E]) InOverlap() bool {
+	return s.HasNext() && s.SrcStart != -1
 }
 
 // This method updates the currrent instance  to represent what data intersects with the overlap SpanBoundry[E,T].

@@ -12,8 +12,7 @@ var AllSet = []SpanBoundry[int]{
 	&Span[int]{Begin: 0, End: 1},
 	&Span[int]{Begin: 0, End: 1},
 }
-var tagA = "a"
-var tagB = "b"
+
 var MultiSet = []SpanBoundry[int]{
 	&Span[int]{Begin: -1, End: 0},            // 0
 	&Span[int]{Begin: 2, End: 2}, //1
