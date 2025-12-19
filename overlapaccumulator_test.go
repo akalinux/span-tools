@@ -63,6 +63,10 @@ func TestPull2MultSetDataOverlaps(t *testing.T) {
 			t.Errorf("Invalid SrcEnd, expected: %d, got %d for position: %d",expected[idx][1],ol.SrcEnd,idx)
 			return
 		}
+		if !ol.IsUnique() && ol.GetContains()==nil {
+			t.Errorf("Contains should not be empty if the object is uniqe")
+			return
+		}
 	  idx,ol,ok =next()
 	}
 	if(count!=len(expected)) {
