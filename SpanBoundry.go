@@ -9,21 +9,7 @@ type Span[E any] struct {
 	End E
 }
 
-// Pure pointer Span struct
-type SpanRef[E any] struct {
-	// Start of the Span.
-	Begin *E
-	// End of the Span.
-	End *E
-}
 
-func (s *SpanRef[E]) GetBegin() E {
-	return *s.Begin
-}
-
-func (s *SpanRef[E]) GetEnd() E {
-	return *s.End
-}
 
 type SpanBoundry[E any] interface {
 	// Returns the Begin value.

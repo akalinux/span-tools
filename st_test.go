@@ -1,22 +1,19 @@
-
-
 package st
 
 import (
+	"cmp"
 	"slices"
 	"testing"
 )
 
-
-
 var MultMultiiSet = []SpanBoundry[int]{
-  &Span[int]{Begin: -1, End: 0},// 0, 0
-  &Span[int]{Begin: 2, End: 2}, //1, 1
-  &Span[int]{Begin: 2, End: 2}, //2, 1
-  &Span[int]{Begin: 5, End: 6},//3, 2
-  &Span[int]{Begin: 9, End: 11}, //4, 3
-  &Span[int]{Begin: 9, End: 11 },//5, 3
-	&Span[int]{Begin: 12, End: 12},//6, 4
+	&Span[int]{Begin: -1, End: 0},  // 0, 0
+	&Span[int]{Begin: 2, End: 2},   //1, 1
+	&Span[int]{Begin: 2, End: 2},   //2, 1
+	&Span[int]{Begin: 5, End: 6},   //3, 2
+	&Span[int]{Begin: 9, End: 11},  //4, 3
+	&Span[int]{Begin: 9, End: 11},  //5, 3
+	&Span[int]{Begin: 12, End: 12}, //6, 4
 }
 
 // Data sets used to verify the range sort method works as expected
@@ -46,38 +43,25 @@ var testSets = [][][]SpanBoundry[int]{
 	},
 }
 
-var testDriver = NewOrderedSpanUtil[int]()
-
-type SpanInt struct {
-	SpanRef[int]
+func AddOne(e int) int {
+	return e + 1
 }
 
-func TestSaneSpan(t *testing.T) {
-	var begin = 2
-	var end = 1
-	var next = &SpanInt{
-		SpanRef[int]{
-			Begin: &begin,
-			End:   &end,
-		},
-	}
+var testDriver = NewSpanUtil(
+	cmp.Compare,
+	AddOne,
+)
 
-
-	if nil == testDriver.Check(next, nil) {
-		t.Errorf("Should get an error if begin is greater than end")
-		return
+func TestCreateOverlap(t *testing.T) {
+	
+	var test=[]SpanBoundry[int]{
+		&Span[int]{Begin: 0,End: 3},
+		&Span[int]{Begin: 2,End: 2},
 	}
-	begin = 0
-	if nil != testDriver.Check(next, nil) {
-		t.Errorf("Should get not get an error")
-		return
-	}
-
-	var current = &Span[int]{Begin: 3, End: 3}
-	if nil == testDriver.Check(next, current) {
-		t.Errorf("current: %d->%d, should be before next: %d->%d", current.GetBegin(), current.GetEnd(), next.GetBegin(), next.GetEnd())
-	}
-
+	var res=testDriver.CreateOverlapSpan(&test)
+	if(res.GetBegin()!=2 || res.GetEnd()!=2) {
+		t.Errorf("Expected 2->2, got %v",res)
+	} 
 }
 
 func TestNewSpan(t *testing.T) {
@@ -95,7 +79,7 @@ func TestNewSpan(t *testing.T) {
 		t.Errorf("Invalid return span content")
 		return
 	}
-	span, err = testDriver.NewSpan(2, 1 )
+	span, err = testDriver.NewSpan(2, 1)
 	if err == nil {
 		t.Errorf("Should have an error here")
 	}
@@ -215,8 +199,6 @@ func TestGrowth(t *testing.T) {
 	}
 }
 
-
-
 // Negative and positive overlap span testing.
 func TestOverlaps(t *testing.T) {
 	var a = &Span[int]{Begin: 0, End: 1}
@@ -275,10 +257,10 @@ func TestMultiAccumulateSet(t *testing.T) {
 		t.Errorf("Expected 5,6 got: %d,%d", next.GetBegin(), next.GetEnd())
 		return
 	}
-  if(next.SrcBegin!=3 || next.SrcEnd!=3) {
+	if next.SrcBegin != 3 || next.SrcEnd != 3 {
 		t.Errorf("Expected 3,3 got: %d,%d", next.SrcBegin, next.SrcEnd)
-    panic("STOP TESTING")
-  }
+		panic("STOP TESTING")
+	}
 	if first == next {
 		t.Errorf("First and next should not be the same!")
 		return
@@ -294,11 +276,6 @@ func TestMultiAccumulateSet(t *testing.T) {
 		return
 	}
 }
-
-
-
-
-
 
 func TestChanAccumulatro(t *testing.T) {
 	var c = make(chan SpanBoundry[int], len(MultiSet))
@@ -357,11 +334,5 @@ func TestChanAccumulatro(t *testing.T) {
 	if count != 1 {
 		t.Errorf("Force, yeild test coverage... Expected a total 1 for got: %d", count)
 	}
-  
 
 }
-
-
-
-
-

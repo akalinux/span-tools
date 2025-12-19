@@ -1,9 +1,7 @@
 package st
 
 import (
-	"cmp"
 	"errors"
-	"fmt"
 	"iter"
 )
 
@@ -19,6 +17,10 @@ type SpanUtil[E any] struct {
 
 	// Denots if a tag is required, when true tag values cannot be nil.
 	TagRequired bool
+
+	// Next value function, should return the next E.
+	// The new E value must always be greater than the argument passed in
+	Next func(e E) E
 }
 
 // This method is used to verify the sanyty of the next and current value.
@@ -47,19 +49,17 @@ func (s *SpanUtil[E]) GetP(x E) *E {
 	return &x
 }
 
-// Creates a instance of *SpanUtil[E cmp.Ordered,T], this can be used to process most span data sets.
-func NewOrderedSpanUtil[E cmp.Ordered]() *SpanUtil[E] {
-	return NewSpanUtil[E](cmp.Compare)
-}
-
 // Creates an instance of *SpanUtil[E], the value of cmp is expected to be able to compare the Span.Begin and Span.End values.
 // See: [cmp.Compare] for more info.
 //
 // The default SpanFormat is set to: "Span: [%s -> %s], Tag: %s"
 //
 // [cmp.Compare]: https://pkg.go.dev/github.com/google/go-cmp/cmp#Comparer
-func NewSpanUtil[E any](cmp func(a, b E) int) *SpanUtil[E] {
-	return &SpanUtil[E]{Cmp: cmp}
+func NewSpanUtil[E any](cmp func(a, b E) int, next func(e E) E) *SpanUtil[E] {
+	return &SpanUtil[E]{
+		Cmp:  cmp,
+		Next: next,
+	}
 }
 
 // This method is used to sort slice of spans in the accumulation order.
@@ -98,8 +98,9 @@ func (s *SpanUtil[E]) NewSpan(a, b E) (*Span[E], error) {
 	return &Span[E]{Begin: a, End: b}, nil
 }
 
-// This method returns the first smallest span from the slice of Span[E].
-// The new Span[E] will contian the smallest GetBegin() and the smallest GetEnd().
+// This method returns the first smallest span from list.
+// The new SpanBoundry[E] will contian the smallest GetBegin() and the smallest GetEnd().
+// Usage(FirstSpan): Is in conjuntion with NextSpan(span,list) to iterate through a set
 func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
 	var span = &Span[E]{Begin: (*list)[0].GetBegin(), End: (*list)[0].GetEnd()}
 	var last = len(*list)
@@ -157,71 +158,65 @@ func (s *SpanUtil[E]) NewColumnSets() *ColumnSets[E] {
 	}
 }
 
-func (s *SpanUtil[E]) GetNextBegin(current E, list *[]SpanBoundry[E]) *E {
-	var next *E = nil
+func (s *SpanUtil[E]) CreateOverlapSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
+
+	var begin *E
+	var end *E
+	var Cmp = s.Cmp
+	var res SpanBoundry[E] = &Span[E]{}
 	for _, span := range *list {
-		var cmp = s.Cmp(span.GetBegin(), current)
-		if next == nil {
-			if cmp > 0 {
-				next = s.GetP(span.GetBegin())
-			}
-		} else if cmp > 0 && s.Cmp(span.GetBegin(), *next) < 0 {
-			next = s.GetP(span.GetBegin())
+		if begin == nil {
+			begin = s.GetP(span.GetBegin())
+			end = s.GetP(span.GetEnd())
+			continue
+		}
+
+		if Cmp(span.GetBegin(), *begin) > 0 {
+			begin = s.GetP(span.GetBegin())
+		}
+		if Cmp(*end, span.GetEnd()) > 0 {
+			end = s.GetP(span.GetEnd())
 		}
 	}
-	return next
-}
-
-func (s *SpanUtil[E]) GetNextEnd(current E, list *[]SpanBoundry[E]) *E {
-	var next *E = nil
-	for _, span := range *list {
-		var cmp = s.Cmp(span.GetEnd(), current)
-		if next == nil {
-			if cmp > 0 {
-				next = s.GetP(span.GetEnd())
-			}
-		} else if cmp > 0 && s.Cmp(span.GetEnd(), *next) < 0 {
-			next = s.GetP(span.GetEnd())
-		}
+	if Cmp(*begin, *end) < 1 {
+		res = &Span[E]{Begin: *begin, End: *end}
 	}
-	return next
+	return res
 }
 
-// This method acts as a stateless iterator that,
-// returns the next overlapping Span[E] or nill based on the start SpanBoundry[E] and the slice of spans.
-// If all valid SpanBoundry[E] values have been exausted, nil is returned.
+// Finds the next common overlapping SpanBoundry[E] span in list after start, 
+// or nil if no next overlap is found after start in list.
 func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) SpanBoundry[E] {
-	fmt.Printf("Getting Next for: %v\n", start)
-	var begin *E = s.GetP(start.GetEnd())
-	var end *E = nil
-	var res *Span[E];
+	var min = s.Next(start.GetEnd())
+	var end *E
+	var res SpanBoundry[E] = &Span[E]{}
 	var Cmp = s.Cmp
 	for _, span := range *list {
-		var cmp = Cmp(span.GetBegin(), *begin)
-		fmt.Printf("  Testing: %v begin cmp: %d\n",span,cmp)
+		var cmp = Cmp(span.GetEnd(), min)
 		if end == nil {
-			if cmp > 0 {
-				end = s.GetP(span.GetBegin())
-				fmt.Printf("    New End from Begin: %v\n", *end)
-			} else if Cmp(span.GetEnd(),*begin) > 0 {
+			if cmp > -1 {
 				end = s.GetP(span.GetEnd())
-				fmt.Printf("    New End from End: %v\n", *end)
-			}
-		} else if cmp > 0 && Cmp(*end, span.GetBegin()) > 0 {
-			*end = span.GetBegin()
-			fmt.Printf("    Reducing end to: %v\n", *end)
-		} else if Cmp(*begin, span.GetEnd()) > 0 && Cmp(*end, span.GetEnd()) > 0 {
-			fmt.Printf("    Reducing end to: %v\n", *end)
-			*end = span.GetEnd()
-		}
+				cmp = Cmp(span.GetBegin(), min)
+				if cmp > 0 && Cmp(span.GetBegin(), *end) < 0 {
+					end = s.GetP(span.GetBegin())
+				}
 
-	}
-	if end == nil {
-		if Cmp(start.GetBegin(), start.GetEnd()) != 0 {
-			 res=&Span[E]{Begin: *begin, End: *begin}
+			}
+			continue
+		} else if cmp > -1 && Cmp(*end, span.GetEnd()) > 0 {
+			end = s.GetP(span.GetEnd())
 		}
-	} else {
-		res=&Span[E]{Begin: *begin, End: *end}
+		cmp = Cmp(span.GetBegin(), min)
+		if cmp > 0 && Cmp(span.GetBegin(), *end) < 0 {
+			end = s.GetP(span.GetBegin())
+		}
+	}
+	if end != nil {
+		var tmp = &Span[E]{Begin: min, End: *end}
+		var ol = []SpanBoundry[E]{}
+		copy(ol, *list)
+		ol = append(ol, tmp)
+		res = s.CreateOverlapSpan(&ol)
 	}
 
 	return res
