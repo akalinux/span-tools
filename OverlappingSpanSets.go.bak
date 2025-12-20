@@ -3,14 +3,14 @@ package st
 // A representation of accumulated Span from a given source.
 // The *Span[E,T] represents the span that contains all SpanBoundry[E,T] in *Contains.
 // When *Contains is nil, then this struct only has 1 SpanBoundry[E,T].
-// When *Contains is not nil, the original *SpanBoundry[E,T] values are contained within.
+// When *Contains is not nil, the orignal *SpanBoundry[E,T] values are contained within.
 type OverlappingSpanSets[E any] struct {
 
 	// The Span that contains all Spans in this instance.
 	Span SpanBoundry[E]
 
 	// When nil, Span is the only value representing this Span.
-	// When not nil, contains all the Spans accumulated to create this instance.
+	// When not nill, contains all the Spans acumulated to create this instance.
 	Contains *[]SpanBoundry[E]
 
 	// Starting position in the original data set
