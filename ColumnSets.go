@@ -8,6 +8,7 @@ type CurrentColumn[E any] struct {
 	ColumnOverlap[E]
 	ColumnId int
 }
+
 type ColumnSets[E any] struct {
 	Util    *SpanUtil[E]
 	columns *[]*ColumnOverlapAccumulator[E]
@@ -20,19 +21,28 @@ type ColumnSets[E any] struct {
 }
 
 type ColumnResults[E any] interface {
+	// Returns the current columns
 	GetColumns() *[]*CurrentColumn[E]
+	
+	// Denotes how many columns overlap with the current span.
 	OverlapCount() int 
+	// Returns the SpanBoundry representing the current position in our data set.
 	GetSpan() SpanBoundry[E]
+	
+	
 	SpanBoundry[E]
 }
 
 func (s *ColumnSets[E]) GetSpan() SpanBoundry[E] {
 	return s.overlap
 }
+
+// This is a wrapper for s.GetSpan.GetBegin().
 func (s *ColumnSets[E]) GetBegin() E {
 	return s.overlap.GetBegin()
 }
 
+// This is a wrapper for s.GetSpan.GetEnd().
 func (s *ColumnSets[E]) GetEnd() E {
 	return s.overlap.GetEnd()
 }
@@ -53,6 +63,8 @@ func (s *ColumnSets[E]) Close() {
 	}
 }
 
+// Denotes how many columns overlap with this span, if the set of current colums is empty
+// then the returned value will be -1.
 func (s *ColumnSets[E]) OverlapCount() int {
 	if s.current == nil {
 		return -1
@@ -73,8 +85,12 @@ func (s *ColumnSets[E]) AddColumn(c *ColumnOverlapAccumulator[E]) int {
 	return len(*s.columns) - 1
 }
 
-func (s *ColumnSets[E]) AddColumnFromSpanSlice(list *[]SpanBoundry[E]) int {
-	return s.AddColumn(s.Util.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(list))
+// This is a helper method that constructs an SpanOverlapAccumulator and then produces
+// an iterator from the SpanOverlapAccumulator based on list.
+func (s *ColumnSets[E]) AddColumnFromSpanSlice(list *[]SpanBoundry[E]) (int,*SpanOverlapAccumulator[E]) {
+	var ac=s.Util.NewSpanOverlapAccumulator()
+	var res=s.AddColumn(ac.ColumnOverlapSliceFactory(list))
+	return res,ac
 }
 
 func (s *ColumnSets[E]) init() {
@@ -86,12 +102,13 @@ func (s *ColumnSets[E]) init() {
 			*test = append(*test, span)
 		}
 	}
-	if len(check) == 0 {
-		s.pos = -1
+  var init,ok=s.Util.FirstSpan(test)
+	if(!ok) {
+		s.pos=-1
 		return
 	}
 	s.pos = 0
-	s.overlap = s.Util.FirstSpan(test)
+	s.overlap = init
 	s.active = &check
 	s.setCurrent()
 

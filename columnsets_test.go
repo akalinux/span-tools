@@ -19,19 +19,19 @@ func TestEmptyColumnSet(t *testing.T) {
 func TestInitColumSet(t *testing.T) {
 	var cs = testDriver.NewColumnSets()
 
-	var id = cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{&Span[int]{Begin: 1, End: 1}})
+	var id,_ = cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{&Span[int]{Begin: 1, End: 1}})
 	if id != 0 {
 		t.Errorf("Expected id: 0, got %d", id)
 		return
 	}
 
-	id = cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{&Span[int]{Begin: 2, End: 2}})
+	id,_ = cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{&Span[int]{Begin: 2, End: 2}})
 	if id != 1 {
 		t.Errorf("Expected id: 1, got %d", id)
 		return
 	}
 
-	id = cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{&Span[int]{Begin: 3, End: 3}})
+	id,_ = cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{&Span[int]{Begin: 3, End: 3}})
 	if id != 2 {
 		t.Errorf("Expected id: 1, got %d", id)
 		return

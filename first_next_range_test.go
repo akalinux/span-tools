@@ -8,7 +8,7 @@ func TestFirstRange(t *testing.T) {
 		&Span[int]{Begin: 2, End: 2},
 		&Span[int]{Begin: 0, End: 1},
 	}
-	var span = testDriver.FirstSpan(src)
+	var span,_ = testDriver.FirstSpan(src)
 	if span.GetBegin() != 0 || span.GetEnd() != 1 {
 		t.Errorf("Invalid start range")
 	}
