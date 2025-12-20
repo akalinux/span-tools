@@ -60,4 +60,30 @@ func TestInitColumSet(t *testing.T) {
 
 }
 
+func TestFullIter(t *testing.T) {
+	var cs = testDriver.NewColumnSets()
 
+	cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{&Span[int]{Begin: 1, End: 1}})
+	cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{&Span[int]{Begin: 2, End: 2}})
+
+
+	cs.Init()
+	defer cs.Close()
+	cs.SetNext()
+
+	if cs.OverlapCount() != 1 {
+		t.Errorf("Expected OverlapCount of: 1, got: %d", cs.OverlapCount())
+		return
+	}
+	if(cs.Overlap.GetBegin()!=2 || cs.Overlap.GetEnd()!=2) {
+		t.Errorf("Should have gotten our next span of 2->2, but got: %v",cs.Overlap)
+		return
+	}
+	cs.SetNext()
+	if(cs.Pos!=-1) {
+		t.Errorf("Should be done!, got %v",cs.Overlap)
+	}
+	
+
+
+}
