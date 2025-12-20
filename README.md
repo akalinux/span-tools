@@ -6,7 +6,7 @@ and overlaps of "one dimensional spans" of any data type.
 
 The package is built around the SpanUtil[E] struct,
 The struct requires 2 methods be set in order to implement the algorithm:
-- A "Compare" function see: [cmp.Compare] for more details.
+- A "Compare" function see: [cmp.Compare](https://pkg.go.dev/cmp#Compare) for more details.
 - A "Next" function, takes a given value and returns next value.
   The next value must be greater than the input value
 
