@@ -10,17 +10,26 @@ type SpanOverlapAccumulator[E any] struct {
 	Rss *OverlappingSpanSets[E]
 	*SpanUtil[E]
 	// When true slices passed in will be sorted.
-	Sort     bool
-	Err      error
-	Pos      int
-	Validate bool
+	Sort        bool
+	
+	// When not nil, this object has encoutner an error
+	Err         error
+	
+	// Sequence counter
+	Pos         int
+	
+	// Turns validation on/off, default false or off
+	Validate    bool
+
+	// Turns consolidation of adjacent spans on or off, default false or off
+	Consolidate bool
 }
 
 // The Accumulate method.
 //
-// For a given Span[E,T] provided:
-// When the span overlaps with the current Span[E,T], the OverlappingSpanSets is expanded and the span is appened to the Contains slice.
-// When the span is outside of the current Span[E,T], then a new OverlappingSpanSets is created with this span as its current span.
+// For a given span provided:
+// When the span overlaps with the current internal Span[E], the OverlappingSpanSets is expanded and the span is appened to the Contains slice.
+// When the span is outside of the current internal Span[E], then a new OverlappingSpanSets is created with this span as its current span.
 func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) *OverlappingSpanSets[E] {
 	s.Pos++
 	if s.Validate {
@@ -34,11 +43,25 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) *Overlapping
 
 	a := s.Rss.Span
 	if s.Cmp(a.GetEnd(), span.GetBegin()) < 0 {
-		s.Rss = &OverlappingSpanSets[E]{
-			Span:     span,
-			Contains: nil,
-			SrcBegin: s.Pos,
-			SrcEnd:   s.Pos,
+		var joined = false
+		if s.Consolidate {
+			var next = s.Next(a.GetEnd())
+			if s.Cmp(next, span.GetBegin()) == 0 {
+				s.Rss.Span = &Span[E]{
+					Begin: a.GetBegin(),
+					End:   span.GetEnd(),
+				}
+				joined = true
+			}
+		}
+		if !joined {
+
+			s.Rss = &OverlappingSpanSets[E]{
+				Span:     span,
+				Contains: nil,
+				SrcBegin: s.Pos,
+				SrcEnd:   s.Pos,
+			}
 		}
 	} else {
 		x, y := s.ContainedBy(a, span)
@@ -46,9 +69,13 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) *Overlapping
 			var r = Span[E]{}
 			if x < 0 {
 				r.Begin = a.GetBegin()
+			} else {
+				r.Begin = span.GetBegin()
 			}
 			if y > 0 {
 				r.End = a.GetEnd()
+			} else {
+				r.End = span.GetEnd()
 			}
 			s.Rss.Span = &r
 		}
