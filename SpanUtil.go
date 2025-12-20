@@ -6,7 +6,6 @@ import (
 )
 
 // Core of the span utilties: Provides methos for processing ranges.
-// Its recommended that an instance of this structure be created via the constructor util methods such as NewSpanUtil(Cmp) or NewOrderedSpanUtil(),
 type SpanUtil[E any] struct {
 
 	// Compare function.  This function should be atomic and be able t compare the E type by return -1,0,1.
@@ -101,12 +100,16 @@ func (s *SpanUtil[E]) NewSpan(a, b E) (*Span[E], error) {
 }
 
 // Generates the first valid span representing the smallest overapping set.
-// This is done by first finding the smallest begin and end values.
-// The resulting span is refered to as the "initial span".
-//
+// If list is nil, or contains no spans, then the span is nill and the bool value will be false.
+// 
+// Finding the "inital span" is done by first finding the smallest begin and end values.
+// The resulting span is refered to as the "initial span". 
 // If there is a begin value in list, that overlaps with the smallest end value, then
 // the "inital span" begin value will also be set as the end value for the "inital span".
-func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
+func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) (SpanBoundry[E],bool) {
+	if(list==nil || len(*list)==0) {
+		return nil,false
+	}
 	var span = &Span[E]{Begin: (*list)[0].GetBegin(), End: (*list)[0].GetEnd()}
 	var last = len(*list)
 	var Cmp = s.Cmp
@@ -122,13 +125,14 @@ func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
 	for _, check := range *list {
 		if Cmp(check.GetBegin(), span.Begin) > 0 && Cmp(span.GetEnd(), check.GetBegin()) > -1 {
 			span.End = span.Begin
-			return span
+			return span,true
 		}
 	}
-	return span
+	return span,true
 }
 
 // Factory interface for the creation of SpanOverlapAccumulator[E].
+// Each set of data should have its on uniqe instance of an accumulator.
 func (s *SpanUtil[E]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E] {
 	return &SpanOverlapAccumulator[E]{
 		Validate:    s.Validate,
@@ -153,6 +157,7 @@ func (s *SpanUtil[E]) ColumnOverlapFactory(driver iter.Seq2[int, *OverlappingSpa
 }
 
 // This method takes the next and stop functions and creates a new fully initalized instance of ColumnOverlapAccumulator[E].
+// Each data set should have its own accumulator.
 func (s *SpanUtil[E]) ColumnOverlapFactoryBuilder(next func() (int, *OverlappingSpanSets[E], bool), stop func()) *ColumnOverlapAccumulator[E] {
 	var res = &ColumnOverlapAccumulator[E]{}
 	res.ItrStop = stop
@@ -171,8 +176,19 @@ func (s *SpanUtil[E]) NewColumnSets() *ColumnSets[E] {
 	}
 }
 
-func (s *SpanUtil[E]) CreateOverlapSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
+// Generates the "common overlapping span".
+// This method assumes that all SpanBoundry instances in list overlap, and does not
+// check if some SpanBoundry instances do not overlap. If some SpanBoundry instances
+// do not overlap, then this will result in the creation of an invalid SpanBoundry.
+//
+// How the "common overlapping span" is created is as follows:
+//  - Find the largest begin value in list and uses that as the begin value.
+//  - Find the smallest end value in list and uses that as the end value.
+func (s *SpanUtil[E]) CreateOverlapSpan(list *[]SpanBoundry[E]) (SpanBoundry[E],bool) {
 
+	if(list==nil || len(*list)==0) {
+		return nil, false
+	}
 	var begin *E
 	var end *E
 	var Cmp = s.Cmp
@@ -194,7 +210,7 @@ func (s *SpanUtil[E]) CreateOverlapSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
 	if Cmp(*begin, *end) < 1 {
 		res = &Span[E]{Begin: *begin, End: *end}
 	}
-	return res
+	return res,true
 }
 
 // Finds the next common overlapping SpanBoundry[E] span in list after start,
@@ -241,8 +257,7 @@ func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) (Sp
 		var ol = []SpanBoundry[E]{}
 		copy(ol, *list)
 		ol = append(ol, tmp)
-		res = s.CreateOverlapSpan(&ol)
-		ok = true
+		res,ok = s.CreateOverlapSpan(&ol)
 	}
 
 	return res, ok

@@ -5,21 +5,22 @@ import (
 	"slices"
 )
 
-// This is a stater structure, used to driver the creation of new OverlappingSpanSets.
+// This is a stater structure, used to drive the creation of new OverlappingSpanSets.
+// Each source of spans should have thier own instance of SpanOverlapAccumulator.
 type SpanOverlapAccumulator[E any] struct {
 	Rss *OverlappingSpanSets[E]
 	*SpanUtil[E]
 	// When true slices passed in will be sorted.
-	Sort        bool
-	
+	Sort bool
+
 	// When not nil, this object has encoutner an error
-	Err         error
-	
+	Err error
+
 	// Sequence counter
-	Pos         int
-	
+	Pos int
+
 	// Turns validation on/off, default false or off
-	Validate    bool
+	Validate bool
 
 	// Turns consolidation of adjacent spans on or off, default false or off
 	Consolidate bool
@@ -28,8 +29,8 @@ type SpanOverlapAccumulator[E any] struct {
 // The Accumulate method.
 //
 // For a given span provided:
-// When the span overlaps with the current internal Span[E], the OverlappingSpanSets is expanded and the span is appened to the Contains slice.
-// When the span is outside of the current internal Span[E], then a new OverlappingSpanSets is created with this span as its current span.
+// When the span overlaps with the current internal span, the OverlappingSpanSets is expanded and the span is appened to the Contains slice.
+// When the span is outside of the current internal span, then a new OverlappingSpanSets is created with this span as its current span.
 func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) *OverlappingSpanSets[E] {
 	s.Pos++
 	if s.Validate {
@@ -112,17 +113,18 @@ func (s *SpanOverlapAccumulator[E]) ChanIterFactoryOverlaps(c <-chan *Overlappin
 	}
 }
 
-func (s *SpanOverlapAccumulator[E]) SliceIterFactoryOverlaps(c *[]*OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
+// Helper function to create an overlap iterator from a slice of list.
+func (s *SpanOverlapAccumulator[E]) SliceIterFactoryOverlaps(list *[]*OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
 
-	if c == nil {
+	if list == nil {
 		return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
 		}
 	}
-	var end = len(*c)
+	var end = len(*list)
 	var i = 0
 	return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
 		for ; i < end; i++ {
-			if !yeild(i, (*c)[i]) {
+			if !yeild(i, (*list)[i]) {
 				return
 			}
 		}

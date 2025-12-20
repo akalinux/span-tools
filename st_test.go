@@ -58,10 +58,19 @@ func TestCreateOverlap(t *testing.T) {
 		&Span[int]{Begin: 0,End: 3},
 		&Span[int]{Begin: 2,End: 2},
 	}
-	var res=testDriver.CreateOverlapSpan(&test)
+	var res,ok=testDriver.CreateOverlapSpan(&test)
+	if(!ok) {
+		t.Errorf("Expected ok to be true, got false?")
+		return
+	}
 	if(res.GetBegin()!=2 || res.GetEnd()!=2) {
 		t.Errorf("Expected 2->2, got %v",res)
 	} 
+	_,ok=testDriver.CreateOverlapSpan(nil)
+	if(ok) {
+		t.Error("Expected ok to be false, got true?")
+		return
+	}
 }
 
 func TestNewSpan(t *testing.T) {

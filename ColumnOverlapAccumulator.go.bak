@@ -24,7 +24,7 @@ type ColumnOverlapAccumulator[E any] struct {
 	// The next set to operate on, when nil.
 	Next *OverlappingSpanSets[E]
 
-	// Denotes if the object is closed
+	// Denotes if theobject is closed
 	Closed bool
 }
 
@@ -78,7 +78,7 @@ func (s *ColumnOverlapAccumulator[E]) InOverlap() bool {
 	return s.HasNext() && s.SrcStart != -1
 }
 
-// This method updates the current instance  to represent what data intersects with the overlap SpanBoundry[E,T].
+// This method updates the currrent instance  to represent what data intersects with the overlap SpanBoundry[E,T].
 func (s *ColumnOverlapAccumulator[E]) SetNext(overlap SpanBoundry[E]) {
 	var current = s.Next
 	var hasnext = current != nil
