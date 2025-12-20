@@ -189,7 +189,7 @@ func (s *SpanUtil[E]) CreateOverlapSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
 func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) SpanBoundry[E] {
 	var min = s.Next(start.GetEnd())
 	var end *E
-	var res SpanBoundry[E] = &Span[E]{}
+	var res SpanBoundry[E] 
 	var Cmp = s.Cmp
 	for _, span := range *list {
 		var cmp = Cmp(span.GetEnd(), min)
