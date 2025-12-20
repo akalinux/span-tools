@@ -15,16 +15,15 @@ type SpanUtil[E any] struct {
 	// Turns validation on for new child objects created.
 	Validate bool
 
-	// Denots if a tag is required, when true tag values cannot be nil.
-	TagRequired bool
-
 	// Next value function, should return the next E.
 	// The new E value must always be greater than the argument passed in
 	Next func(e E) E
 	
 	
-	// Global default flag denoting if overlaps that are ajacent should be consolidated.
-	// when truee: 1,2 and 2,3 
+	// Flag denoting if overlaps that are ajacent should be consolidated.
+	// Example of when true: 1,2 and 2,3 consolidate to 1,3, when false they do not consolidate.
+	// Default is false.
+	Consolidate bool
 }
 
 // This method is used to verify the sanyty of the next and current value.
@@ -127,6 +126,7 @@ func (s *SpanUtil[E]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E] {
 		SpanUtil: s,
 		Rss:      &OverlappingSpanSets[E]{Contains: nil, Span: nil},
 		Pos:      -1,
+		Consolidate: s.Consolidate,
 	}
 }
 
@@ -189,7 +189,7 @@ func (s *SpanUtil[E]) CreateOverlapSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
 }
 
 // Finds the next common overlapping SpanBoundry[E] span in list after start, 
-// or nil if no next overlap is found after start in list.
+// If the bool value is false, then there are no more elements in the set.
 func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) (SpanBoundry[E],bool) {
 	var min = s.Next(start.GetEnd())
 	var end *E

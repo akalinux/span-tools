@@ -83,7 +83,4 @@ func TestFullIter(t *testing.T) {
 	if(cs.Pos!=-1) {
 		t.Errorf("Should be done!, got %v",cs.Overlap)
 	}
-	
-
-
 }
