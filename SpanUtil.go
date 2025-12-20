@@ -21,6 +21,10 @@ type SpanUtil[E any] struct {
 	// Next value function, should return the next E.
 	// The new E value must always be greater than the argument passed in
 	Next func(e E) E
+	
+	
+	// Global default flag denoting if overlaps that are ajacent should be consolidated.
+	// when truee: 1,2 and 2,3 
 }
 
 // This method is used to verify the sanyty of the next and current value.
@@ -186,11 +190,12 @@ func (s *SpanUtil[E]) CreateOverlapSpan(list *[]SpanBoundry[E]) SpanBoundry[E] {
 
 // Finds the next common overlapping SpanBoundry[E] span in list after start, 
 // or nil if no next overlap is found after start in list.
-func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) SpanBoundry[E] {
+func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) (SpanBoundry[E],bool) {
 	var min = s.Next(start.GetEnd())
 	var end *E
 	var res SpanBoundry[E] 
 	var Cmp = s.Cmp
+	var ok=false
 	for _, span := range *list {
 		var cmp = Cmp(span.GetEnd(), min)
 		if end == nil {
@@ -217,7 +222,8 @@ func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) Spa
 		copy(ol, *list)
 		ol = append(ol, tmp)
 		res = s.CreateOverlapSpan(&ol)
+		ok=true
 	}
 
-	return res
+	return res,ok
 }
