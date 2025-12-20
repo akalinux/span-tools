@@ -10,10 +10,9 @@ The struct requires 2 methods be set in order to implement the algorithm:
 - A "Next" function, takes a given value and returns next value.
   The next value must be greater than the input value
 
-The algorithm is primarily implemented by 3 methods of the SpanUtil[E] struct:
+The algorithm is primarily implemented by 2 methods of the SpanUtil[E] struct:
 - FirstSpan, finds the initial data span intersection.
 - NextSpan, finds all subsequent data span intersections.
-- CreateOverlapSpan, finds the most common intersection of all overlapping spans.
 
 Other features of this package provide ways to consolidate overlaps and data set
 iteration from various data sources.
