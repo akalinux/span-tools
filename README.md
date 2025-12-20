@@ -50,13 +50,33 @@ Example Code:
 			u.Ns(2,7),
 			u.Ns(5,11),
 		}
-		var count=0
+		
+		// Create our initial span 
 		var span,ok=u.FirstSpan(list)
+		
+		// Denote our overlap set position
+		var count=0
 		for ok {
+		  // Get the indexes of the columns this overlap relates to
 			var sources=u.GetOverlapIndexes(span,list)
+			
+			// output our intersection data
 			fmt.Printf("Overlap Set: %d, Span: %v, Columns: %v\n",count,span,sources)
+			
+			// update our overlap set
 			count++
+			
+			// get our next set
 			span,ok=u.NextSpan(span,list)
 		}
 	}
+
+Resulting output:
+
+    Overlap Set: 0, Span: &{1 1}, Columns: &[0]
+    Overlap Set: 1, Span: &{2 2}, Columns: &[0 1]
+    Overlap Set: 2, Span: &{3 5}, Columns: &[1 2]
+    Overlap Set: 3, Span: &{6 7}, Columns: &[1 2]
+    Overlap Set: 4, Span: &{8 11}, Columns: &[2]
+
     
