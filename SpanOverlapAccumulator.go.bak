@@ -6,14 +6,14 @@ import (
 )
 
 // This is a stater structure, used to drive the creation of new OverlappingSpanSets.
-// Each source of spans should have thier own instance of SpanOverlapAccumulator.
+// Each source of spans should have their own instance of SpanOverlapAccumulator.
 type SpanOverlapAccumulator[E any] struct {
 	Rss *OverlappingSpanSets[E]
 	*SpanUtil[E]
 	// When true slices passed in will be sorted.
 	Sort bool
 
-	// When not nil, this object has encoutner an error
+	// When not nil, this object has encounter an error
 	Err error
 
 	// Sequence counter
@@ -29,7 +29,7 @@ type SpanOverlapAccumulator[E any] struct {
 // The Accumulate method.
 //
 // For a given span provided:
-// When the span overlaps with the current internal span, the OverlappingSpanSets is expanded and the span is appened to the Contains slice.
+// When the span overlaps with the current internal span, the OverlappingSpanSets is expanded and the span is append to the Contains slice.
 // When the span is outside of the current internal span, then a new OverlappingSpanSets is created with this span as its current span.
 func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) *OverlappingSpanSets[E] {
 	s.Pos++
@@ -91,7 +91,7 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) *Overlapping
 	return s.Rss
 }
 
-// Creates a channel iteraotr for chan of OverlappingSpanSets.
+// Creates a channel iterator for chan of OverlappingSpanSets.
 func (s *SpanOverlapAccumulator[E]) ChanIterFactoryOverlaps(c <-chan *OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
 
 	if c == nil {
@@ -232,7 +232,7 @@ func (s *SpanOverlapAccumulator[E]) SliceIterFactory(list *[]SpanBoundry[E]) ite
 	}
 }
 
-// This is a convenience method for initalizing the iter.Seq2 stater internals based on a slice of SpanBoundry.
+// This is a convenience method for initializing the iter.Seq2 stater internals based on a slice of SpanBoundry.
 func (s *SpanOverlapAccumulator[E]) ColumnOverlapSliceFactory(list *[]SpanBoundry[E]) *ColumnOverlapAccumulator[E] {
 	return s.ColumnOverlapFactory(s.SliceIterFactory(list))
 }
