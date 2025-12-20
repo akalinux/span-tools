@@ -91,7 +91,7 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) *Overlapping
 	return s.Rss
 }
 
-// Creates a channel iterator for chan of OverlappingSpanSets.
+// Creates a channel iterator for channel of OverlappingSpanSets.
 func (s *SpanOverlapAccumulator[E]) ChanIterFactoryOverlaps(c <-chan *OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
 
 	if c == nil {
