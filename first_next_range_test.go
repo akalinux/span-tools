@@ -12,6 +12,15 @@ func TestFirstRange(t *testing.T) {
 	if span.GetBegin() != 0 || span.GetEnd() != 1 {
 		t.Errorf("Invalid start range")
 	}
+	var check=testDriver.GetOverlapIndexes(span,src);
+	if(len(*check)==0) {
+		t.Errorf("should not be empty")
+	}
+	check=testDriver.GetOverlapIndexes(span,nil);
+
+	if(len(*check)!=0) {
+		t.Errorf("should not be empty")
+	}
 }
 
 

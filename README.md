@@ -6,9 +6,9 @@ and overlaps of "one dimensional spans" of any data type.
 
 The package is built around the SpanUtil[E] struct,
 The struct requires 2 methods be set in order to implement the algorithm:
-	- A "Compare" function see: [cmp.Compare] for more details.
-	- A "Next" function, takes a given value and get a next value.
-	 The next value must be greater than the input value
+- A "Compare" function see: [cmp.Compare] for more details.
+- A "Next" function, takes a given value and returns next value.
+  The next value must be greater than the input value
 
 The algorithm is primarily implemented by 3 methods of the SpanUtil[E] struct:
 - FirstSpan, finds the initial data span intersection.
@@ -79,4 +79,7 @@ Resulting output:
     Overlap Set: 3, Span: &{6 7}, Columns: &[1 2]
     Overlap Set: 4, Span: &{8 11}, Columns: &[2]
 
+# More Examples
+
+For more examples see the Examples folder [examples](./examples)
     

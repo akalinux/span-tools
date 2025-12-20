@@ -84,7 +84,7 @@ func TestNewSpan(t *testing.T) {
 		return
 	}
 
-	if span.Begin != 1 || span.End != 2 {
+	if span.GetBegin() != 1 || span.GetEnd() != 2 {
 		t.Errorf("Invalid return span content")
 		return
 	}
