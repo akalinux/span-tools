@@ -98,8 +98,9 @@ func (s *ColumnSets[E]) SetNext() {
 		return
 	}
 
-	s.Overlap = s.Util.NextSpan(s.Overlap, test)
-	if s.Overlap == nil {
+	var ok bool
+	s.Overlap,ok = s.Util.NextSpan(s.Overlap, test)
+	if !ok {
 		s.Pos = -1
 		return
 	}

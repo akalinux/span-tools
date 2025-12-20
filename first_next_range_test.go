@@ -17,10 +17,10 @@ func TestFirstRange(t *testing.T) {
 
 func CommonNextSpan(src *[]SpanBoundry[int],expected *[]SpanBoundry[int],t *testing.T) {
 
-	var check = testDriver.NextSpan(&Span[int]{Begin: -1, End: -1}, src)
+	var check,ok = testDriver.NextSpan(&Span[int]{Begin: -1, End: -1}, src)
 	for id,span := range *expected {
-		if check == nil {
-			t.Errorf("Should have gotten as our next return value")
+		if !ok {
+			t.Errorf("Should have gotten as our next return value for id: %d",id)
 			return
 		}
 		if span.GetBegin() != check.GetBegin() {
@@ -31,9 +31,9 @@ func CommonNextSpan(src *[]SpanBoundry[int],expected *[]SpanBoundry[int],t *test
 			t.Errorf("Invalid end, expected: %v, got: %v for set: %d", span, check,id)
 			return
 		}
-		check = testDriver.NextSpan(check, src)
+		check,ok = testDriver.NextSpan(check, src)
 	}
-	if check == nil {
+	if ok {
 		t.Errorf("Expected last call to NextSpan to return nil, got: %v",check)
 		return
 	}	
