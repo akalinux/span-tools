@@ -8,9 +8,9 @@ func TestEmptyColumnSet(t *testing.T) {
 	if(cs.OverlapCount()!=-1) {
 		t.Errorf("Expected the uninitalized set to be -1")
 	}
-	cs.Columns=&[]*ColumnOverlapAccumulator[int]{}
-	cs.SetNext()
-	cs.Init()
+	cs.columns=&[]*ColumnOverlapAccumulator[int]{}
+	cs.setNext()
+	cs.init()
 	cs.Close()
 	cs.Close()
 	cs.AddColumn(nil)
@@ -36,13 +36,13 @@ func TestInitColumSet(t *testing.T) {
 		t.Errorf("Expected id: 1, got %d", id)
 		return
 	}
-	cs.Init()
+	cs.init()
 
 	if cs.OverlapCount() != 1 {
 		t.Errorf("Expected OverlapCount of: 1, got: %d", cs.OverlapCount())
 		return
 	}
-	var col = (*cs.Current)[0]
+	var col = (*cs.current)[0]
 	if col.ColumnId != 0 || col.GetSrcStart() != 0 || col.GetSrcEnd() != 0 {
 		t.Errorf("Bad data position, expected 0, got: ColumnId: %d, src: %d, end: %d",
 			col.ColumnId,
@@ -67,20 +67,84 @@ func TestFullIter(t *testing.T) {
 	cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{&Span[int]{Begin: 2, End: 2}})
 
 
-	cs.Init()
+	cs.init()
 	defer cs.Close()
-	cs.SetNext()
+	cs.setNext()
 
 	if cs.OverlapCount() != 1 {
 		t.Errorf("Expected OverlapCount of: 1, got: %d", cs.OverlapCount())
 		return
 	}
-	if(cs.Overlap.GetBegin()!=2 || cs.Overlap.GetEnd()!=2) {
-		t.Errorf("Should have gotten our next span of 2->2, but got: %v",cs.Overlap)
+	if(cs.overlap.GetBegin()!=2 || cs.overlap.GetEnd()!=2) {
+		t.Errorf("Should have gotten our next span of 2->2, but got: %v",cs.overlap)
 		return
 	}
-	cs.SetNext()
-	if(cs.Pos!=-1) {
-		t.Errorf("Should be done!, got %v",cs.Overlap)
+	cs.setNext()
+	if(cs.pos!=-1) {
+		t.Errorf("Should be done!, got %v",cs.overlap)
 	}
 }
+
+
+func TestColumSetIter(t *testing.T) {
+	
+	var cs = testDriver.NewColumnSets()
+	cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{
+		&Span[int]{Begin: 1, End: 2},
+		&Span[int]{Begin: 1, End: 1},
+		&Span[int]{Begin: 3, End: 3},
+		&Span[int]{Begin: 4, End: 4},
+	})
+	cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{
+		&Span[int]{Begin: 2, End: 3},
+	})
+	cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{
+		&Span[int]{Begin: 3, End: 5},
+	})
+	var expected=[]SpanBoundry[int]{
+		&Span[int]{Begin: 1, End: 1},
+		&Span[int]{Begin: 2, End: 2},
+		&Span[int]{Begin: 3, End: 3},
+		&Span[int]{Begin: 4, End: 4},
+		&Span[int]{Begin: 5, End: 5},
+	}
+	for id,res := range cs.Iter() {
+		var cmp=expected[id];
+		if(res.GetBegin()!=cmp.GetBegin() || res.GetEnd()!=cmp.GetEnd()) {
+			t.Errorf("Expected: %v, Got: %v",cmp,res.GetSpan())
+		}
+		// force code to be tested
+		res.GetColumns()
+		res.GetSpan()
+	}
+}
+
+
+func TestColumSetIterBreakTest(t *testing.T) {
+	
+	var cs = testDriver.NewColumnSets()
+	cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{
+		&Span[int]{Begin: 1, End: 2},
+		&Span[int]{Begin: 1, End: 1},
+		&Span[int]{Begin: 3, End: 3},
+		&Span[int]{Begin: 4, End: 4},
+	})
+	cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{
+		&Span[int]{Begin: 2, End: 3},
+	})
+	cs.AddColumnFromSpanSlice(&[]SpanBoundry[int]{
+		&Span[int]{Begin: 3, End: 5},
+	})
+	for  range cs.Iter() {
+		break
+	}
+	if(!cs.closed) {
+		t.Error("Should now be closed")
+	}
+	var check=cs.Iter()
+	if(check!=nil) {
+		t.Error("Should not be able to create anotehr instance!")
+	} 
+}
+
+
