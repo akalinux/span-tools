@@ -299,8 +299,12 @@ The SpanOverlapAccumulator instance provides a method called s.Accumulate(SpanBo
 This method returns both the OverlappingSpanSets instance and a pointer to error.
 If the error instance is not nil then the SpanOverlapAccumulator has encountered an error.
 
-The SpanUtil[E] instance provides a method for checking the quality of the SpanBoundry[E]
-instances it receives.
+The SpanUtil[E] instance provides a check method for validating both SpanBondry instances and
+validating SpanBoundry instances in sequence.  The name of the method is Check.
+
+__Error checking Example:__
+
+Example code can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/ErrorExample/main.go)
 
 __To check if a SpanBoundry instance is valid:__
 
