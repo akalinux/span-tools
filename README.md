@@ -33,7 +33,10 @@ Example Code:
 
 The full example can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/example01/example01.go).
 
-Setup the package and imports:
+__Setup the package and imports:__
+
+We will need to import our "st" package along with the "fmt" and "cmp" packages in order to process
+the example data sets.
 
 	import (
 		"github.com/akalinux/span-tools"
@@ -41,7 +44,9 @@ Setup the package and imports:
 		"cmp"
 	)
 
-Create our SpanUtil[E] instance:
+__Create our SpanUtil[E] instance:__
+
+We will use the factory interface NewSpanUtil to generate our SpanUtil[int] instance for these examples.
 
 	var u=st.NewSpanUtil(
 		// use the standard Compare function
@@ -50,7 +55,10 @@ Create our SpanUtil[E] instance:
 		func(e int) int { return e+1},
 	)
 
-Find our the initial SpanBoundry intersection:
+__Find our the initial SpanBoundry intersection:__
+
+We need to find the initial intersection, before we can iterate through of these data sets.
+The initial SpanBoundry is found by making a call to u.FirstSapn(list).
 
 	// Create our initial span 
 	var span,ok=u.FirstSpan(list)
@@ -58,7 +66,10 @@ Find our the initial SpanBoundry intersection:
 	// Denote our overlap set position
 	var count=0
 
-Iterate through all of our SpanBoundry intersections:
+__Iterate through all of our SpanBoundry intersections:__
+
+We can now step through each data intersection point and output the results.
+Each subsequent intersection is found by making a call to u.NextSpan(span,list).
 
 	for ok {
 		// Get the indexes of the columns this overlap relates to
@@ -74,7 +85,7 @@ Iterate through all of our SpanBoundry intersections:
 		span,ok=u.NextSpan(span,list)
 	}
 
-##### Resulting output:
+__Resulting output:__
 
     Overlap Set: 0, Span: &{1 1}, Columns: &[0]
     Overlap Set: 1, Span: &{2 2}, Columns: &[0 1]
@@ -113,7 +124,7 @@ Example Code:
 
 The full source code can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/beyondbasics/multicolumns.go)
 
-Create a ColumnSets[E] instance:
+__Create a ColumnSets[E] instance:__
 
 The ColumnSets instance is created by a factory interface of SpanUtil.
 For each instance of ColumnSets, a properly scoped call to "defer i.Close()" will require being made.
@@ -124,7 +135,7 @@ For each instance of ColumnSets, a properly scoped call to "defer i.Close()" wil
 	// Always make sure a defer to close is scoped correctly!
 	defer ac.Close()
 
-Adding each data set:
+__Adding each data set to our ColumnSets:__
 
 Each data set will need to be added to the ColumnSets instance. 
 The internals refer to each column as a source.
@@ -157,6 +168,8 @@ of the column/source added.
 	ac.AddColumnFromSpanSlice(setc)
 	m[2] = "SetC"
 
+__Iterate through the results:__
+
 Finally we want to iterate through the resulting overlaps and intersections found in our different data sets:
 
 	header := "+-----+--------------------+------------------------------------+\n"
@@ -179,7 +192,7 @@ Finally we want to iterate through the resulting overlaps and intersections foun
 	}
 	fmt.Print(header)
 
-The resulting output would be:
+__The resulting output:__
 
 	+-----+--------------------+------------------------------------+
 	| Seq | Begin and End      | Set Name:(Row,Row)                 |
@@ -194,6 +207,32 @@ The resulting output would be:
 	+-----+--------------------+------------------------------------+
 	|  4  | Begin:  8, End: 11 | SetA:(1-2), SetB:(1-1), SetC:(1-1) |
 	+-----+--------------------+------------------------------------+
+
+# SpanBoundry Duplicate and Overlap Consolidation
+
+In the real world data sets are often messy, out of order and contain duplicates and overlaps.
+The internals of the "st" package expect SpanBoundry instance to be provided in a specific order
+to be processed correctly.
+
+The expected order is as follows (i=SpanBoundry):
+ - i.GetBegin() ascending order
+ - i.GetEnd() in descending order
+ 
+ This is an example unordered data set
+ 
+	(7,11),
+	(20,21),
+	(2,11),
+	(2,12),
+	(5,19),
+
+This is the same data ordered for consumption by the "st" package:
+
+	(2,12),
+	(2,11),
+	(5,19),
+	(7,11),
+	(20,21),
 
 # More Examples
 
