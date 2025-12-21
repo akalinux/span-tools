@@ -61,7 +61,7 @@ Find our the initial SpanBoundry intersection:
 Iterate through all of our SpanBoundry intersections:
 
 	for ok {
-	  // Get the indexes of the columns this overlap relates to
+		// Get the indexes of the columns this overlap relates to
 		var sources=u.GetOverlapIndexes(span,list)
 			
 		// output our intersection data
