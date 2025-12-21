@@ -255,7 +255,7 @@ of SpanOverlapAccumulator instances, the method is u.NewSpanOverlapAccumulator()
 
 __Sorting and Consolidation__
 
-Now we need to step through the resulting sorting and consolidation
+Now we need to step through the resulting sorted and consolidated
 results.  The ac.SliceIterFactory(*list) method provides an iter.Seq2
 factory interface that can be used to driver our for loop for us.
 
