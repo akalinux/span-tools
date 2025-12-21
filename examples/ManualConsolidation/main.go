@@ -27,11 +27,13 @@ func main() {
 		u.Ns(5, 19),  // Row: 2
 	}
 
+	// This pass will error out
 	fmt.Print("Processing our data with an invalid order\n")
 	AccumulateSet(unsorted)
 
+	
+	// Once the data is sorted consolidation will work correctly
 	slices.SortFunc(*unsorted, u.Compare)
-
 	fmt.Print("\nProcessing post sort\n")
 	AccumulateSet(unsorted)
 
@@ -64,7 +66,7 @@ func AccumulateSet(list *[]st.SpanBoundry[int]) {
 	if err != nil {
 		fmt.Printf("  Failed to accumulate: %v, error was: %v\n", span, err)
 	} else if last == ol {
-		fmt.Printf("  %v has beeen absorbed int OverlappingSpanSets: (%d,%d)\n", span, ol.GetBegin(), ol.GetEnd())
+		fmt.Printf("  %v has been absorbed into OverlappingSpanSets: (%d,%d)\n", span, ol.GetBegin(), ol.GetEnd())
 	} else {
 		fmt.Printf("  %v has spawned an new OverlappingSpanSets: (%d,%d)\n", span, ol.GetBegin(), ol.GetEnd())
 	}
