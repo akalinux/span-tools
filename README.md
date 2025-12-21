@@ -291,8 +291,9 @@ __Resulting output:__
 
 ## Manual Consolidation and Error Checking
 
-Data integrity is very important: the internals of the "st" package check for errors
-by default.  The iterators of the "st" package stop progressing if an error
+Data integrity is very important: the internals of the "st" package does not check for errors
+by default.  Error checking can be enabled on the SpanUltil instance by setting u.Valudate=true.
+ The iterators of the "st" package stop progressing if an error
 is encountered.  Typically error checking is done in an instance of SpanOverlapAccumulator.
 This is generally a good place to stop the iteration process.
 The SpanOverlapAccumulator instance provides a method called s.Accumulate(SpanBoundry).
@@ -303,6 +304,9 @@ The SpanUtil[E] instance provides a check method for validating both SpanBondry 
 validating SpanBoundry instances in sequence.  The name of the method is Check.
 
 __Error checking Example:__
+
+This example checks each element of a slice of SpanBoundry instances to see if they are both valid
+and in the correct order.
 
 Example code can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/ErrorExample/main.go)
 
@@ -330,6 +334,72 @@ Note: current is not checked for validity.
 	if err!=nil {
 	  // next is out of order in relation to current
 	}	
+
+__Manual Consolidation with Error checking enabled:__
+
+As noted, error checking is disabled by default in this example we will enable 
+error checking and iterate through the SpanBoundry twice.  In both passes
+we will have Validation turned on.  In the first pass we will provide an unsorted
+list that will error out during the consolidation process.  The 2nd pass we will
+first sort our list and then enter the consolidation process.
+
+The source code for this example can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/ManualConsolidation/main.go).
+
+__First we need to turn validation on__
+
+We will be using the same data set as our previous example, so the main differences come in 2 pars.
+  - The import of the "slices" package for sorting
+  - Turning validation on
+
+__Our updated imports for this example:__
+
+	import (
+		"cmp"
+		"fmt"
+		"github.com/akalinux/span-tools"
+		"slices"
+	)
+
+In our main package we define a function called AccumulateSet, and it handles processing each
+manual accumulation pass. Please see the source code 
+[here](https://github.com/akalinux/span-tools/blob/main/examples/ManualConsolidation/main.go) 
+for more details
+
+__In our main function we turn validation on:__
+
+By default SpanUtil.Validate==false, to enable validation we need to set it to true.
+
+	// turn validation on
+	u.Validate=true
+
+__Example 1, the expected error pass__
+
+	// This pass will error out
+	fmt.Print("Processing our data with an invalid order\n")
+	AccumulateSet(unsorted)
+
+Output from this section:
+
+	Processing our data with an invalid order
+	  &{7 11} has spawned an new OverlappingSpanSets: (7,11)
+	  &{20 21} has spawned an new OverlappingSpanSets: (20,21)
+	  Failed to accumulate: &{2 11}, error was: SpanBoundry out of sequence
+
+Example 2, the expected success pass
+
+	// Once the data is sorted consolidation will work correctly
+	slices.SortFunc(*unsorted, u.Compare)
+	fmt.Print("\nProcessing post sort\n")
+	AccumulateSet(unsorted)
+
+Output from this section:
+
+	Processing post sort
+	  &{2 12} has spawned an new OverlappingSpanSets: (2,12)
+	  &{2 11} has been absorbed into OverlappingSpanSets: (2,12)
+	  &{5 19} has been absorbed into OverlappingSpanSets: (2,19)
+	  &{7 11} has been absorbed into OverlappingSpanSets: (2,19)
+	  &{20 21} has spawned an new OverlappingSpanSets: (20,21)
 
 # More Examples
 
