@@ -52,6 +52,15 @@ func TestMultSetDataOverlaps(t *testing.T) {
 			t.Errorf("Should get at least one span, got %d on set: %d", len(*raw),idx)
 			return
 		}
+	  sets :=ol.GetOverlaps()
+		if len(*sets)==0 {
+			t.Errorf("Should never get 0 overlaps!")
+			return
+		}
+		if(ol.GetSrcId()!=ol.SrcBegin || ol.GetEndId()!=ol.SrcEnd) {
+			t.Error("Interface methouds for index begin and end should match the internal structure states")
+			return
+		} 
 	}
 	if count != len(expected) {
 		t.Errorf("Iterator count missmatch!, expected %d, got %d", len(expected), count)

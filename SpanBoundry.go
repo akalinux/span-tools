@@ -10,7 +10,10 @@ type Span[E any] struct {
 }
 
 
-
+// This interface acts as the core representation of spans for the "st" pacakge.
+// Spans are represent by 2 values a "Begin" value and an "End" value.
+// The Begin value should be returned by GetBegin and should be greater than
+// or equal to the End value returned by GetEnd.
 type SpanBoundry[E any] interface {
 	// Returns the Begin value.
 	GetBegin() E
