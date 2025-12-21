@@ -289,6 +289,44 @@ __Resulting output:__
 	  Original Span values:
 	    Row: 4 span: &{20 21}
 
+## Manual Consolidation and Error Checking
+
+Data integrity is very important: the internals of the "st" package check for errors
+by default.  The iterators of the "st" package stop progressing if an error
+is encountered.  Typically error checking is done in an instance of SpanOverlapAccumulator.
+This is generally a good place to stop the iteration process.
+The SpanOverlapAccumulator instance provides a method called s.Accumulate(SpanBoundry).
+This method returns both the OverlappingSpanSets instance and a pointer to error.
+If the error instance is not nil then the SpanOverlapAccumulator has encountered an error.
+
+The SpanUtil[E] instance provides a method for checking the quality of the SpanBoundry[E]
+instances it receives.
+
+__To check if a SpanBoundry instance is valid:__
+
+In this case if err is  not nil, then the span is valid.  Validity is defined as
+span.GetBegin() is less than or equal to span.GetEnd().
+
+	err :=u.Check(span,nil)
+	
+	if err!=nil {
+	  // invalid span
+	}	
+
+__To check if the next SpanBoundry should be after the current SpanBoundry:__
+
+This method performs 2 checks
+ - First next is checked for validity
+ - Checks if next comes after current or is equal to current
+
+Note: current is not checked for validity.
+
+	err :=u.Check(next,current)
+	
+	if err!=nil {
+	  // next is out of order in relation to current
+	}	
+
 # More Examples
 
 For more examples see the Examples folder [examples](https://github.com/akalinux/span-tools/tree/main/examples)
