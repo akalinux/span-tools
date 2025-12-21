@@ -237,7 +237,7 @@ This is the same data ordered for consumption by the "st" package:
 __Enable Sorting of data sets__
 
 
-The full source code can be found: [here]().
+The full source code can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/ConsolidateOverlaps/main.go).
 
 The SpanUtil[E] struct has a "Sort" (default false ) flag, when set to true, all instances of
 SpanOverlapAccumulator[E] created with the u.
