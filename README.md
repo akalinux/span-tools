@@ -208,11 +208,11 @@ __The resulting output:__
 	|  4  | Begin:  8, End: 11 | SetA:(1-2), SetB:(1-1), SetC:(1-1) |
 	+-----+--------------------+------------------------------------+
 
-# SpanBoundry Duplicate and Overlap Consolidation
+# SpanBoundry Consolidation of Duplicate(s) and Overlap(s)
 
 In the real world data sets are often messy, out of order and contain duplicates and overlaps.
-The internals of the "st" package expect SpanBoundry instance to be provided in a specific order
-to be processed correctly.
+The internals of the "st" package expect SpanBoundry instance to be provided in a specific order. If data is not provided in the correct order it cannot
+be processed correctly.
 
 The expected order is as follows (i=SpanBoundry):
  - i.GetBegin() ascending order
@@ -233,6 +233,60 @@ This is the same data ordered for consumption by the "st" package:
 	(5,19),
 	(7,11),
 	(20,21),
+
+__Enable Sorting of data sets__
+
+
+The full source code can be found: [here]().
+
+The SpanUtil[E] struct has a "Sort" (default false ) flag, when set to true, all instances of
+SpanOverlapAccumulator[E] created with the u.
+
+	// Turn sorting on
+	u.Sort=true
+
+__Creating our SpanOverlapAccumulator__
+
+The SpanUtil[E] instance provides a factory interface for the creation
+of SpanOverlapAccumulator instances, the method is u.NewSpanOverlapAccumulator().
+
+	ac :=u.NewSpanOverlapAccumulator()
+
+__Sorting and Consolidation__
+
+Now we need to step through the resulting sorting and consolidation
+results.  The ac.SliceIterFactory(*list) method provides an iter.Seq2
+factory interface that can be used to driver our for loop for us.
+
+	// this slice will end up being sorted by the "st" internals
+	unsorted :=&[]st.SpanBoundry[int]{
+		// Raw       // Will be sorted to
+		u.Ns(7,11),  // Row: 3
+		u.Ns(20,21), // Row: 4
+		u.Ns(2,11),  // Row: 1
+		u.Ns(2,12),  // Row: 0
+		u.Ns(5,19),  // Row: 2
+	}
+	
+	for id,span := range ac.SliceIterFactory(unsorted) {
+		fmt.Printf("OverlappingSpanSets: %d SpanBoundry (%d,%d)\n ",id,span.GetBegin(),span.GetEnd())
+		fmt.Print(" Original Span values:\n")
+		for _,src :=range *span.GetSources() {
+			fmt.Printf("    Row: %d span: %v\n",src.SrcId,src.SpanBoundry)
+		}
+	}
+
+__Resulting output:__
+
+	OverlappingSpanSets: 0 SpanBoundry (2,19)
+	  Original Span values:
+	    Row: 0 span: &{2 12}
+	    Row: 1 span: &{2 11}
+	    Row: 2 span: &{5 19}
+	    Row: 3 span: &{7 11}
+	OverlappingSpanSets: 1 SpanBoundry (20,21)
+	  Original Span values:
+	    Row: 4 span: &{20 21}
 
 # More Examples
 
