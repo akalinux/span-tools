@@ -29,49 +29,52 @@ Example Sets:
 		(2,7)
 		(5,11)
 		
-Example Code:
+Example Code: 
 
-	package main
+The full example can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/example01/example01.go).
+
+Setup the package and imports:
+
 	import (
 		"github.com/akalinux/span-tools"
 		"fmt"
 		"cmp"
 	)
+
+Create our SpanUtil[E] instance:
+
+	var u=st.NewSpanUtil(
+		// use the standard Compare function
+		cmp.Compare,
+		// Define our Next function
+		func(e int) int { return e+1},
+	)
+
+Find our the initial SpanBoundry intersection:
+
+	// Create our initial span 
+	var span,ok=u.FirstSpan(list)
 		
-	func main() {
-		var u=st.NewSpanUtil(
-			// use the standard Compare function
-			cmp.Compare,
-			// Define our Next function
-			func(e int) int { return e+1},
-		)
-		var list=&[]st.SpanBoundry[int]{
-			u.Ns(1,2),
-			u.Ns(2,7),
-			u.Ns(5,11),
-		}
-		
-		// Create our initial span 
-		var span,ok=u.FirstSpan(list)
-		
-		// Denote our overlap set position
-		var count=0
-		for ok {
-		  // Get the indexes of the columns this overlap relates to
-			var sources=u.GetOverlapIndexes(span,list)
+	// Denote our overlap set position
+	var count=0
+
+Iterate through all of our SpanBoundry intersections:
+
+	for ok {
+	  // Get the indexes of the columns this overlap relates to
+		var sources=u.GetOverlapIndexes(span,list)
 			
-			// output our intersection data
-			fmt.Printf("Overlap Set: %d, Span: %v, Columns: %v\n",count,span,sources)
+		// output our intersection data
+		fmt.Printf("Overlap Set: %d, Span: %v, Columns: %v\n",count,span,sources)
 			
-			// update our overlap set
-			count++
+		// update our overlap set
+		count++
 			
-			// get our next set
-			span,ok=u.NextSpan(span,list)
-		}
+		// get our next set
+		span,ok=u.NextSpan(span,list)
 	}
 
-Resulting output:
+##### Resulting output:
 
     Overlap Set: 0, Span: &{1 1}, Columns: &[0]
     Overlap Set: 1, Span: &{2 2}, Columns: &[0 1]
@@ -98,11 +101,9 @@ Example Data sets:
 			(1, 2),
 			(3, 7),  // will consolidate to 3-11
 			(5, 11), // will consolidate to 3-11
-	
 	SetB:
 			(3, 3),
 			(5, 11),
-	
 	SetC:
 			(1, 7),  // will consolidate to 1-11
 			(8, 11), // will consolidate to 1-11
@@ -110,74 +111,73 @@ Example Data sets:
 
 Example Code:
 
-	package main
+The full source code can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/beyondbasics/multicolumns.go)
+
+Create a ColumnSets[E] instance:
+
+The ColumnSets instance is created by a factory interface of SpanUtil.
+For each instance of ColumnSets, a properly scoped call to "defer i.Close()" will require being made.
+
+	// Build our column accumulator
+	ac := u.NewColumnSets()
 	
-	import (
-		"cmp"
-		"fmt"
-		"strings"
-		"github.com/akalinux/span-tools"
-	)
+	// Always make sure a defer to close is scoped correctly!
+	defer ac.Close()
+
+Adding each data set:
+
+Each data set will need to be added to the ColumnSets instance. 
+The internals refer to each column as a source.
+Every source added receives an id starting from 0, so we know in advance
+what the id of each source is, but all AddCoulumnXXX methods of ColumnSets returns the index
+of the column/source added.
+
+	// We will map our ColumnId to our Set Name
+	m := make(map[int]string)
 	
-	func main() {
-		u := st.NewSpanUtil(
-			// use the standard Compare function
-			cmp.Compare,
-				
-			// Define our Next function
-			func(e int) int { return e + 1 },
-		)
-		// Build our column accumulator
-		ac := u.NewColumnSets()
-		
-		// Always make sure a defer to Close is scoped correctly!
-		defer ac.Close()
-		
-		// We will map our ColumnId to our Set Name
-		m := make(map[int]string)
-		
-		var seta = &[]st.SpanBoundry[int]{
-			u.Ns(1, 2),
-			u.Ns(3, 7),  // will consolidate to 3-11
-			u.Ns(5, 11), // will consolidate to 3-11
-		}
-		ac.AddColumnFromSpanSlice(seta)
-		m[0] = "SetA"
-		
-		var setb = &[]st.SpanBoundry[int]{
-			u.Ns(3, 3),
-			u.Ns(5, 11),
-		}
-		ac.AddColumnFromSpanSlice(setb)
-		m[1] = "SetB"
-		
-		var setc = &[]st.SpanBoundry[int]{
-			u.Ns(1, 7),
-			u.Ns(8, 11),
-		}
-		ac.AddColumnFromSpanSlice(setc)
-		m[2] = "SetC"
-		
-		header := "+-----+--------------------+------------------------------------+\n"
-		fmt.Print(header)
-		fmt.Print("| Seq | Begin and End      | Set Name:(Row,Row)                 |\n")
-		for pos, res := range ac.Iter() {
-			cols := res.GetColumns()
-			names := []string{}
-			for _, column := range *cols {
-				str :=fmt.Sprintf("%s:(%d-%d)",m[column.ColumnId],column.GetSrcId(),column.GetEndId())
-				names = append(names, str)
-			}
-			fmt.Print(header)
-			fmt.Printf("| %- 3d | Begin:% 3d, End:% 3d | %- 34s |\n",
-				pos,
-				res.GetBegin(),
-				res.GetEnd(),
-				strings.Join(names, ", "),
-			)
-		}
-		fmt.Print(header)	
+	var seta = &[]st.SpanBoundry[int]{
+		u.Ns(1, 2),
+		u.Ns(3, 7),  // will consolidate to 3-11
+		u.Ns(5, 11), // will consolidate to 3-11
 	}
+	ac.AddColumnFromSpanSlice(seta)
+	m[0] = "SetA"
+	
+	var setb = &[]st.SpanBoundry[int]{
+		u.Ns(3, 3),
+		u.Ns(5, 11),
+	}
+	ac.AddColumnFromSpanSlice(setb)
+	m[1] = "SetB"
+	
+	var setc = &[]st.SpanBoundry[int]{
+		u.Ns(1, 7),
+		u.Ns(8, 11),
+	}
+	ac.AddColumnFromSpanSlice(setc)
+	m[2] = "SetC"
+
+Finally we want to iterate through the resulting overlaps and intersections found in our different data sets:
+
+	header := "+-----+--------------------+------------------------------------+\n"
+	fmt.Print(header)
+	fmt.Print("| Seq | Begin and End      | Set Name:(Row,Row)                 |\n")
+	for pos, res := range ac.Iter() {
+		cols := res.GetColumns()
+		names := []string{}
+		for _, column := range *cols {
+			str :=fmt.Sprintf("%s:(%d-%d)",m[column.ColumnId],column.GetSrcId(),column.GetEndId())
+			names = append(names, str)
+		}
+		fmt.Print(header)
+		fmt.Printf("| %- 3d | Begin:% 3d, End:% 3d | %- 34s |\n",
+			pos,
+			res.GetBegin(),
+			res.GetEnd(),
+			strings.Join(names, ", "),
+		)
+	}
+	fmt.Print(header)
 
 The resulting output would be:
 
@@ -197,4 +197,4 @@ The resulting output would be:
 
 # More Examples
 
-For more examples see the Examples folder [examples](./examples)
+For more examples see the Examples folder [examples](https://github.com/akalinux/span-tools/tree/main/examples)

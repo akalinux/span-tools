@@ -1,6 +1,7 @@
 package st
 
 
+// This structure represents a "data source" and how it intersects with an external SpanBoundry.
 // Contains the current iterator control functions and represents the column position in the iterator process.
 type ColumnOverlapAccumulator[E any] struct {
 	// Representation of the data that intersected with an SpanBoundry passed to GetNext.
@@ -35,16 +36,6 @@ func (s *ColumnOverlapAccumulator[E]) GetBegin() E {
 
 func (s *ColumnOverlapAccumulator[E]) GetEnd() E {
 	return s.Next.GetEnd()
-}
-
-type ColumnOverlap[E any] interface {
-	SpanBoundry[E]
-	GetSrcId() int
-	GetEndId() int
-	GetOverlaps() *[]*OverlappingSpanSets[E]
-	GetFirstSpan() (int,SpanBoundry[E])
-	GetLastSpan() (int,SpanBoundry[E])
-	GetSources() *[]*OvelapSources[E]
 }
 
 // Returns the first span that intersecs with this set.
@@ -101,11 +92,15 @@ func (s *ColumnOverlapAccumulator[E]) Close() {
 	}
 }
 
+// When true this instance contains elements in "Overlaps" that intersect with 
+// the last value passed to SetNext.
 func (s *ColumnOverlapAccumulator[E]) InOverlap() bool {
 	return s.HasNext() && s.SrcStart != -1
 }
 
-// This method updates the current instance  to represent what data intersects with the overlap SpanBoundry[E,T].
+// This method updates the state of the instance instance in relation to overlap.
+// The overlap is considered an external point for comparison, and the internal data sets are
+// updated to reflect the current intersection points if any.
 func (s *ColumnOverlapAccumulator[E]) SetNext(overlap SpanBoundry[E]) {
 	var current = s.Next
 	var hasnext = current != nil

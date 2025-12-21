@@ -20,6 +20,20 @@ type OverlappingSpanSets[E any] struct {
 	SrcEnd int
 }
 
+func (s *OverlappingSpanSets[E]) GetSrcId() int {
+	return s.SrcBegin
+}
+
+
+func (s *OverlappingSpanSets[E]) GetEndId() int {
+	return s.SrcEnd
+}
+
+func (s *OverlappingSpanSets[E]) GetOverlaps() *[]*OverlappingSpanSets[E] {
+	return &[]*OverlappingSpanSets[E]{s}
+}
+
+
 func (s *OverlappingSpanSets[E]) IsUnique() bool {
 	return s.Contains == nil
 }
