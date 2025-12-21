@@ -28,15 +28,19 @@ type SpanOverlapAccumulator[E any] struct {
 
 // The Accumulate method.
 //
-// For a given span provided: When the span overlaps with the current internal span, 
+// For a given span provided: When the span overlaps with the current internal span,
 // the OverlappingSpanSets is expanded and the span is append to the Contains slice.
-// When the span is outside of the current internal span, 
+// When the span is outside of the current internal span,
 // then a new OverlappingSpanSets is created with this span as its current span.
 // The error value is nil, by default, when an error has happend it is no longer nil.
 func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*OverlappingSpanSets[E], error) {
 	s.Pos++
 	if s.Validate {
 		s.Err = s.Check(span, s.Rss.Span)
+	}
+
+	if s.Err != nil {
+		return nil, s.Err
 	}
 
 	if s.Rss.Span == nil {
