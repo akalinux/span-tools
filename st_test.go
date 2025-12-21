@@ -120,7 +120,11 @@ func TestConsolidate(t *testing.T) {
 	for idx, span := range AllSet {
 		var res = s.Accumulate(span)
 		if container.GetBegin() != res.GetBegin() || container.GetEnd() != res.GetEnd() {
-			t.Errorf("Container out of bounds in element: %d", idx)
+			t.Errorf("Container out of bounds in element: %d expected: %v, got %v", 
+			idx,
+			container,
+			res.Span,
+		)
 		}
 		if idx == 0 {
 			if res.Contains != nil {

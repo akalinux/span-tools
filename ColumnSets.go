@@ -29,7 +29,6 @@ type ColumnResults[E any] interface {
 	// Returns the SpanBoundry representing the current position in our data set.
 	GetSpan() SpanBoundry[E]
 	
-	
 	SpanBoundry[E]
 }
 

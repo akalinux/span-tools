@@ -37,6 +37,21 @@ func TestMultSetDataOverlaps(t *testing.T) {
 			t.Errorf("Invalid SrcEnd, expected: %d, got %d for position: %d", expected[idx][1], ol.SrcEnd, idx)
 			return
 		}
+		_, span := ol.GetFirstSpan()
+		if span == nil {
+			t.Errorf("Expected non nil span, got nil?")
+			return
+		}
+		_, span = ol.GetLastSpan()
+		if span == nil {
+			t.Errorf("Expected non nil span, got nil?")
+			return
+		}
+		raw := ol.GetSources()
+		if len(*raw) == 0 {
+			t.Errorf("Should get at least one span, got %d on set: %d", len(*raw),idx)
+			return
+		}
 	}
 	if count != len(expected) {
 		t.Errorf("Iterator count missmatch!, expected %d, got %d", len(expected), count)
@@ -78,12 +93,12 @@ func TestPull2MultSetDataOverlaps(t *testing.T) {
 
 func TestOverlapAdjacentConsolidate(t *testing.T) {
 	var ac = testDriver.NewSpanOverlapAccumulator()
-	ac.Consolidate=true;
+	ac.Consolidate = true
 	var expected = [][]int{
 		{0, 3},
 		{5, 9},
 	}
-	var count = -1 
+	var count = -1
 	for idx, ol := range ac.SliceIterFactory(&[]SpanBoundry[int]{
 		&Span[int]{Begin: 0, End: 2},
 		&Span[int]{Begin: 3, End: 3},

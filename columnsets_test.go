@@ -43,11 +43,11 @@ func TestInitColumSet(t *testing.T) {
 		return
 	}
 	var col = (*cs.current)[0]
-	if col.ColumnId != 0 || col.GetSrcStart() != 0 || col.GetSrcEnd() != 0 {
+	if col.ColumnId != 0 || col.GetSrcId() != 0 || col.GetEndId() != 0 {
 		t.Errorf("Bad data position, expected 0, got: ColumnId: %d, src: %d, end: %d",
 			col.ColumnId,
-			col.GetSrcStart(),
-			col.GetSrcEnd(),
+			col.GetSrcId(),
+			col.GetEndId(),
 		)
 		return
 	}

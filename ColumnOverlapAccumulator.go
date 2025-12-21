@@ -1,5 +1,6 @@
 package st
 
+
 // Contains the current iterator control functions and represents the column position in the iterator process.
 type ColumnOverlapAccumulator[E any] struct {
 	// Representation of the data that intersected with an SpanBoundry passed to GetNext.
@@ -38,19 +39,45 @@ func (s *ColumnOverlapAccumulator[E]) GetEnd() E {
 
 type ColumnOverlap[E any] interface {
 	SpanBoundry[E]
-	GetSrcStart() int
-	GetSrcEnd() int
+	GetSrcId() int
+	GetEndId() int
 	GetOverlaps() *[]*OverlappingSpanSets[E]
+	GetFirstSpan() (int,SpanBoundry[E])
+	GetLastSpan() (int,SpanBoundry[E])
+	GetSources() *[]*OvelapSources[E]
 }
 
-func (s *ColumnOverlapAccumulator[E]) GetSrcStart() int {
+// Returns the first span that intersecs with this set.
+func (s *ColumnOverlapAccumulator[E]) GetFirstSpan() (int,SpanBoundry[E]) {
+	return (*s.Overlaps)[0].GetFirstSpan()
+}
+
+// Returns the last span that intersecs with this set.
+func (s *ColumnOverlapAccumulator[E]) GetLastSpan() (int,SpanBoundry[E]) {
+	return (*s.Overlaps)[len(*s.Overlaps)-1].GetLastSpan()
+}
+
+// Returns all spans with the sequence id from the orginal data source.
+func (s *ColumnOverlapAccumulator[E]) GetSources() (*[]*OvelapSources[E]) {
+	list :=[]*OvelapSources[E]{}
+	for _,ol :=range *s.Overlaps {
+		src :=ol.GetSources()
+		list=append(list,(*src)...)
+	}
+	return &list
+}
+
+// Returns the first positional id from the orignal data set for this column.
+func (s *ColumnOverlapAccumulator[E]) GetSrcId() int {
 	return s.SrcStart
 }
 
-func (s *ColumnOverlapAccumulator[E]) GetSrcEnd() int {
+// Returns the last positional id from the orignal data set for this column.
+func (s *ColumnOverlapAccumulator[E]) GetEndId() int {
 	return s.SrcEnd
 }
 
+// Returns the overlap sets.
 func (s *ColumnOverlapAccumulator[E]) GetOverlaps() *[]*OverlappingSpanSets[E] {
 	return s.Overlaps
 }

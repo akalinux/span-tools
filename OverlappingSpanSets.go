@@ -20,7 +20,6 @@ type OverlappingSpanSets[E any] struct {
 	SrcEnd int
 }
 
-
 func (s *OverlappingSpanSets[E]) IsUnique() bool {
 	return s.Contains == nil
 }
@@ -37,5 +36,39 @@ func (s *OverlappingSpanSets[E]) GetEnd() E {
 	return s.Span.GetEnd()
 }
 
+func (s *OverlappingSpanSets[E]) GetFirstSpan() (int, SpanBoundry[E]) {
+	if s.IsUnique() {
+		return s.SrcBegin, s.Span
+	}
+	return s.SrcBegin, (*s.Contains)[0]
+}
 
+func (s *OverlappingSpanSets[E]) GetLastSpan() (int, SpanBoundry[E]) {
+	if s.IsUnique() {
+		return s.SrcEnd, s.Span
+	}
+	return s.SrcEnd, (*s.Contains)[len(*s.Contains)-1]
+}
 
+type OvelapSources[E any] struct {
+	SpanBoundry[E]
+	SrcId int
+}
+
+func (s *OverlappingSpanSets[E]) GetSources() *[]*OvelapSources[E] {
+	res := &[]*OvelapSources[E]{}
+	if s.IsUnique() {
+		*res = append(*res, &OvelapSources[E]{
+			SpanBoundry: s.Span,
+			SrcId:       s.SrcBegin,
+		})
+	} else {
+		for id, span := range *s.Contains {
+			*res = append(*res, &OvelapSources[E]{
+				SpanBoundry: span,
+				SrcId:       s.SrcBegin + id,
+			})
+		}
+	}
+	return res
+}

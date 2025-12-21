@@ -22,6 +22,9 @@ type SpanUtil[E any] struct {
 	// Example of when true: 1,2 and 2,3 consolidate to 1,3, when false they do not consolidate.
 	// Default is false.
 	Consolidate bool
+	
+	// Denotes if objects created should sort by default.
+	Sort bool
 }
 
 // This method is used to verify the sanity of the next and current value.
@@ -145,6 +148,7 @@ func (s *SpanUtil[E]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E] {
 		Rss:         &OverlappingSpanSets[E]{Contains: nil, Span: nil},
 		Pos:         -1,
 		Consolidate: s.Consolidate,
+		Sort: s.Sort,
 	}
 }
 

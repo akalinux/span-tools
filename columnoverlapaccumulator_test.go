@@ -11,35 +11,33 @@ type IterValidate struct {
 }
 
 func TestColumConsolidateChannelOverlapAccumulator(t *testing.T) {
-  var list=[]*OverlappingSpanSets[int]{}
-	
-	
-	for _,span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultMultiiSet) {
-		list=append(list,span)
+	var list = []*OverlappingSpanSets[int]{}
+
+	for _, span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultMultiiSet) {
+		list = append(list, span)
 	}
-	var ts=make(chan *OverlappingSpanSets[int], len(list))
-	for _,span := range list {
+	var ts = make(chan *OverlappingSpanSets[int], len(list))
+	for _, span := range list {
 		ts <- span
 	}
-	close(ts);
-	var ca=testDriver.NewSpanOverlapAccumulator().ColumnChanOverlapSpanSetsFactory(ts)
+	close(ts)
+	var ca = testDriver.NewSpanOverlapAccumulator().ColumnChanOverlapSpanSetsFactory(ts)
 	ca.SetNext(MultMultiiSet[len(MultMultiiSet)-1])
-	
-	var _,ok = <-ts
-	if(ok) {
+
+	var _, ok = <-ts
+	if ok {
 		t.Error("Channel should be depleted")
-		
+
 	}
 
 }
 
-func testOverlapStruct(expected []IterValidate,t *testing.T,src *[]SpanBoundry[int]) {
+func testOverlapStruct(expected []IterValidate, t *testing.T, src *[]SpanBoundry[int]) {
 	var res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(src)
 	defer res.Close()
 	for pos, conf := range expected {
 
 		res.SetNext(conf.Next)
-
 		if conf.SrcStart != res.SrcStart {
 			t.Errorf("Bad position on result: %d, expected SrcStart: %d, Got: %d", pos, conf.SrcStart, res.SrcStart)
 			return
@@ -48,8 +46,25 @@ func testOverlapStruct(expected []IterValidate,t *testing.T,src *[]SpanBoundry[i
 			t.Errorf("Bad position on result: %d, expected SrcEnd: %d, Got: %d", pos, conf.SrcEnd, res.SrcEnd)
 			return
 		}
-		// test coverage enforcement.. nothing to test though
-		res.GetOverlaps()
+		if res.InOverlap() {
+			if len(*res.GetSources()) == 0 {
+				t.Errorf("Should never get 0 records from GetSources on set: %v",conf.Next)
+				t.Errorf("Next is: %v",res.Next.Span)
+				return
+			}
+			// just making sure these methods don't cause a crash... not testing the results
+			res.GetOverlaps()
+			_, span := res.GetLastSpan()
+			if span == nil {
+				t.Error("GetLastSpan should never return nil!")
+				return
+			}
+			_, span = res.GetFirstSpan()
+			if span == nil {
+				t.Error("GetFirst should never return nil!")
+				return
+			}
+		}
 	}
 
 	res.Close()
@@ -61,22 +76,22 @@ func testOverlapStruct(expected []IterValidate,t *testing.T,src *[]SpanBoundry[i
 func TestColumConsolidateLookBack(t *testing.T) {
 	var expected = []IterValidate{
 		{
-			Next:     &Span[int]{Begin: -1, End:5},
+			Next:     &Span[int]{Begin: -1, End: 5},
 			SrcStart: 0,
 			SrcEnd:   3,
 		},
 		{
-			Next:     &Span[int]{Begin: 2, End:6},
+			Next:     &Span[int]{Begin: 2, End: 6},
 			SrcStart: 1,
 			SrcEnd:   3,
 		},
 		{
-			Next:     &Span[int]{Begin: 13, End:13},
+			Next:     &Span[int]{Begin: 13, End: 13},
 			SrcStart: -1,
 			SrcEnd:   -1,
 		},
- }
-  testOverlapStruct(expected,t,&MultMultiiSet)
+	}
+	testOverlapStruct(expected, t, &MultMultiiSet)
 }
 func TestColumnConsolidateIter(t *testing.T) {
 
@@ -107,6 +122,6 @@ func TestColumnConsolidateIter(t *testing.T) {
 			SrcEnd:   6,
 		},
 	}
-  testOverlapStruct(expected,t,&MultMultiiSet)
-	
+	testOverlapStruct(expected, t, &MultMultiiSet)
+
 }
