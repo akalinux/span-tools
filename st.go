@@ -12,10 +12,11 @@
 // The algorithm is primarily implemented by 3 methods of the SpanUtil[E] struct:
 //   - FirstSpan, finds the initial data span intersections.
 //   - NextSpan, finds all subsequent data span intersections.
-//   - CreateOverlapSpan, finds the most common intersection of all overlapping spans.
+//   - CreateOverlapSpan, finds the most common intersecti:qon of all overlapping spans.
 // 
-// Other features of this package provide ways to consolidate overlaps and data set
-// iteration from various data sources.
+// Other features of this package:
+//   - Provide ways to consolidate overlaps.
+//   - Iterate through intersections of multiple data sets.
 //
 // [cmp.Compare]: https://pkg.go.dev/cmp#Compare
 package st

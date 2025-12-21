@@ -15,7 +15,9 @@ The algorithm is primarily implemented by 3 methods of the SpanUtil[E] struct:
 - NextSpan, finds all subsequent data span intersections.
 - CreateOverlapSpan, finds the most common intersection of all overlapping spans.
 
-Other features of this package provide ways to consolidate overlaps and iterate through intersections of multiple data sets.
+Other features of this package:
+- Provide ways to consolidate overlaps.
+- Iterate through intersections of multiple data sets.
 
 ## Basic Example
 
@@ -81,7 +83,7 @@ Resulting output:
 
 The basic example works, but its not very useful.  In the real world
 we generally have multiple data sources.  Usually we want to find the intersections
-of between different data sources.
+of between those different data sources.
 
 In this example we create a ColumnSets instance from a SpanUtil instance and add each
 data set as a column.  Once all columns have been added, we iterate over the result
@@ -196,4 +198,3 @@ The resulting output would be:
 # More Examples
 
 For more examples see the Examples folder [examples](./examples)
-    
