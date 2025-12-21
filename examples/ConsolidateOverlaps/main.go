@@ -16,7 +16,10 @@ func main() {
 	// Turn sorting on
 	u.Sort=true
 	
-	// this slice will end up being sorted by the internals
+	// Create our accumulator
+	ac :=u.NewSpanOverlapAccumulator()
+	
+	// this slice will end up being sorted by the "st" internals
 	unsorted :=&[]st.SpanBoundry[int]{
 		// Raw       // Will be sorted to
 		u.Ns(7,11),  // Row: 3
@@ -25,7 +28,6 @@ func main() {
 		u.Ns(2,12),  // Row: 0
 		u.Ns(5,19),  // Row: 2
 	}
-	ac :=u.NewSpanOverlapAccumulator()
 	
 	for id,span := range ac.SliceIterFactory(unsorted) {
 		fmt.Printf("OverlappingSpanSets: %d SpanBoundry (%d,%d)\n ",id,span.GetBegin(),span.GetEnd())

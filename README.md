@@ -210,7 +210,7 @@ __The resulting output:__
 
 # SpanBoundry Consolidation of Duplicate(s) and Overlap(s)
 
-In the real world data sets are often messy, out of order and contain duplicates and overlaps.
+In the real world data sets are often messy, out of order, and contain duplicates/overlaps.
 The internals of the "st" package expect SpanBoundry instances to be provided in a specific order. 
 If data is not provided in the correct order it cannot be processed correctly.
 
