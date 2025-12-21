@@ -15,9 +15,7 @@ The algorithm is primarily implemented by 3 methods of the SpanUtil[E] struct:
 - NextSpan, finds all subsequent data span intersections.
 - CreateOverlapSpan, finds the most common intersection of all overlapping spans.
 
-Other features of this package provide ways to consolidate overlaps and data set
-iteration from various data sources.
-
+Other features of this package provide ways to consolidate overlaps and iterate through intersections of multiple data sets.
 
 ## Basic Example
 
@@ -90,7 +88,7 @@ data set as a column.  Once all columns have been added, we iterate over the res
 set which contains the data and how it intersects.
  
 In this example we will use 3 data sets, one of which contains overlapping values.
-Please note when a source is processed as a column overlapping data sets are consolidated together.
+Please note when a source is processed as a column, the overlapping data sets are consolidated together.
 
 Example Data sets:
 
@@ -104,8 +102,8 @@ Example Data sets:
 			(5, 11),
 	
 	SetC:
-			(1, 7),
-			(8, 11),
+			(1, 7),  // will consolidate to 1-11
+			(8, 11), // will consolidate to 1-11
 
 
 Example Code:
