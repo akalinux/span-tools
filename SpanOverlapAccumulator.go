@@ -28,10 +28,12 @@ type SpanOverlapAccumulator[E any] struct {
 
 // The Accumulate method.
 //
-// For a given span provided:
-// When the span overlaps with the current internal span, the OverlappingSpanSets is expanded and the span is append to the Contains slice.
-// When the span is outside of the current internal span, then a new OverlappingSpanSets is created with this span as its current span.
-func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) *OverlappingSpanSets[E] {
+// For a given span provided: When the span overlaps with the current internal span, 
+// the OverlappingSpanSets is expanded and the span is append to the Contains slice.
+// When the span is outside of the current internal span, 
+// then a new OverlappingSpanSets is created with this span as its current span.
+// The error value is nil, by default, when an error has happend it is no longer nil.
+func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*OverlappingSpanSets[E], error) {
 	s.Pos++
 	if s.Validate {
 		s.Err = s.Check(span, s.Rss.Span)
@@ -39,7 +41,7 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) *Overlapping
 
 	if s.Rss.Span == nil {
 		s.Rss.Span = span
-		return s.Rss
+		return s.Rss, s.Err
 	}
 
 	a := s.Rss.Span
@@ -88,7 +90,7 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) *Overlapping
 		}
 		s.Rss.SrcEnd = s.Pos
 	}
-	return s.Rss
+	return s.Rss, s.Err
 }
 
 // Creates a channel iterator for channel of OverlappingSpanSets.

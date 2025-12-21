@@ -9,7 +9,7 @@ type SpanIterSeq2Stater[E any] struct {
 }
 
 func (s *SpanIterSeq2Stater[E]) SetNext(span SpanBoundry[E]) bool {
-	var cmp = s.Sa.Accumulate(span)
+	cmp,_ := s.Sa.Accumulate(span)
 	if s.Current == nil {
 		s.Current = cmp
 		return false

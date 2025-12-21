@@ -210,9 +210,9 @@ __The resulting output:__
 
 # SpanBoundry Consolidation of Duplicate(s) and Overlap(s)
 
-In the real world data sets are often messy, out of order and contain duplicates and overlaps.
-The internals of the "st" package expect SpanBoundry instance to be provided in a specific order. If data is not provided in the correct order it cannot
-be processed correctly.
+In the real world data sets are often messy, out of order, and contain duplicates/overlaps.
+The internals of the "st" package expect SpanBoundry instances to be provided in a specific order. 
+If data is not provided in the correct order it cannot be processed correctly.
 
 The expected order is as follows (i=SpanBoundry):
  - i.GetBegin() ascending order
@@ -237,10 +237,11 @@ This is the same data ordered for consumption by the "st" package:
 __Enable Sorting of data sets__
 
 
-The full source code can be found: [here]().
+The full source code can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/ConsolidateOverlaps/main.go).
 
 The SpanUtil[E] struct has a "Sort" (default false ) flag, when set to true, all instances of
-SpanOverlapAccumulator[E] created with the u.
+SpanOverlapAccumulator[E] created with the factory interface u.NewSpanOverlapAccumulator() will have
+the Sort flag set to true.
 
 	// Turn sorting on
 	u.Sort=true
@@ -254,7 +255,7 @@ of SpanOverlapAccumulator instances, the method is u.NewSpanOverlapAccumulator()
 
 __Sorting and Consolidation__
 
-Now we need to step through the resulting sorting and consolidation
+Now we need to step through the resulting sorted and consolidated
 results.  The ac.SliceIterFactory(*list) method provides an iter.Seq2
 factory interface that can be used to driver our for loop for us.
 
@@ -287,6 +288,44 @@ __Resulting output:__
 	OverlappingSpanSets: 1 SpanBoundry (20,21)
 	  Original Span values:
 	    Row: 4 span: &{20 21}
+
+## Manual Consolidation and Error Checking
+
+Data integrity is very important: the internals of the "st" package check for errors
+by default.  The iterators of the "st" package stop progressing if an error
+is encountered.  Typically error checking is done in an instance of SpanOverlapAccumulator.
+This is generally a good place to stop the iteration process.
+The SpanOverlapAccumulator instance provides a method called s.Accumulate(SpanBoundry).
+This method returns both the OverlappingSpanSets instance and a pointer to error.
+If the error instance is not nil then the SpanOverlapAccumulator has encountered an error.
+
+The SpanUtil[E] instance provides a method for checking the quality of the SpanBoundry[E]
+instances it receives.
+
+__To check if a SpanBoundry instance is valid:__
+
+In this case if err is  not nil, then the span is valid.  Validity is defined as
+span.GetBegin() is less than or equal to span.GetEnd().
+
+	err :=u.Check(span,nil)
+	
+	if err!=nil {
+	  // invalid span
+	}	
+
+__To check if the next SpanBoundry should be after the current SpanBoundry:__
+
+This method performs 2 checks
+ - First next is checked for validity
+ - Checks if next comes after current or is equal to current
+
+Note: current is not checked for validity.
+
+	err :=u.Check(next,current)
+	
+	if err!=nil {
+	  // next is out of order in relation to current
+	}	
 
 # More Examples
 

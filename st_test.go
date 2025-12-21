@@ -118,7 +118,7 @@ func TestConsolidate(t *testing.T) {
 	var s = testDriver.NewSpanOverlapAccumulator()
 	s.Validate = false
 	for idx, span := range AllSet {
-		var res = s.Accumulate(span)
+		var res,_ = s.Accumulate(span)
 		if container.GetBegin() != res.GetBegin() || container.GetEnd() != res.GetEnd() {
 			t.Errorf("Container out of bounds in element: %d expected: %v, got %v", 
 			idx,
@@ -145,7 +145,7 @@ func TestConsolidate(t *testing.T) {
 func TestMergeMultiple(t *testing.T) {
 	var accumulator = testDriver.NewSpanOverlapAccumulator()
 	for idx, span := range MultiSet {
-		var res = accumulator.Accumulate(span)
+		var res,_ = accumulator.Accumulate(span)
 		if span.GetBegin() != res.GetBegin() || span.GetEnd() != res.GetEnd() {
 			t.Errorf("Range missmatch, expected: %d->%d, got: %d->%d", span.GetBegin(), span.GetEnd(), res.GetBegin(), res.GetEnd())
 		}
@@ -179,7 +179,7 @@ func TestGrowth(t *testing.T) {
 	var s = testDriver.NewSpanOverlapAccumulator()
 	var lastRes *OverlappingSpanSets[int] = nil
 	for idx, span := range src {
-		res := s.Accumulate(&span)
+		res,_ := s.Accumulate(&span)
 
 		switch idx {
 		case 0:
@@ -234,8 +234,8 @@ func TestOverlaps(t *testing.T) {
 
 func TestMultiAccumulateSet(t *testing.T) {
 	var acc = testDriver.NewSpanOverlapAccumulator()
-	var first = acc.Accumulate(MultiSet[0])
-	var next = acc.Accumulate(MultiSet[1])
+	var first,_ = acc.Accumulate(MultiSet[0])
+	var next,_ = acc.Accumulate(MultiSet[1])
 
 	if first.GetBegin() != -1 || first.GetEnd() != 0 {
 		t.Errorf("Expected -1,0 got: %d,%d", first.GetBegin(), first.GetEnd())
@@ -251,7 +251,7 @@ func TestMultiAccumulateSet(t *testing.T) {
 		return
 	}
 	first = next
-	next = acc.Accumulate(MultiSet[2])
+	next,_ = acc.Accumulate(MultiSet[2])
 	if next.GetBegin() != 2 || next.GetEnd() != 2 {
 		t.Errorf("Expected 2,2 got: %d,%d", next.GetBegin(), next.GetEnd())
 		return
@@ -265,7 +265,7 @@ func TestMultiAccumulateSet(t *testing.T) {
 		return
 	}
 	first = next
-	next = acc.Accumulate(MultiSet[3])
+	next,_ = acc.Accumulate(MultiSet[3])
 	if next.GetBegin() != 5 || next.GetEnd() != 6 {
 		t.Errorf("Expected 5,6 got: %d,%d", next.GetBegin(), next.GetEnd())
 		return
@@ -279,7 +279,7 @@ func TestMultiAccumulateSet(t *testing.T) {
 		return
 	}
 	first = next
-	next = acc.Accumulate(MultiSet[4])
+	next ,_= acc.Accumulate(MultiSet[4])
 	if next.GetBegin() != 9 || next.GetEnd() != 11 {
 		t.Errorf("Expected 9,11 got: %d,%d", next.GetBegin(), next.GetEnd())
 		return
