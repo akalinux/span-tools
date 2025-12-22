@@ -176,6 +176,11 @@ Finally we want to iterate through the resulting overlaps and intersections foun
 	fmt.Print(header)
 	fmt.Print("| Seq | Begin and End      | Set Name:(Row,Row)                 |\n")
 	for pos, res := range ac.Iter() {
+		// check if there were errors
+		if ac.Err != nil {
+			fmt.Printf("Error: on Column: %s, error was: %v\n",m[ac.ErrCol],ac.Err)
+			return
+		}
 		cols := res.GetColumns()
 		names := []string{}
 		for _, column := range *cols {
@@ -239,12 +244,9 @@ __Enable Sorting of data sets__
 
 The full source code can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/ConsolidateOverlaps/main.go).
 
-The SpanUtil[E] struct has a "Sort" (default false ) flag, when set to true, all instances of
+The SpanUtil[E] struct has a "Sort" flag, when set to true( the default ), all instances of
 SpanOverlapAccumulator[E] created with the factory interface u.NewSpanOverlapAccumulator() will have
 the Sort flag set to true.
-
-	// Turn sorting on
-	u.Sort=true
 
 __Creating our SpanOverlapAccumulator__
 
@@ -292,9 +294,9 @@ __Resulting output:__
 
 ## Manual Consolidation and Error Checking
 
-Data integrity is very important: the internals of the "st" package does not check for errors
-by default.  Error checking can be enabled on the SpanUltil instance by setting u.Valudate=true.
- The iterators of the "st" package stop progressing if an error
+Data integrity is very important: the internals of the "st" package check for errors
+by default.  Error checking can be disabled on the SpanUltil instance by setting
+u.Valudate=false.  The iterators of the "st" package stop progressing if an error
 is encountered.  Typically error checking is done in an instance of SpanOverlapAccumulator.
 This is generally a good place to stop the iteration process.
 The SpanOverlapAccumulator instance provides a method called s.Accumulate(SpanBoundry).
@@ -338,9 +340,8 @@ Note: current is not checked for validity.
 
 __Manual Consolidation with Error checking enabled:__
 
-As noted, error checking is disabled by default. In this example we will enable 
-error checking and iterate through the SpanBoundry slice twice.  In both passes
-we will have Validation turned on.  In the first pass we will provide an unsorted
+As noted, error checking is enabled by default. In this example we will iterate 
+through the SpanBoundry slice twice.  In the first pass we will provide an unsorted
 list that will error out during the consolidation process.  The 2nd pass we will
 first sort our list and then enter the consolidation process.
 
@@ -366,13 +367,6 @@ In our main package we define a function called AccumulateSet, and it handles pr
 manual accumulation pass. Please see the source code 
 [here](https://github.com/akalinux/span-tools/blob/main/examples/ManualConsolidation/main.go) 
 for more details
-
-__In our main function we turn validation on:__
-
-By default SpanUtil.Validate==false, to enable validation we need to set it to true.
-
-	// turn validation on
-	u.Validate=true
 
 __Example1, the expected error pass:__
 

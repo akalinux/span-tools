@@ -6,7 +6,10 @@ func TestBadOrder(t *testing.T) {
     &Span[int]{Begin: 9, End: 11},
     &Span[int]{Begin: 2, End: 2},
   }
+	testDriver :=NewSpanUtil(testDriver.Cmp,testDriver.Next)
   testDriver.Validate = true
+  testDriver.Sort= false
+	
   for id, span := range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(list) {
     if id > 0 {
       t.Errorf("Should stop at 0")

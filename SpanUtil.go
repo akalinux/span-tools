@@ -63,6 +63,8 @@ func NewSpanUtil[E any](cmp func(a, b E) int, next func(e E) E) *SpanUtil[E] {
 	return &SpanUtil[E]{
 		Cmp:  cmp,
 		Next: next,
+		Validate: true,
+		Sort:true,
 	}
 }
 

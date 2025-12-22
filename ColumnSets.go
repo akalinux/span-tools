@@ -19,7 +19,10 @@ type ColumnSets[E any] struct {
 	pos     int
 	current *[]*CurrentColumn[E]
 	itr     bool
+	
+	// The last error, nil if there were no errors
 	Err     error
+	// ColumnId the our last error came from
 	ErrCol  int
 }
 

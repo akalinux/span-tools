@@ -15,8 +15,6 @@ var u = st.NewSpanUtil(
 )
 func main() {
 	
-	// turn validation on
-	u.Validate=true
 	// this slice will end up being sorted by the "st" internals
 	unsorted := &[]st.SpanBoundry[int]{
 		// Raw       // Will be sorted to
@@ -30,7 +28,6 @@ func main() {
 	// This pass will error out
 	fmt.Print("Processing our data with an invalid order\n")
 	AccumulateSet(unsorted)
-
 	
 	// Once the data is sorted consolidation will work correctly
 	slices.SortFunc(*unsorted, u.Compare)

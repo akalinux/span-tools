@@ -13,8 +13,6 @@ func main() {
 		// Define our Next function
 		func(e int) int { return e + 1 },
 	)
-	// Turn sorting on
-	u.Sort=true
 	
 	// Create our accumulator
 	ac :=u.NewSpanOverlapAccumulator()
