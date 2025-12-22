@@ -7,7 +7,7 @@ import (
 
 func TestOverlapsLoopBreak(t *testing.T) {
 	var count = 0
-	for range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultiSet) {
+	for range testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromSbSlice(&MultiSet) {
 		count++
 		break
 	}
@@ -27,7 +27,7 @@ func TestMultSetDataOverlaps(t *testing.T) {
 		{6, 6},
 	}
 	var count = 0
-	for idx, ol := range ac.SliceIterFactory(&MultMultiiSet) {
+	for idx, ol := range ac.NewOlssSeq2FromSbSlice(&MultMultiiSet) {
 		count++
 		if expected[idx][0] != ol.SrcBegin {
 			t.Errorf("Invalid SrcBegin, expected: %d, got %d for position: %d", expected[idx][0], ol.SrcBegin, idx)
@@ -68,7 +68,7 @@ func TestMultSetDataOverlaps(t *testing.T) {
 }
 
 func TestPull2MultSetDataOverlaps(t *testing.T) {
-	var next, stop = iter.Pull2(testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultMultiiSet))
+	var next, stop = iter.Pull2(testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromSbSlice(&MultMultiiSet))
 	defer stop()
 	var count = 0
 	var expected = [][]int{
@@ -108,7 +108,7 @@ func TestOverlapAdjacentConsolidate(t *testing.T) {
 		{5, 9},
 	}
 	var count = -1
-	for idx, ol := range ac.SliceIterFactory(&[]SpanBoundry[int]{
+	for idx, ol := range ac.NewOlssSeq2FromSbSlice(&[]SpanBoundry[int]{
 		&Span[int]{Begin: 0, End: 2},
 		&Span[int]{Begin: 3, End: 3},
 		&Span[int]{Begin: 5, End: 6},

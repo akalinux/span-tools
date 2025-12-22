@@ -7,7 +7,7 @@ import (
 func MakeOverlapTestList() *[]*OverlappingSpanSets[int] {
 	var ac = testDriver.NewSpanOverlapAccumulator()
 	var list = []*OverlappingSpanSets[int]{}
-	for _, ol := range ac.SliceIterFactory(&MultMultiiSet) {
+	for _, ol := range ac.NewOlssSeq2FromSbSlice(&MultMultiiSet) {
 		list = append(list, ol)
 	}
 	return &list
@@ -22,7 +22,7 @@ func TestOverlapChannel(t *testing.T) {
 	}
 	close(ch)
 	var count = 0
-	for id, value := range ac.ChanIterFactoryOverlaps(ch) {
+	for id, value := range ac.NewOlssSeq2FromOlssChan(ch) {
 		count++
 		if list[id] != value {
 			t.Errorf("Error, wrong object ref in chan iter??")
@@ -42,7 +42,7 @@ func TestBreakLoopOverlapChannel(t *testing.T) {
 	}
 	close(ch)
 	var count = 0
-	for range ac.ChanIterFactoryOverlaps(ch) {
+	for range ac.NewOlssSeq2FromOlssChan(ch) {
 		count++
 		break
 	}
@@ -51,7 +51,7 @@ func TestBreakLoopOverlapChannel(t *testing.T) {
 	}
 }
 func TestNilOverlapChannel(t *testing.T) {
-	var itb=testDriver.NewSpanOverlapAccumulator().ChanIterFactoryOverlaps(nil);
+	var itb=testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssChan(nil);
 	var count=0
 	for  range itb  {
 	  count++
@@ -60,21 +60,11 @@ func TestNilOverlapChannel(t *testing.T) {
 		t.Error("Should Not get any elements in our loop")
 	}
 }
-func TestNilOverlapSlice(t *testing.T) {
-	var itb=testDriver.NewSpanOverlapAccumulator().SliceIterFactoryOverlaps(nil);
 
-  var count=0
-	for  range itb  {
-	  count++
-  }
-	if(count!=0) {
-		t.Error("Should Not get any elements in our loop")
-	}
-}
 
 func TestBreakLoopOverlapSlice(t *testing.T) {
 	var list =*MakeOverlapTestList() 
-	var itb=testDriver.NewSpanOverlapAccumulator().SliceIterFactoryOverlaps(&list);
+	var itb=testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssSlice(&list);
   var count=0
 	for range itb  {
 		count++
@@ -87,7 +77,7 @@ func TestBreakLoopOverlapSlice(t *testing.T) {
 
 func TestOverlapSlice(t *testing.T) {
 	var list =*MakeOverlapTestList() 
-	var itb=testDriver.NewSpanOverlapAccumulator().SliceIterFactoryOverlaps(&list);
+	var itb=testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssSlice(&list);
   var count=0
 	for id, value := range itb  {
 		count++

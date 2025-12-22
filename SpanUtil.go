@@ -63,6 +63,8 @@ func NewSpanUtil[E any](cmp func(a, b E) int, next func(e E) E) *SpanUtil[E] {
 	return &SpanUtil[E]{
 		Cmp:  cmp,
 		Next: next,
+		Validate: true,
+		Sort:true,
 	}
 }
 
@@ -160,20 +162,20 @@ func (s *SpanUtil[E]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E] {
 // operations, you should a setup a defer call to  ColumnOverlapAccumulator[E].Close() method to clean the instance up in order to prevent memory leaks or undefined behavior.
 //
 // [iter.Pull2]: https://pkg.go.dev/iter#hdr-Pulling_Values
-func (s *SpanUtil[E]) ColumnOverlapFactory(driver iter.Seq2[int, *OverlappingSpanSets[E]]) *ColumnOverlapAccumulator[E] {
-	var next, stop = iter.Pull2(driver)
-	return s.ColumnOverlapFactoryBuilder(next, stop)
+func (s *SpanUtil[E]) NewCoaFromOlssSeq2(driver iter.Seq2[int, *OverlappingSpanSets[E]]) *ColumnOverlapAccumulator[E] {
+	return s.NewColumnOverlapAccumulator(iter.Pull2(driver))
 }
 
 // This method takes the next and stop functions and creates a new fully initialized instance of ColumnOverlapAccumulator[E].
 // Each data set should have its own accumulator.
-func (s *SpanUtil[E]) ColumnOverlapFactoryBuilder(next func() (int, *OverlappingSpanSets[E], bool), stop func()) *ColumnOverlapAccumulator[E] {
+func (s *SpanUtil[E]) NewColumnOverlapAccumulator(next func() (int, *OverlappingSpanSets[E], bool), stop func()) *ColumnOverlapAccumulator[E] {
 	var res = &ColumnOverlapAccumulator[E]{}
 	res.ItrStop = stop
 	res.ItrGetNext = next
 	res.Util = s
 	var _, current, ok = res.ItrGetNext()
 	if ok {
+		res.Err=current.Err
 		res.Next = current
 	}
 	return res
@@ -284,4 +286,26 @@ func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) (Sp
 	}
 
 	return res, ok
+}
+
+// Creates a channel iterator for channel of OverlappingSpanSets.
+func (s *SpanUtil[E]) NewOlssSeq2FromOlssChan(c <-chan *OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
+
+	if c == nil {
+		return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
+		}
+	}
+	var i = 0
+	return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
+		var ol, ok = <-c
+		for ok {
+
+			if !yeild(i, ol) {
+				return
+			}
+			i++
+			ol, ok = <-c
+		}
+
+	}
 }

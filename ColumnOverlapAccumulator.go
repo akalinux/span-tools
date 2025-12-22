@@ -1,6 +1,5 @@
 package st
 
-
 // This structure represents a "data source" and how it intersects with an external SpanBoundry.
 // Contains the current iterator control functions and represents the column position in the iterator process.
 type ColumnOverlapAccumulator[E any] struct {
@@ -28,6 +27,8 @@ type ColumnOverlapAccumulator[E any] struct {
 
 	// Denotes if the object is closed
 	Closed bool
+
+	Err error
 }
 
 func (s *ColumnOverlapAccumulator[E]) GetBegin() E {
@@ -39,21 +40,21 @@ func (s *ColumnOverlapAccumulator[E]) GetEnd() E {
 }
 
 // Returns the first span that intersecs with this set.
-func (s *ColumnOverlapAccumulator[E]) GetFirstSpan() (int,SpanBoundry[E]) {
+func (s *ColumnOverlapAccumulator[E]) GetFirstSpan() (int, SpanBoundry[E]) {
 	return (*s.Overlaps)[0].GetFirstSpan()
 }
 
 // Returns the last span that intersecs with this set.
-func (s *ColumnOverlapAccumulator[E]) GetLastSpan() (int,SpanBoundry[E]) {
+func (s *ColumnOverlapAccumulator[E]) GetLastSpan() (int, SpanBoundry[E]) {
 	return (*s.Overlaps)[len(*s.Overlaps)-1].GetLastSpan()
 }
 
 // Returns all spans with the sequence id from the orginal data source.
-func (s *ColumnOverlapAccumulator[E]) GetSources() (*[]*OvelapSources[E]) {
-	list :=[]*OvelapSources[E]{}
-	for _,ol :=range *s.Overlaps {
-		src :=ol.GetSources()
-		list=append(list,(*src)...)
+func (s *ColumnOverlapAccumulator[E]) GetSources() *[]*OvelapSources[E] {
+	list := []*OvelapSources[E]{}
+	for _, ol := range *s.Overlaps {
+		src := ol.GetSources()
+		list = append(list, (*src)...)
 	}
 	return &list
 }
@@ -92,7 +93,7 @@ func (s *ColumnOverlapAccumulator[E]) Close() {
 	}
 }
 
-// When true this instance contains elements in "Overlaps" that intersect with 
+// When true this instance contains elements in "Overlaps" that intersect with
 // the last value passed to SetNext.
 func (s *ColumnOverlapAccumulator[E]) InOverlap() bool {
 	return s.HasNext() && s.SrcStart != -1
@@ -102,6 +103,7 @@ func (s *ColumnOverlapAccumulator[E]) InOverlap() bool {
 // The overlap is considered an external point for comparison, and the internal data sets are
 // updated to reflect the current intersection points if any.
 func (s *ColumnOverlapAccumulator[E]) SetNext(overlap SpanBoundry[E]) {
+
 	var current = s.Next
 	var hasnext = current != nil
 	var u = *s.Util
@@ -112,7 +114,6 @@ func (s *ColumnOverlapAccumulator[E]) SetNext(overlap SpanBoundry[E]) {
 				break
 			}
 			if u.Overlap(overlap, span) {
-
 				*ol = append(*ol, span)
 			}
 		}
@@ -132,6 +133,12 @@ func (s *ColumnOverlapAccumulator[E]) SetNext(overlap SpanBoundry[E]) {
 
 	for hasnext {
 		s.Next = current
+		if current.Err != nil {
+			s.Err = current.Err
+			s.Next = nil
+			s.SrcStart = -1
+			return
+		}
 
 		if u.Overlap(overlap, current) {
 			if s.SrcStart == -1 {
