@@ -21,7 +21,7 @@ func TestColumConsolidateChannelOverlapAccumulator(t *testing.T) {
 		ts <- span
 	}
 	close(ts)
-	var ca = testDriver.NewSpanOverlapAccumulator().ColumnChanOverlapSpanSetsFactory(ts)
+	var ca = testDriver.NewSpanOverlapAccumulator().NewColumnOverlapAccumulatorFromOverlappingSpanSetsChan(ts)
 	ca.SetNext(MultMultiiSet[len(MultMultiiSet)-1])
 
 	var _, ok = <-ts
@@ -33,7 +33,7 @@ func TestColumConsolidateChannelOverlapAccumulator(t *testing.T) {
 }
 
 func testOverlapStruct(expected []IterValidate, t *testing.T, src *[]SpanBoundry[int]) {
-	var res = testDriver.NewSpanOverlapAccumulator().ColumnOverlapSliceFactory(src)
+	var res = testDriver.NewSpanOverlapAccumulator().NewColumnOverlapAccumulatorFromSpanBoundrySlice(src)
 	defer res.Close()
 	for pos, conf := range expected {
 

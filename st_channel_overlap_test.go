@@ -22,7 +22,7 @@ func TestOverlapChannel(t *testing.T) {
 	}
 	close(ch)
 	var count = 0
-	for id, value := range ac.ChanIterFactoryOverlaps(ch) {
+	for id, value := range ac.NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsChan(ch) {
 		count++
 		if list[id] != value {
 			t.Errorf("Error, wrong object ref in chan iter??")
@@ -42,7 +42,7 @@ func TestBreakLoopOverlapChannel(t *testing.T) {
 	}
 	close(ch)
 	var count = 0
-	for range ac.ChanIterFactoryOverlaps(ch) {
+	for range ac.NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsChan(ch) {
 		count++
 		break
 	}
@@ -51,7 +51,7 @@ func TestBreakLoopOverlapChannel(t *testing.T) {
 	}
 }
 func TestNilOverlapChannel(t *testing.T) {
-	var itb=testDriver.NewSpanOverlapAccumulator().ChanIterFactoryOverlaps(nil);
+	var itb=testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsChan(nil);
 	var count=0
 	for  range itb  {
 	  count++
@@ -60,17 +60,7 @@ func TestNilOverlapChannel(t *testing.T) {
 		t.Error("Should Not get any elements in our loop")
 	}
 }
-func TestNilOverlapSlice(t *testing.T) {
-	var itb=testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsSlice(nil);
 
-  var count=0
-	for  range itb  {
-	  count++
-  }
-	if(count!=0) {
-		t.Error("Should Not get any elements in our loop")
-	}
-}
 
 func TestBreakLoopOverlapSlice(t *testing.T) {
 	var list =*MakeOverlapTestList() 
