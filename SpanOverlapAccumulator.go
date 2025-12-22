@@ -3,6 +3,7 @@ package st
 import (
 	"iter"
 	"slices"
+	"context"
 )
 
 // This is a stater structure, used to drive the creation of new OverlappingSpanSets.
@@ -98,27 +99,7 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*Overlappin
 	return s.Rss, s.Err
 }
 
-// Creates a channel iterator for channel of OverlappingSpanSets.
-func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromOlssChan(c <-chan *OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
 
-	if c == nil {
-		return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
-		}
-	}
-	var i = 0
-	return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
-		var ol, ok = <-c
-		for ok {
-
-			if !yeild(i, ol) {
-				return
-			}
-			i++
-			ol, ok = <-c
-		}
-
-	}
-}
 
 // Helper function to create an overlap iterator from a slice of list.
 func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromOlssSlice(list *[]*OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
@@ -228,6 +209,17 @@ func (s *SpanOverlapAccumulator[E]) NewCoaFromSbSlice(list *[]SpanBoundry[E]) *C
 	return s.NewCoaFromOlssSeq2(s.NewOlssSeq2FromSbSlice(list))
 }
 
-func (s *SpanOverlapAccumulator[E]) NewCoaFromSbChan(c <-chan *OverlappingSpanSets[E]) *ColumnOverlapAccumulator[E] {
+func (s *SpanOverlapAccumulator[E]) NewCoaFromOlssChan(c <-chan *OverlappingSpanSets[E]) *ColumnOverlapAccumulator[E] {
 	return s.SpanUtil.NewCoaFromOlssSeq2(s.NewOlssSeq2FromOlssChan(c))
+}
+
+
+func (s *SpanOverlapAccumulator[E]) NewOlssChanStater() *OlssChanStater[E] {
+	ctx,cancle :=context.WithCancel(context.Background())
+	return &OlssChanStater[E]{
+		Stater: *s.NewSpanIterSeq2Stater(),
+		Chan: make(chan *OverlappingSpanSets[E]),
+		Ctx: ctx,
+		Cancle: cancle,
+	}
 }

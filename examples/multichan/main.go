@@ -46,7 +46,7 @@ func buildChanColumnAccumulator(ctx context.Context, list *[]st.SpanBoundry[int]
 			}
 		}
 	}()
-	return na.NewCoaFromSbChan(col)
+	return na.NewCoaFromOlssChan(col)
 }
 
 func main() {

@@ -287,3 +287,25 @@ func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) (Sp
 
 	return res, ok
 }
+
+// Creates a channel iterator for channel of OverlappingSpanSets.
+func (s *SpanUtil[E]) NewOlssSeq2FromOlssChan(c <-chan *OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
+
+	if c == nil {
+		return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
+		}
+	}
+	var i = 0
+	return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
+		var ol, ok = <-c
+		for ok {
+
+			if !yeild(i, ol) {
+				return
+			}
+			i++
+			ol, ok = <-c
+		}
+
+	}
+}

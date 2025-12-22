@@ -21,7 +21,7 @@ func TestColumConsolidateChannelOverlapAccumulator(t *testing.T) {
 		ts <- span
 	}
 	close(ts)
-	var ca = testDriver.NewSpanOverlapAccumulator().NewCoaFromSbChan(ts)
+	var ca = testDriver.NewSpanOverlapAccumulator().NewCoaFromOlssChan(ts)
 	ca.SetNext(MultMultiiSet[len(MultMultiiSet)-1])
 
 	var _, ok = <-ts

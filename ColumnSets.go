@@ -19,11 +19,12 @@ type ColumnSets[E any] struct {
 	pos     int
 	current *[]*CurrentColumn[E]
 	itr     bool
-	
+
 	// The last error, nil if there were no errors
-	Err     error
+	Err error
 	// ColumnId the our last error came from
 	ErrCol  int
+	OnClose *[]func()
 }
 
 type ColumnResults[E any] interface {
@@ -61,10 +62,23 @@ func (s *ColumnSets[E]) Close() {
 		return
 	}
 	s.closed = true
+	if s.OnClose != nil {
+		for _, todo := range *s.OnClose {
+			todo()
+		}
+	}
 	if s.columns != nil {
 		for _, col := range *s.columns {
 			col.Close()
 		}
+	}
+}
+
+func (s *ColumnSets[E]) AddOnClose(todo func()) {
+	if s.OnClose == nil {
+		s.OnClose = &[]func(){todo}
+	} else {
+		*s.OnClose = append(*s.OnClose, todo)
 	}
 }
 
@@ -106,6 +120,25 @@ func (s *ColumnSets[E]) AddColumnFromOverlappingSpanSets(list *[]*OverlappingSpa
 			),
 		),
 	)
+}
+
+// Adds a context aware channel based ColumnOverlapAccumulator.
+//
+// # Warning
+//
+// If you don't start the goroutine that appends to the chanel before calling this method, 
+// it will cause a race condition that will prevent the ColumnSets instence from working 
+// correctly.
+func (s *ColumnSets[E]) AddColumnFromNewOlssChanStater(sa *OlssChanStater[E]) int {
+	id := s.AddColumn(
+		s.Util.NewColumnOverlapAccumulator(
+			iter.Pull2(
+				s.Util.NewOlssSeq2FromOlssChan(sa.Chan),
+			),
+		),
+	)
+	s.AddOnClose(sa.Shutdown)
+	return id
 }
 
 func (s *ColumnSets[E]) init() {
