@@ -7,7 +7,7 @@ import (
 func MakeOverlapTestList() *[]*OverlappingSpanSets[int] {
 	var ac = testDriver.NewSpanOverlapAccumulator()
 	var list = []*OverlappingSpanSets[int]{}
-	for _, ol := range ac.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(&MultMultiiSet) {
+	for _, ol := range ac.NewOlssSeq2FromSbSlice(&MultMultiiSet) {
 		list = append(list, ol)
 	}
 	return &list
@@ -22,7 +22,7 @@ func TestOverlapChannel(t *testing.T) {
 	}
 	close(ch)
 	var count = 0
-	for id, value := range ac.NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsChan(ch) {
+	for id, value := range ac.NewOlssSeq2FromOlssChan(ch) {
 		count++
 		if list[id] != value {
 			t.Errorf("Error, wrong object ref in chan iter??")
@@ -42,7 +42,7 @@ func TestBreakLoopOverlapChannel(t *testing.T) {
 	}
 	close(ch)
 	var count = 0
-	for range ac.NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsChan(ch) {
+	for range ac.NewOlssSeq2FromOlssChan(ch) {
 		count++
 		break
 	}
@@ -51,7 +51,7 @@ func TestBreakLoopOverlapChannel(t *testing.T) {
 	}
 }
 func TestNilOverlapChannel(t *testing.T) {
-	var itb=testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsChan(nil);
+	var itb=testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssChan(nil);
 	var count=0
 	for  range itb  {
 	  count++
@@ -64,7 +64,7 @@ func TestNilOverlapChannel(t *testing.T) {
 
 func TestBreakLoopOverlapSlice(t *testing.T) {
 	var list =*MakeOverlapTestList() 
-	var itb=testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsSlice(&list);
+	var itb=testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssSlice(&list);
   var count=0
 	for range itb  {
 		count++
@@ -77,7 +77,7 @@ func TestBreakLoopOverlapSlice(t *testing.T) {
 
 func TestOverlapSlice(t *testing.T) {
 	var list =*MakeOverlapTestList() 
-	var itb=testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsSlice(&list);
+	var itb=testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssSlice(&list);
   var count=0
 	for id, value := range itb  {
 		count++

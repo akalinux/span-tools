@@ -99,7 +99,7 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*Overlappin
 }
 
 // Creates a channel iterator for channel of OverlappingSpanSets.
-func (s *SpanOverlapAccumulator[E]) NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsChan(c <-chan *OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
+func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromOlssChan(c <-chan *OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
 
 	if c == nil {
 		return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
@@ -121,12 +121,12 @@ func (s *SpanOverlapAccumulator[E]) NewOverlappingSpanSetsIterSeq2FromOverlappin
 }
 
 // Helper function to create an overlap iterator from a slice of list.
-func (s *SpanOverlapAccumulator[E]) NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsSlice(list *[]*OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
+func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromOlssSlice(list *[]*OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
   return slices.All(*list)
 }
 
 // Generates a iter.Seq2 iterator, for a channel of SpanBoundry instances.
-func (s *SpanOverlapAccumulator[E]) NewOverlappingSpanSetsFromSpanBoundryChan(c <-chan SpanBoundry[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
+func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromSbChan(c <-chan SpanBoundry[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
 	var sa = s.NewSpanIterSeq2Stater()
 	if c != nil {
 		var span, ok = <-c
@@ -177,7 +177,7 @@ func (s *SpanOverlapAccumulator[E]) NewSpanIterSeq2Stater() *SpanIterSeq2Stater[
 }
 
 // Factory interface for converting slices of SpanBoundaries instances into iterator sequences of OverlappingSpanSets.
-func (s *SpanOverlapAccumulator[E]) NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(list *[]SpanBoundry[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
+func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromSbSlice(list *[]SpanBoundry[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
 	var end = -1
 	var pos = 0
 	var au = s.NewSpanIterSeq2Stater()
@@ -224,10 +224,10 @@ func (s *SpanOverlapAccumulator[E]) NewOverlappingSpanSetsIterSeq2FromSpanBoundr
 }
 
 // This is a convenience method for initializing the iter.Seq2 stater internals based on a slice of SpanBoundry.
-func (s *SpanOverlapAccumulator[E]) NewColumnOverlapAccumulatorFromSpanBoundrySlice(list *[]SpanBoundry[E]) *ColumnOverlapAccumulator[E] {
-	return s.NewColumnOverlapAccumulatorFromSeq2(s.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(list))
+func (s *SpanOverlapAccumulator[E]) NewCoaFromSbSlice(list *[]SpanBoundry[E]) *ColumnOverlapAccumulator[E] {
+	return s.NewCoaFromOlssSeq2(s.NewOlssSeq2FromSbSlice(list))
 }
 
-func (s *SpanOverlapAccumulator[E]) NewColumnOverlapAccumulatorFromOverlappingSpanSetsChan(c <-chan *OverlappingSpanSets[E]) *ColumnOverlapAccumulator[E] {
-	return s.SpanUtil.NewColumnOverlapAccumulatorFromSeq2(s.NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsChan(c))
+func (s *SpanOverlapAccumulator[E]) NewCoaFromSbChan(c <-chan *OverlappingSpanSets[E]) *ColumnOverlapAccumulator[E] {
+	return s.SpanUtil.NewCoaFromOlssSeq2(s.NewOlssSeq2FromOlssChan(c))
 }

@@ -23,7 +23,7 @@ func buildChanColumnAccumulator(ctx context.Context, list *[]st.SpanBoundry[int]
 	go func() {
 
 		next, stop := iter.Pull2(
-			na.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(
+			na.NewOlssSeq2FromSbSlice(
 				list,
 			),
 		)
@@ -46,7 +46,7 @@ func buildChanColumnAccumulator(ctx context.Context, list *[]st.SpanBoundry[int]
 			}
 		}
 	}()
-	return na.NewColumnOverlapAccumulatorFromOverlappingSpanSetsChan(col)
+	return na.NewCoaFromSbChan(col)
 }
 
 func main() {

@@ -94,7 +94,7 @@ func (s *ColumnSets[E]) AddColumn(c *ColumnOverlapAccumulator[E]) int {
 // an iterator from the SpanOverlapAccumulator based on list.
 func (s *ColumnSets[E]) AddColumnFromSpanSlice(list *[]SpanBoundry[E]) (int, *SpanOverlapAccumulator[E]) {
 	var ac = s.Util.NewSpanOverlapAccumulator()
-	var res = s.AddColumn(ac.NewColumnOverlapAccumulatorFromSpanBoundrySlice(list))
+	var res = s.AddColumn(ac.NewCoaFromSbSlice(list))
 	return res, ac
 }
 

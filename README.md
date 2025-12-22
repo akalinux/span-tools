@@ -258,7 +258,7 @@ of SpanOverlapAccumulator instances, the method is u.NewSpanOverlapAccumulator()
 __Sorting and Consolidation__
 
 Now we need to step through the resulting sorted and consolidated
-results.  The ac.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(*list) 
+results.  The ac.NewOlssSeq2FromSbSlice(*list) 
 method provides an iter.Seq2 factory interface that can be used to driver 
 our for loop for us.
 
@@ -272,7 +272,7 @@ our for loop for us.
 		u.Ns(5,19),  // Row: 2
 	}
 	
-	for id,span := range ac.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(unsorted) {
+	for id,span := range ac.NewOlssSeq2FromSbSlice(unsorted) {
 		fmt.Printf("OverlappingSpanSets: %d SpanBoundry (%d,%d)\n ",id,span.GetBegin(),span.GetEnd())
 		fmt.Print(" Original Span values:\n")
 		for _,src :=range *span.GetSources() {

@@ -162,7 +162,7 @@ func (s *SpanUtil[E]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E] {
 // operations, you should a setup a defer call to  ColumnOverlapAccumulator[E].Close() method to clean the instance up in order to prevent memory leaks or undefined behavior.
 //
 // [iter.Pull2]: https://pkg.go.dev/iter#hdr-Pulling_Values
-func (s *SpanUtil[E]) NewColumnOverlapAccumulatorFromSeq2(driver iter.Seq2[int, *OverlappingSpanSets[E]]) *ColumnOverlapAccumulator[E] {
+func (s *SpanUtil[E]) NewCoaFromOlssSeq2(driver iter.Seq2[int, *OverlappingSpanSets[E]]) *ColumnOverlapAccumulator[E] {
 	return s.NewColumnOverlapAccumulator(iter.Pull2(driver))
 }
 

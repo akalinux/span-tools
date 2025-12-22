@@ -13,7 +13,7 @@ type IterValidate struct {
 func TestColumConsolidateChannelOverlapAccumulator(t *testing.T) {
 	var list = []*OverlappingSpanSets[int]{}
 
-	for _, span := range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(&MultMultiiSet) {
+	for _, span := range testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromSbSlice(&MultMultiiSet) {
 		list = append(list, span)
 	}
 	var ts = make(chan *OverlappingSpanSets[int], len(list))
@@ -21,7 +21,7 @@ func TestColumConsolidateChannelOverlapAccumulator(t *testing.T) {
 		ts <- span
 	}
 	close(ts)
-	var ca = testDriver.NewSpanOverlapAccumulator().NewColumnOverlapAccumulatorFromOverlappingSpanSetsChan(ts)
+	var ca = testDriver.NewSpanOverlapAccumulator().NewCoaFromSbChan(ts)
 	ca.SetNext(MultMultiiSet[len(MultMultiiSet)-1])
 
 	var _, ok = <-ts
@@ -33,7 +33,7 @@ func TestColumConsolidateChannelOverlapAccumulator(t *testing.T) {
 }
 
 func testOverlapStruct(expected []IterValidate, t *testing.T, src *[]SpanBoundry[int]) {
-	var res = testDriver.NewSpanOverlapAccumulator().NewColumnOverlapAccumulatorFromSpanBoundrySlice(src)
+	var res = testDriver.NewSpanOverlapAccumulator().NewCoaFromSbSlice(src)
 	defer res.Close()
 	for pos, conf := range expected {
 

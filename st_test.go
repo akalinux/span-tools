@@ -297,7 +297,7 @@ func TestChanAccumulatro(t *testing.T) {
 	}
 	close(c)
 	var count = 0
-	for range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsFromSpanBoundryChan(c) {
+	for range testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromSbChan(c) {
 		count++
 	}
 	if count != 4 {
@@ -309,7 +309,7 @@ func TestChanAccumulatro(t *testing.T) {
 	}
 	close(c)
 	count = 0
-	for range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsFromSpanBoundryChan(c) {
+	for range testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromSbChan(c) {
 		count++
 	}
 	if count != 1 {
@@ -317,7 +317,7 @@ func TestChanAccumulatro(t *testing.T) {
 	}
 
 	count = 0
-	for range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsFromSpanBoundryChan(nil) {
+	for range testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromSbChan(nil) {
 		count++
 	}
 	if count != 0 {
@@ -327,7 +327,7 @@ func TestChanAccumulatro(t *testing.T) {
 	c <- &Span[int]{Begin: 11, End: 5}
 	close(c)
 	count = 0
-	for range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsFromSpanBoundryChan(c) {
+	for range testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromSbChan(c) {
 		count++
 	}
 	if count != 0 {
@@ -340,7 +340,7 @@ func TestChanAccumulatro(t *testing.T) {
 	}
 	close(c)
 	count = 0
-	for range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsFromSpanBoundryChan(c) {
+	for range testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromSbChan(c) {
 		count++
 		break
 	}
