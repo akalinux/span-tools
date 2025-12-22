@@ -140,7 +140,7 @@ func (s *SpanOverlapAccumulator[E]) SliceIterFactoryOverlaps(list *[]*Overlappin
 
 // Generates a iter.Seq2 iterator, for a channel of SpanBoundry instances.
 func (s *SpanOverlapAccumulator[E]) ChanIterFactory(c <-chan SpanBoundry[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
-	var sa = s.SpanStatefulAccumulator()
+	var sa = s.NewSpanIterSeq2Stater()
 	if c != nil {
 		var span, ok = <-c
 		for ok {
@@ -179,7 +179,7 @@ func (s *SpanOverlapAccumulator[E]) ChanIterFactory(c <-chan SpanBoundry[E]) ite
 	}
 }
 
-func (s *SpanOverlapAccumulator[E]) SpanStatefulAccumulator() *SpanIterSeq2Stater[E] {
+func (s *SpanOverlapAccumulator[E]) NewSpanIterSeq2Stater() *SpanIterSeq2Stater[E] {
 	var si = &SpanIterSeq2Stater[E]{
 		Sa:      s,
 		Current: nil,
@@ -190,10 +190,10 @@ func (s *SpanOverlapAccumulator[E]) SpanStatefulAccumulator() *SpanIterSeq2State
 }
 
 // Factory interface for converting slices of SpanBoundaries instances into iterator sequences of OverlappingSpanSets.
-func (s *SpanOverlapAccumulator[E]) SliceIterFactory(list *[]SpanBoundry[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
+func (s *SpanOverlapAccumulator[E]) NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(list *[]SpanBoundry[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
 	var end = -1
 	var pos = 0
-	var au = s.SpanStatefulAccumulator()
+	var au = s.NewSpanIterSeq2Stater()
 	if list != nil {
 		if s.Sort {
 			slices.SortFunc(*list, s.Compare)
@@ -238,7 +238,7 @@ func (s *SpanOverlapAccumulator[E]) SliceIterFactory(list *[]SpanBoundry[E]) ite
 
 // This is a convenience method for initializing the iter.Seq2 stater internals based on a slice of SpanBoundry.
 func (s *SpanOverlapAccumulator[E]) ColumnOverlapSliceFactory(list *[]SpanBoundry[E]) *ColumnOverlapAccumulator[E] {
-	return s.NewColumnOverlapAccumulatorFromSeq2(s.SliceIterFactory(list))
+	return s.NewColumnOverlapAccumulatorFromSeq2(s.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(list))
 }
 
 func (s *SpanOverlapAccumulator[E]) ColumnChanOverlapSpanSetsFactory(c <-chan *OverlappingSpanSets[E]) *ColumnOverlapAccumulator[E] {

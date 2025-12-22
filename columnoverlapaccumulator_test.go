@@ -13,7 +13,7 @@ type IterValidate struct {
 func TestColumConsolidateChannelOverlapAccumulator(t *testing.T) {
 	var list = []*OverlappingSpanSets[int]{}
 
-	for _, span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultMultiiSet) {
+	for _, span := range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(&MultMultiiSet) {
 		list = append(list, span)
 	}
 	var ts = make(chan *OverlappingSpanSets[int], len(list))

@@ -7,7 +7,7 @@ func TestBadOrder(t *testing.T) {
     &Span[int]{Begin: 2, End: 2},
   }
   testDriver.Validate = true
-  for id, span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
+  for id, span := range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(list) {
     if id > 0 {
       t.Errorf("Should stop at 0")
       return
@@ -19,7 +19,7 @@ func TestBadOrder(t *testing.T) {
 }
 
 func TestNilSliceIter(t *testing.T) {
-  for range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(nil) {
+  for range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(nil) {
      t.Errorf("Should have gotten no ranges!")
      return
    }
@@ -31,7 +31,7 @@ func TestBadInitValue(t *testing.T) {
     &Span[int]{Begin: 13, End: 11},
   }
   testDriver.Validate = true
-  for _,span :=range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(list) {
+  for _,span :=range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(list) {
 		if span.Err ==nil {
       t.Errorf("Should have gotten no valid ranges!, but we got: %v, %v",span.Span,span.Err)
       return

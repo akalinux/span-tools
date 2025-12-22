@@ -29,7 +29,7 @@ func main() {
 		u.Ns(5,19),  // Row: 2
 	}
 	
-	for id,span := range ac.SliceIterFactory(unsorted) {
+	for id,span := range ac.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(unsorted) {
 		fmt.Printf("OverlappingSpanSets: %d SpanBoundry (%d,%d)\n ",id,span.GetBegin(),span.GetEnd())
 		fmt.Print(" Original Span values:\n")
 		for _,src :=range *span.GetSources() {

@@ -208,7 +208,7 @@ __The resulting output:__
 	|  4  | Begin:  8, End: 11 | SetA:(1-2), SetB:(1-1), SetC:(1-1) |
 	+-----+--------------------+------------------------------------+
 
-# SpanBoundry Consolidation of Duplicate(s) and Overlap(s)
+# SpanBoundry Consolidation of Duplicates and Overlaps
 
 In the real world data sets are often messy, out of order, and contain duplicates/overlaps.
 The internals of the "st" package expect SpanBoundry instances to be provided in a specific order. 
@@ -256,8 +256,9 @@ of SpanOverlapAccumulator instances, the method is u.NewSpanOverlapAccumulator()
 __Sorting and Consolidation__
 
 Now we need to step through the resulting sorted and consolidated
-results.  The ac.SliceIterFactory(*list) method provides an iter.Seq2
-factory interface that can be used to driver our for loop for us.
+results.  The ac.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(*list) 
+method provides an iter.Seq2 factory interface that can be used to driver 
+our for loop for us.
 
 	// this slice will end up being sorted by the "st" internals
 	unsorted :=&[]st.SpanBoundry[int]{
@@ -269,7 +270,7 @@ factory interface that can be used to driver our for loop for us.
 		u.Ns(5,19),  // Row: 2
 	}
 	
-	for id,span := range ac.SliceIterFactory(unsorted) {
+	for id,span := range ac.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(unsorted) {
 		fmt.Printf("OverlappingSpanSets: %d SpanBoundry (%d,%d)\n ",id,span.GetBegin(),span.GetEnd())
 		fmt.Print(" Original Span values:\n")
 		for _,src :=range *span.GetSources() {
@@ -337,8 +338,8 @@ Note: current is not checked for validity.
 
 __Manual Consolidation with Error checking enabled:__
 
-As noted, error checking is disabled by default in this example we will enable 
-error checking and iterate through the SpanBoundry twice.  In both passes
+As noted, error checking is disabled by default. In this example we will enable 
+error checking and iterate through the SpanBoundry slice twice.  In both passes
 we will have Validation turned on.  In the first pass we will provide an unsorted
 list that will error out during the consolidation process.  The 2nd pass we will
 first sort our list and then enter the consolidation process.

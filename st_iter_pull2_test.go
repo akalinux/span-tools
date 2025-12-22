@@ -5,7 +5,7 @@ import "iter"
 
 func TestAccumulateIterPull2(t *testing.T) {
 
-  var next, stop = iter.Pull2(testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultiSet))
+  var next, stop = iter.Pull2(testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(&MultiSet))
   defer stop()
   var idx, res, hasnext = next()
   var count = -1

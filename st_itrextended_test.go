@@ -55,7 +55,7 @@ func TestAccumulateIter(t *testing.T) {
 			Contains: nil,
 		},
 	}
-	for idx, res := range sa.SliceIterFactory(&MultiSet) {
+	for idx, res := range sa.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(&MultiSet) {
 		var cmp = exp[idx]
 
 		if cmp.SrcBegin != res.SrcBegin {
@@ -171,7 +171,7 @@ func TestExersizeSubIterator(t *testing.T) {
 func TestExersizeSubIteratorSlice(t *testing.T) {
 	var count = 0
 	//fmt.Printf("Starting Slice MultiMulti iter test testing\n")
-	for idx, span := range testDriver.NewSpanOverlapAccumulator().SliceIterFactory(&MultMultiiSet) {
+	for idx, span := range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(&MultMultiiSet) {
 		count++
 		if idx == 3 {
 			if span.SrcBegin != 4 || span.SrcEnd != 5 {
@@ -186,7 +186,7 @@ func TestExersizeSubIteratorSlice(t *testing.T) {
 }
 
 func TestSpanIterFactory(t *testing.T) {
-	var sa = testDriver.NewSpanOverlapAccumulator().SpanStatefulAccumulator()
+	var sa = testDriver.NewSpanOverlapAccumulator().NewSpanIterSeq2Stater()
 	if sa.HasNext() {
 		t.Errorf("We should not have next")
 		return

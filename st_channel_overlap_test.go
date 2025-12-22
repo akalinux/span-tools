@@ -7,7 +7,7 @@ import (
 func MakeOverlapTestList() *[]*OverlappingSpanSets[int] {
 	var ac = testDriver.NewSpanOverlapAccumulator()
 	var list = []*OverlappingSpanSets[int]{}
-	for _, ol := range ac.SliceIterFactory(&MultMultiiSet) {
+	for _, ol := range ac.NewOverlappingSpanSetsIterSeq2FromSpanBoundrySlice(&MultMultiiSet) {
 		list = append(list, ol)
 	}
 	return &list
