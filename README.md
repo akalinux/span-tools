@@ -103,7 +103,7 @@ In this example we create a ColumnSets instance from a SpanUtil instance and add
 data set as a column.  Once all columns have been added, we iterate over the result
 set which contains the data and how it intersects.
  
-In this example we will use 3 data sets, one of which contains overlapping values.
+In this example we will use 3 data sets, two of which contains overlapping values.
 Please note when a source is processed as a column, the overlapping data sets are consolidated together.
 
 Example Data sets:
@@ -347,9 +347,10 @@ The source code for this example can be found: [here](https://github.com/akalinu
 
 __First we need to turn validation on__
 
-We will be using the same data set as our previous example, so the main differences come in 2 pars.
+We will be using the same data set as our previous example, the main differences come in 3 parts.
   - The import of the "slices" package for sorting
   - Turning validation on
+  - The introduction of an additional function into the "main" package
 
 __Our updated imports for this example:__
 
@@ -372,27 +373,34 @@ By default SpanUtil.Validate==false, to enable validation we need to set it to t
 	// turn validation on
 	u.Validate=true
 
-__Example 1, the expected error pass__
+__Example1, the expected error pass:__
 
 	// This pass will error out
 	fmt.Print("Processing our data with an invalid order\n")
 	AccumulateSet(unsorted)
 
-Output from this section:
+__Output from this section:__
+
+Notice that we run into an error when we get to SpanBoundry (2,11).  The error is caused
+by the detection of a sequencing inconsistency.
 
 	Processing our data with an invalid order
 	  &{7 11} has spawned an new OverlappingSpanSets: (7,11)
 	  &{20 21} has spawned an new OverlappingSpanSets: (20,21)
 	  Failed to accumulate: &{2 11}, error was: SpanBoundry out of sequence
 
-Example 2, the expected success pass
+__Example 2, the expected success pass:__
 
 	// Once the data is sorted consolidation will work correctly
 	slices.SortFunc(*unsorted, u.Compare)
 	fmt.Print("\nProcessing post sort\n")
 	AccumulateSet(unsorted)
 
-Output from this section:
+__Output from this section:__
+
+In the output data set, take note that the OverlappingSpanSets expands from (2,12)
+to encompass (2,19) and a new OverlappingSpanSets is only created when a non overlapping
+SpanBoundry is introduced to the Accumulator method.
 
 	Processing post sort
 	  &{2 12} has spawned an new OverlappingSpanSets: (2,12)

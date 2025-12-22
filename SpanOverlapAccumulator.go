@@ -35,12 +35,12 @@ type SpanOverlapAccumulator[E any] struct {
 // The error value is nil, by default, when an error has happend it is no longer nil.
 func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*OverlappingSpanSets[E], error) {
 	s.Pos++
-	if s.Validate {
+	if s.Validate && s.Err==nil {
 		s.Err = s.Check(span, s.Rss.Span)
 	}
 
 	if s.Err != nil {
-		return nil, s.Err
+		s.Rss.Err=s.Err
 	}
 
 	if s.Rss.Span == nil {
@@ -68,6 +68,7 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*Overlappin
 				Contains: nil,
 				SrcBegin: s.Pos,
 				SrcEnd:   s.Pos,
+				Err: s.Err,
 			}
 		}
 	} else {
@@ -214,9 +215,6 @@ func (s *SpanOverlapAccumulator[E]) SliceIterFactory(list *[]SpanBoundry[E]) ite
 		}
 
 		for {
-			if s.Err != nil {
-				return
-			}
 			if au.HasNext() {
 				var id, current = au.GetNext()
 
@@ -240,9 +238,9 @@ func (s *SpanOverlapAccumulator[E]) SliceIterFactory(list *[]SpanBoundry[E]) ite
 
 // This is a convenience method for initializing the iter.Seq2 stater internals based on a slice of SpanBoundry.
 func (s *SpanOverlapAccumulator[E]) ColumnOverlapSliceFactory(list *[]SpanBoundry[E]) *ColumnOverlapAccumulator[E] {
-	return s.ColumnOverlapFactory(s.SliceIterFactory(list))
+	return s.NewColumnOverlapAccumulatorFromSeq2(s.SliceIterFactory(list))
 }
 
 func (s *SpanOverlapAccumulator[E]) ColumnChanOverlapSpanSetsFactory(c <-chan *OverlappingSpanSets[E]) *ColumnOverlapAccumulator[E] {
-	return s.SpanUtil.ColumnOverlapFactory(s.ChanIterFactoryOverlaps(c))
+	return s.SpanUtil.NewColumnOverlapAccumulatorFromSeq2(s.ChanIterFactoryOverlaps(c))
 }

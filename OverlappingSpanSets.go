@@ -18,6 +18,8 @@ type OverlappingSpanSets[E any] struct {
 
 	// Ending position in the original data set
 	SrcEnd int
+	
+	Err error
 }
 
 func (s *OverlappingSpanSets[E]) GetSrcId() int {
