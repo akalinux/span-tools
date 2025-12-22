@@ -61,7 +61,7 @@ func TestNilOverlapChannel(t *testing.T) {
 	}
 }
 func TestNilOverlapSlice(t *testing.T) {
-	var itb=testDriver.NewSpanOverlapAccumulator().SliceIterFactoryOverlaps(nil);
+	var itb=testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsSlice(nil);
 
   var count=0
 	for  range itb  {
@@ -74,7 +74,7 @@ func TestNilOverlapSlice(t *testing.T) {
 
 func TestBreakLoopOverlapSlice(t *testing.T) {
 	var list =*MakeOverlapTestList() 
-	var itb=testDriver.NewSpanOverlapAccumulator().SliceIterFactoryOverlaps(&list);
+	var itb=testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsSlice(&list);
   var count=0
 	for range itb  {
 		count++
@@ -87,7 +87,7 @@ func TestBreakLoopOverlapSlice(t *testing.T) {
 
 func TestOverlapSlice(t *testing.T) {
 	var list =*MakeOverlapTestList() 
-	var itb=testDriver.NewSpanOverlapAccumulator().SliceIterFactoryOverlaps(&list);
+	var itb=testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsSlice(&list);
   var count=0
 	for id, value := range itb  {
 		count++

@@ -155,7 +155,7 @@ func TestExersizeSubIterator(t *testing.T) {
 	}
 	close(c)
 	var count = 0
-	for idx, span := range testDriver.NewSpanOverlapAccumulator().ChanIterFactory(c) {
+	for idx, span := range testDriver.NewSpanOverlapAccumulator().NewOverlappingSpanSetsFromSpanBoundryChan(c) {
 		count++
 		if idx == 3 {
 			if span.SrcBegin != 4 || span.SrcEnd != 5 {

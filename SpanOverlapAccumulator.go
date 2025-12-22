@@ -121,25 +121,12 @@ func (s *SpanOverlapAccumulator[E]) ChanIterFactoryOverlaps(c <-chan *Overlappin
 }
 
 // Helper function to create an overlap iterator from a slice of list.
-func (s *SpanOverlapAccumulator[E]) SliceIterFactoryOverlaps(list *[]*OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
-
-	if list == nil {
-		return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
-		}
-	}
-	var end = len(*list)
-	var i = 0
-	return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
-		for ; i < end; i++ {
-			if !yeild(i, (*list)[i]) {
-				return
-			}
-		}
-	}
+func (s *SpanOverlapAccumulator[E]) NewOverlappingSpanSetsIterSeq2FromOverlappingSpanSetsSlice(list *[]*OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
+  return slices.All(*list)
 }
 
 // Generates a iter.Seq2 iterator, for a channel of SpanBoundry instances.
-func (s *SpanOverlapAccumulator[E]) ChanIterFactory(c <-chan SpanBoundry[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
+func (s *SpanOverlapAccumulator[E]) NewOverlappingSpanSetsFromSpanBoundryChan(c <-chan SpanBoundry[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
 	var sa = s.NewSpanIterSeq2Stater()
 	if c != nil {
 		var span, ok = <-c
