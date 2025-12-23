@@ -252,7 +252,7 @@ The OlssChanStater[E] struct contains 3 important instances:
  - The chan of OverlappingSpanSets[E] required to communicate back to the main thread running the ColumnSets instance
  - The Stater instance used to manage accumulation of SpanBoundry instances and push them to our chan of OverlappingSpanSets[E]
 
-Here is the "Add" closure added to the "main" function:
+Here is the "Add" closure added in the "main" function:
 
 	var Add = func(list *[]st.SpanBoundry[int]) int {
 		s := u.NewSpanOverlapAccumulator().NewOlssChanStater()
