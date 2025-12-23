@@ -240,17 +240,17 @@ variations as needed.
 
 __Creation of our go routines__
 
-The creation of our go routines is done via a declaration of a closure.
+The creation of our go routines will done, via a declaration of a closure.
 Each call to our closure will spawn an new go routine and begin pushing data to our
-initialized chan instance under the hood for us.  The closure will create and manage an
-instance of OlssChanStater[E] and add it to our ColumnSets instance.  From there on out
-the context management will be handled by the ColumnSets instances.
+initialized chan instance.  The closure will create and manage an instance of OlssChanStater[E]
+by calling the factory chain "u.NewSpanOverlapAccumulator().NewOlssChanStater()" and add it to
+our ColumnSets instance.  From there on out the context management will be handled by the ColumnSets 
+instances.
 
-The OlssChanStater[E] struct when instantiated by a factory interface will be initialized
-with 3 important instances:
- - The context.Context used to shut down the should the iterator fail be stopped
- - The chan of OverlappingSpanSets[E] required to communicate back to the thread running the ColumnSets instance
- - The Stater instance used to manage accumulation of SpanBoundry instances and push them to our chan
+The OlssChanStater[E] struct contains 3 important instances:
+ - The context.Context used to shutdown the should the iterator fail be stopped
+ - The chan of OverlappingSpanSets[E] required to communicate back to the main thread running the ColumnSets instance
+ - The Stater instance used to manage accumulation of SpanBoundry instances and push them to our chan of OverlappingSpanSets[E]
 
 Here is the "Add" closure added to the "main" function:
 
