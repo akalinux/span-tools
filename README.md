@@ -19,6 +19,51 @@ Other features of this package:
 - Provide ways to consolidate overlaps.
 - Iterate through intersections of multiple data sets.
 
+## Getting Started
+
+The "st" package is designed and implemented to manipulate instances of the SpanBoundry[E] interface.
+
+The SpanBoundry[E] interface only has 2 methods:
+- GetBegin() E, the value returned is expected to be less than or equal to the value returned by GetEnd()
+- GetEnd() E, the value returned is expected to be greater than or equal to the value returned by GetBegin()
+
+Since the SpanBoundry[E] is an interface, the details of how the object is implemented is up to the developer.
+That said the internal factory interfaces will by default create new instances via the st.Span[E] struct.
+If you implement your own SpanBoundry[E] instance, you can overload the factory interface on the SpanUtils[E] 
+instance by setting the SpanFactory instance function.
+
+Example overloading the default SpanFactory on a SpanUtils[E] instance:
+
+The full example can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/example01/example01.go).
+
+	package main
+	
+	import (
+		"github.com/akalinux/span-tools"
+	)
+	
+	type MySpan struct {
+		a int
+		b int 
+	}
+	
+	// Implement our GetBegin
+	func (s *MySpan) GetBegin() int {
+		return s.a
+	}
+	
+	// Implement our GetEnd
+	func (s *MySpan) GetEnd() int {
+		return s.b
+	}
+	
+	func init() {
+		// overload the default SpanFactory
+		u.SpanFactory=func (a,b int) st.SpanBoundry[int] {
+			return &MySpan{a,b}
+		}
+	}
+
 ## Basic Example
 
 In this example we will find the intersections of 3 sets of integers.
@@ -289,7 +334,7 @@ different.
 
 	// We will map our ColumnId to our Set Name
 	m := make(map[int]string)
-
+	
 	m[Add(
 		&[]st.SpanBoundry[int]{
 			u.Ns(1, 2),
@@ -297,12 +342,12 @@ different.
 			u.Ns(5, 11), // will consolidate to 3-11
 		},
 	)] = "SetA"
-
+	
 	m[Add(&[]st.SpanBoundry[int]{
 		u.Ns(3, 3),
 		u.Ns(5, 11),
 	})] = "SetB"
-
+	
 	m[Add(&[]st.SpanBoundry[int]{
 		u.Ns(1, 7),
 		u.Ns(8, 11),

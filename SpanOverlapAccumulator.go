@@ -55,10 +55,7 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*Overlappin
 		if s.Consolidate {
 			var next = s.Next(a.GetEnd())
 			if s.Cmp(next, span.GetBegin()) == 0 {
-				s.Rss.Span = &Span[E]{
-					Begin: a.GetBegin(),
-					End:   span.GetEnd(),
-				}
+				s.Rss.Span = s.Ns(a.GetBegin(),span.GetEnd())
 				joined = true
 			}
 		}
@@ -75,18 +72,18 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*Overlappin
 	} else {
 		x, y := s.ContainedBy(a, span)
 		if x|y != 0 {
-			var r = Span[E]{}
+			var begin,end E;
 			if x < 0 {
-				r.Begin = a.GetBegin()
+				begin = a.GetBegin()
 			} else {
-				r.Begin = span.GetBegin()
+				begin = span.GetBegin()
 			}
 			if y > 0 {
-				r.End = a.GetEnd()
+				end = a.GetEnd()
 			} else {
-				r.End = span.GetEnd()
+				end = span.GetEnd()
 			}
-			s.Rss.Span = &r
+			s.Rss.Span = s.Ns(begin,end)
 		}
 
 		if s.Rss.Contains == nil {
