@@ -565,7 +565,7 @@ Required tools:
 The Iterative process:
  1. Finding the first set
  2. Finding the next set
- 2. Repeating steps 2 until no more overlaps are found
+ 2. Repeating step 2 until no more overlaps are found
 
 __Finding the first set__
 
