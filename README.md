@@ -548,6 +548,50 @@ The full example can be found: [here](https://github.com/akalinux/span-tools/blo
 			return &MySpan{a,b}
 		}
 	}
+
+# Thesis of Universal Span Intersection Algorithm
+
+The "Universal Span Intersection Algorithm" is implemented by breaking operations down into their constituent parts.
+The process of finding the overlaps in data sets is in no way constrained by the types of data.  We simply need
+a way to define our spans, compare values, and create a next value.
+
+__The parts can be described as follows:__
+
+Required tools:
+ - A way to compare values
+ - Creating a new next value
+ - A way to define the begin and end values of the sets
+
+The Iterative process:
+ 1. Finding the first set
+ 2. Finding the next set
+ 2. Repeating steps 2 until no more overlaps are found
+
+__Finding the first set__
+
+The act of "Finding the first set" is performed  in 3 stages:
+ 1. The first stage requires finding the smallest begin and end value of all of our sets.
+ 2. If a begin value in our sets is both greater than the smallest begin value and less than or equal to smallest end value,
+   then the initial end value must set to the smallest begin value, else we use the smallest end value.
+ 3. We will use the begin value from stage 1 and the end value from stage 2 as our "first set"
+
+__Finding the next set__
+
+The act of "Finding the next set" is performed in 4 stages:
+ 1. The first stage we create a "new next value" that is greater than our last set end value. 
+  This "new next value" will be used as the "begin" value for step 3.
+ 2. We look for the next smallest begin or end value in our sets that are, greater than or equal to our "new next value".
+  The value from this process will be used as our next "end" value for step 3.
+ 3. For each set that overlaps with the span defined by the "begin" from step 1 and the "end" from step 2:
+  We need to look for the largest begin value and the smallest end value.
+ 4. We will used the largest begin value and smallest end value as our "next set"
+ 
+We can repeat the "Finding the next set" until step 1 yields a value beyond any end value in our sets.
+
+## How to find intersections in sets of sets
+
+
+
 # More Examples
 
-For more examples see the Examples folder [examples](https://github.com/akalinux/span-tools/tree/main/examples)
+For more examples see the Examples folder [examples](https://github.com/akalinux/span-tools/tree/main/examples
