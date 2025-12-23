@@ -6,12 +6,17 @@ import (
 
 // Context aware goroutine channel accumulator instance.
 // This struct is meant to be instantiated factory interfaces.
+// If you are managing an instance ouside of the normal factory methods,
+// you will need to add the following defer statements in the properly
+// scopes:
+//  - in the main thread add a defer s.Shutdown()
+//  - in the go routine add a defer s.Final()
 type OlssChanStater[E any] struct {
 	Chan       chan *OverlappingSpanSets[E]
 	Closed     bool
 	Stater     SpanIterSeq2Stater[E]
 	Ctx        context.Context
-	Cancle     func()
+	Cancel     func()
 	IsShutDown bool
 }
 
@@ -61,7 +66,7 @@ func (s *OlssChanStater[E]) Shutdown()  {
 		return
 	}
 	s.IsShutDown = true
-	s.Cancle()
+	s.Cancel()
 }
 
 // Call this method with a derfer statement in your goroutine when you are done processing

@@ -25,6 +25,8 @@ type SpanUtil[E any] struct {
 	
 	// Denotes if objects created should sort by default.
 	Sort bool
+	
+	SpanFactory func(begin,end E) SpanBoundry[E]
 }
 
 // This method is used to verify the sanity of the next and current value.
@@ -65,6 +67,7 @@ func NewSpanUtil[E any](cmp func(a, b E) int, next func(e E) E) *SpanUtil[E] {
 		Next: next,
 		Validate: true,
 		Sort:true,
+		SpanFactory: func(a,b E) SpanBoundry[E] { return &Span[E]{Begin: a, End: b} },
 	}
 }
 
@@ -106,7 +109,7 @@ func (s *SpanUtil[E]) NewSpan(a, b E) (SpanBoundry[E], error) {
 
 // Creates a new SpanBoundry[E], but does not do any error checking.
 func (s *SpanUtil[E]) Ns(a, b E) SpanBoundry[E] {
-	return &Span[E]{Begin: a, End: b}
+	return s.SpanFactory(a,b)
 }
 
 // Generates the first valid span representing the smallest overlapping set.
@@ -120,21 +123,22 @@ func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) (SpanBoundry[E], bool) {
 	if list == nil || len(*list) == 0 {
 		return nil, false
 	}
-	var span = &Span[E]{Begin: (*list)[0].GetBegin(), End: (*list)[0].GetEnd()}
+	var span = s.Ns((*list)[0].GetBegin(),(*list)[0].GetEnd())
+	
 	var last = len(*list)
 	var Cmp = s.Cmp
 	for i := 1; i < last; i++ {
 		var check = (*list)[i]
 		if Cmp(check.GetBegin(), span.GetEnd()) == -1 {
-			span.Begin = check.GetBegin()
+			span= s.Ns(check.GetBegin(),span.GetEnd())
 		}
-		if Cmp(check.GetEnd(), span.End) == -1 {
-			span.End = check.GetEnd()
+		if Cmp(check.GetEnd(), span.GetEnd()) == -1 {
+			span= s.Ns(span.GetBegin(),check.GetEnd())
 		}
 	}
 	for _, check := range *list {
-		if Cmp(check.GetBegin(), span.Begin) > 0 && Cmp(span.GetEnd(), check.GetBegin()) > -1 {
-			span.End = span.Begin
+		if Cmp(check.GetBegin(), span.GetBegin()) > 0 && Cmp(span.GetEnd(), check.GetBegin()) > -1 {
+			span= s.Ns(span.GetBegin(),span.GetBegin())
 			return span, true
 		}
 	}
@@ -217,7 +221,7 @@ func (s *SpanUtil[E]) CreateOverlapSpan(list *[]SpanBoundry[E]) (SpanBoundry[E],
 	var begin *E
 	var end *E
 	var Cmp = s.Cmp
-	var res SpanBoundry[E] = &Span[E]{}
+	var res SpanBoundry[E];
 	for _, span := range *list {
 		if begin == nil {
 			begin = s.GetP(span.GetBegin())
@@ -233,7 +237,7 @@ func (s *SpanUtil[E]) CreateOverlapSpan(list *[]SpanBoundry[E]) (SpanBoundry[E],
 		}
 	}
 	if Cmp(*begin, *end) < 1 {
-		res = &Span[E]{Begin: *begin, End: *end}
+		res = s.Ns(*begin, *end)
 	}
 	return res, true
 }
@@ -278,7 +282,8 @@ func (s *SpanUtil[E]) NextSpan(start SpanBoundry[E], list *[]SpanBoundry[E]) (Sp
 		}
 	}
 	if end != nil {
-		var tmp = &Span[E]{Begin: min, End: *end}
+		//var tmp = &Span[E]{Begin: min, End: *end}
+		var tmp = s.Ns(min, *end)
 		var ol = []SpanBoundry[E]{}
 		copy(ol, *list)
 		ol = append(ol, tmp)

@@ -315,7 +315,7 @@ func TestColumnSetFactoryChanIterBreak(t *testing.T) {
 		return
 	}
 	
-	// need to flush the channel before its actually closed
+	// need to flush the channel, to test if it was actually closed
 	_,ok := <- s.Chan
 	for ok {
 	  _,ok = <- s.Chan

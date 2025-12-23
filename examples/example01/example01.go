@@ -6,13 +6,35 @@ import (
 	"github.com/akalinux/span-tools"
 )
 
+var u = st.NewSpanUtil(
+	// use the standard Compare function
+	cmp.Compare,
+	// Define our Next function
+	func(e int) int { return e + 1 },
+)
+
+type MySpan struct {
+	a int
+	b int 
+}
+
+func (s *MySpan) GetBegin() int {
+	return s.a
+}
+func (s *MySpan) GetEnd() int {
+	return s.b
+}
+
+func init() {
+	// overload the default span
+	u.SpanFactory=func (a,b int) st.SpanBoundry[int] {
+		fmt.Printf("Creating: %d,%d\n",a,b)
+		return &MySpan{a,b}
+	}
+}
+
 func main() {
-	var u = st.NewSpanUtil(
-		// use the standard Compare function
-		cmp.Compare,
-		// Define our Next function
-		func(e int) int { return e + 1 },
-	)
+
 	var list = &[]st.SpanBoundry[int]{
 		u.Ns(1, 2),
 		u.Ns(2, 7),
