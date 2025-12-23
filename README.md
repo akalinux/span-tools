@@ -99,13 +99,11 @@ The basic example works, but its not very useful.  In the real world
 we generally have multiple data sources.  Usually we want to find the intersections
 of between those different data sources.
 
-In this example we create a ColumnSets instance from a SpanUtil instance and add each
-data set as a column.  Once all columns have been added, we iterate over the result
-set which contains the data and how it intersects.
+In this example we create a ColumnSets instance from a SpanUtil instance.  The instance of ColumnSets
+will be used to find the intersection of 3 data sets.  To add a bit of flavor, two of the data sets will contain
+overlapping values. Please note when a source is processed as a column, the overlapping data sets are consolidated 
+together.  Once all columns have been added, we iterate over the result set to see how our data intersects.
  
-In this example we will use 3 data sets, two of which contains overlapping values.
-Please note when a source is processed as a column, the overlapping data sets are consolidated together.
-
 Example Data sets:
 
 	SetA:
@@ -127,7 +125,7 @@ The full source code can be found: [here](https://github.com/akalinux/span-tools
 __Create a ColumnSets[E] instance:__
 
 The ColumnSets instance is created by a factory interface of SpanUtil.
-For each instance of ColumnSets, a properly scoped call to "defer i.Close()" will require being made.
+For each instance of ColumnSets, a properly scoped call to "defer ac.Close()" will require being made.
 
 	// Build our column accumulator
 	ac := u.NewColumnSets()
@@ -137,11 +135,9 @@ For each instance of ColumnSets, a properly scoped call to "defer i.Close()" wil
 
 __Adding each data set to our ColumnSets:__
 
-Each data set will need to be added to the ColumnSets instance. 
-The internals refer to each column as a source.
-Every source added receives an id starting from 0, so we know in advance
-what the id of each source is, but all AddCoulumnXXX methods of ColumnSets returns the index
-of the column/source added.
+Each data set will need to be added to the ColumnSets instance. The internals refer to each column as a source.
+Every source added receives an id starting from 0 for each new column/source the id is incremented by 1.  As a
+note all AddCoulumnXXX methods of ColumnSets returns the index of the column/source that was added.
 
 	// We will map our ColumnId to our Set Name
 	m := make(map[int]string)
