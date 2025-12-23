@@ -213,6 +213,114 @@ __The resulting output:__
 	|  4  | Begin:  8, End: 11 | SetA:(1-2), SetB:(1-1), SetC:(1-1) |
 	+-----+--------------------+------------------------------------+
 
+## Intersections and Go Routines
+
+The previous example works, but has some significant scaling limitations.
+For one, the implementation is limited to pre-loaded slices in memory and
+the code doesn't really take advantage of go routines.
+
+In the real world we would expect to be able to query a system in one
+go routine ,and process the results in another while the data is streamed 
+back to us.The ColumnSets instance supports the use of go routines via
+a chan based iterator of OverlappingSpanSets.
+
+This example will use the same data set but simulate calling multiple systems
+via go routines.  We will also manually drive the accumulation of the data
+by iterating through each slice one element at a time, as if it was a
+result from an external system.
+
+The full source code can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/multichan/main.go)
+
+__Creating an instance of ColumnSets__
+
+The creation of the ColumnSets instance remains unchanged from our previous examples.
+No special changes or initialization settings are required to enable the use of chan
+based communications via go routines.  The top level ColumnSets.AddColumnXX methods
+are agnostic to how the data is accumulated, so you can mix and match ass many
+variations as needed.
+
+__Creation of our go routines__
+
+The creation of our go routines is done via a declaration of a closure.
+Each call to our closure will spawn an new go routine and begin pushing data to our
+initialized chan instance under the hood for us.
+
+The OlssChanStater[E] struct when instantiated by a factory interface will be initialized
+with 3 important instances:
+ - The context.Context used to shut down the should the iterator fail be stopped
+ - The chan of OverlappingSpanSets[E] required to communicate back to the thread running the ColumnSets instance
+ - The Stater instance used to manage accumulation of SpanBoundry instances and push them to our chan
+
+Here is the "Add" closure added to the "main" function:
+
+	var Add = func(list *[]st.SpanBoundry[int]) int {
+		s := u.NewSpanOverlapAccumulator().NewOlssChanStater()
+
+		// Please note, we must start the go routine before we add
+		// the accumulator to the ColumnSets instance.  If not we
+		// will run into a race condition.
+		go func() {
+			// Scope our cleanup code to the go routine
+			defer s.Final()
+	
+			end := len(*list) - 1
+			id := 0
+			span := (*list)[id]
+			for s.CanAccumulate(span) {
+				id++
+				if id > end {
+					return
+				}
+				span = (*list)[id]
+			}
+		}()
+
+		// Adding the st.OlssChanStater instance to the ColumnSets
+		return ac.AddColumnFromNewOlssChanStater(s)
+	}
+
+
+__Adding our data sets__
+
+Since the "Add" closure will manage the creation of our go routines and
+provides the columnId for us, adding our data sets will look a little
+different.
+
+	// We will map our ColumnId to our Set Name
+	m := make(map[int]string)
+
+	m[Add(
+		&[]st.SpanBoundry[int]{
+			u.Ns(1, 2),
+			u.Ns(3, 7),  // will consolidate to 3-11
+			u.Ns(5, 11), // will consolidate to 3-11
+		},
+	)] = "SetA"
+
+	m[Add(&[]st.SpanBoundry[int]{
+		u.Ns(3, 3),
+		u.Ns(5, 11),
+	})] = "SetB"
+
+	m[Add(&[]st.SpanBoundry[int]{
+		u.Ns(1, 7),
+		u.Ns(8, 11),
+	})] = "SetC"
+
+__Iteration through the result set__
+
+The rest of our code, the for loop, error checking and final output statements
+remain completely unchanged.
+
+__The resulting output__
+
+Please note, because our data set is completely unchanged, our output is also going
+to be exactly the same.  The only difference is how we accumulated the data.
+Because the ColumnSets instance iterator manages the context.Context instances,
+the calls to s.CanAccumulate(span) will only return true if the iterator is actively
+engaged in the loop.  If we call break, or the internals run into an error the 
+required call to the context cancel function is made, which will cleanup our go routine.
+
 # SpanBoundry Consolidation of Duplicates and Overlaps
 
 In the real world data sets are often messy, out of order, and contain duplicates/overlaps.
@@ -239,14 +347,15 @@ This is the same data ordered for consumption by the "st" package:
 	(7,11),
 	(20,21),
 
-__Enable Sorting of data sets__
-
+__Sorting of data sets__
 
 The full source code can be found: [here](https://github.com/akalinux/span-tools/blob/main/examples/ConsolidateOverlaps/main.go).
 
 The SpanUtil[E] struct has a "Sort" flag, when set to true( the default ), all instances of
 SpanOverlapAccumulator[E] created with the factory interface u.NewSpanOverlapAccumulator() will have
-the Sort flag set to true.
+the Sort flag set to true by default.  If you wish to disable sorting you can either set the sort flag
+to false on the SpanUtils.Sort=false instance before creating other object or by configuring the flag
+on the instance of the SpanOverlapAccululator.Sort=false.
 
 __Creating our SpanOverlapAccumulator__
 

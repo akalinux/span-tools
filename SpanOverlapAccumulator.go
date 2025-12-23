@@ -220,6 +220,6 @@ func (s *SpanOverlapAccumulator[E]) NewOlssChanStater() *OlssChanStater[E] {
 		Stater: *s.NewSpanIterSeq2Stater(),
 		Chan: make(chan *OverlappingSpanSets[E]),
 		Ctx: ctx,
-		Cancle: cancle,
+		Cancel: cancle,
 	}
 }
