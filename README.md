@@ -591,7 +591,7 @@ We can repeat the "Finding the next set" until step 1 yields a value beyond any 
 ## Thesis of How to find intersections in sets of sets
 
 The core thesis works for finding overlaps in a list of sets, but does not scale to sets of sets.  For comparison
-of sets of sets we need to define constraints our data sets beyond just the concept of begin and end values.
+of sets of sets we need to define constraints for our data sets beyond just the concept of begin and end values.
 
 __Defining our constraints:__
 
