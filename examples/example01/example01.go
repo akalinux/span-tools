@@ -28,7 +28,6 @@ func (s *MySpan) GetEnd() int {
 func init() {
 	// overload the default span
 	u.SpanFactory=func (a,b int) st.SpanBoundry[int] {
-		fmt.Printf("Creating: %d,%d\n",a,b)
 		return &MySpan{a,b}
 	}
 }
