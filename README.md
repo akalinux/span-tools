@@ -101,7 +101,7 @@ of between those different data sources.
 
 In this example we create a ColumnSets instance from a SpanUtil instance.  The instance of ColumnSets
 will be used to find the intersection of 3 data sets.  To add a bit of flavor, two of the data sets will contain
-overlapping values. Please note when a source is processed as a column, the overlapping data sets are consolidated 
+overlapping values.  Please note when a source is processed as a column, the overlapping data sets are consolidated 
 together.  Once all columns have been added, we iterate over the result set to see how our data intersects.
  
 Example Data sets:
@@ -138,6 +138,9 @@ __Adding each data set to our ColumnSets:__
 Each data set will need to be added to the ColumnSets instance. The internals refer to each column as a source.
 Every source added receives an id starting from 0 for each new column/source the id is incremented by 1.  As a
 note all AddCoulumnXXX methods of ColumnSets returns the index of the column/source that was added.
+
+Note: once the iteration over the data sets begins, it is no longer possible to add additional columns to the
+ColumnSets instance.  The iterators provided by the "st" class in general are considered one shot iterators.
 
 	// We will map our ColumnId to our Set Name
 	m := make(map[int]string)
