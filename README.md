@@ -588,10 +588,10 @@ The act of "Finding the next set" is performed in 4 stages:
  
 We can repeat the "Finding the next set" until step 1 yields a value beyond any end value in our sets.
 
-## Thesis of How to find intersections in sets of sets
+## Thesis of How to find intersections in a list of sets of sets
 
 The core thesis works for finding overlaps in a list of sets, but does not scale to a list of sets of sets.  For comparison
-of sets of sets we need to define constraints for our data sets beyond just the concept of begin and end values.
+of lists of sets of sets, we need to define constraints for our data sets beyond just the concept of begin and end values.
 
 __Defining our constraints:__
 
