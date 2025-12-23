@@ -355,8 +355,8 @@ The full source code can be found: [here](https://github.com/akalinux/span-tools
 The SpanUtil[E] struct has a "Sort" flag, when set to true( the default ), all instances of
 SpanOverlapAccumulator[E] created with the factory interface u.NewSpanOverlapAccumulator() will have
 the Sort flag set to true by default.  If you wish to disable sorting you can either set the sort flag
-to false on the u.Sort=false instance before creating other. Each SpanOverlapAccumulator by configuring the flag
-on the instance of the SpanOverlapAccumulator.Sort=false.
+to false on the u.Sort=false instance before creating the SpanOverlapAccumulator instance or you
+can change the flag on just the SpanOverlapAccumulator instance ac.Sort=false.
 
 __Creating our SpanOverlapAccumulator__
 
