@@ -588,9 +588,19 @@ The act of "Finding the next set" is performed in 4 stages:
  
 We can repeat the "Finding the next set" until step 1 yields a value beyond any end value in our sets.
 
-## How to find intersections in sets of sets
+## Thesis of How to find intersections in sets of sets
 
+The core thesis works for finding overlaps in a list of sets, but does not scale to sets of sets.  For comparison
+of sets of sets we need to define constraints our data sets beyond just the concept of begin and end values.
 
+__Defining our constraints:__
+
+In order to compare sets of sets we will add the following constraints:
+ 1. Each set of sets must be presented in a specific order. 
+  The order is defined as: begin value in ascending order, end value in descending order
+ 2. Each time a overlapping value is encountered a new Larger span consisting of the smallest begin value and largest
+  end value must be created.  As a side effect of this the original spans that caused this overlapping set should be
+  retained to explain where this new larger span came from. 
 
 # More Examples
 
