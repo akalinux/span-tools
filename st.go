@@ -3,7 +3,7 @@
 // and overlaps of "one dimensional spans" of any data type.  The package is built around the SpanUtil[E any] struct, and
 // the manipulation of the SpanBoundry[E any] interface.
 //
-// For examples documentation please see the [Tutorials] page.
+// For examples documentation please see the [Project] page.
 // 
 // The SpanUtils[E any] struct requires 2 methods be passed to the constructor in order to implement the algorithm:
 // - A "Compare" function see: [cmp.Compare] for more details.
@@ -19,6 +19,6 @@
 //  - Provide ways to consolidate overlaps.
 //  - Iterate through intersections of multiple data sets.
 //
-// [Tutorials]: https://github.com/akalinux/span-tools
+// [Project]: https://github.com/akalinux/span-tools
 // [cmp.Compare]: https://pkg.go.dev/cmp#Compare
 package st
