@@ -136,8 +136,8 @@ For each instance of ColumnSets, a properly scoped call to "defer ac.Close()" wi
 __Adding each data set to our ColumnSets:__
 
 Each data set will need to be added to the ColumnSets instance. The internals refer to each column as a source.
-Every source added receives an id starting from 0 for each new column/source the id is incremented by 1.  As a
-note all AddCoulumnXXX methods of ColumnSets returns the index of the column/source that was added.
+Every source added receives an id starting from 0, for each new column/source the id is incremented by 1.  As a
+note all AddCoulumnXXX methods of ColumnSets return the index of the column/source that was added.
 
 Note: once the iteration over the data sets begins, it is no longer possible to add additional columns to the
 ColumnSets instance.  The iterators provided by the "st" class in general are considered one shot iterators.
@@ -219,8 +219,8 @@ For one, the implementation is limited to pre-loaded slices in memory and
 the code doesn't really take advantage of go routines.
 
 In the real world we would expect to be able to query a system in one
-go routine ,and process the results in another while the data is streamed 
-back to us.The ColumnSets instance supports the use of go routines via
+go routine, and process the results in another while the data is streamed 
+back to us.  The ColumnSets instance supports the use of go routines via
 a chan based iterator of OverlappingSpanSets.
 
 This example will use the same data set but simulate calling multiple systems
@@ -235,14 +235,16 @@ __Creating an instance of ColumnSets__
 The creation of the ColumnSets instance remains unchanged from our previous examples.
 No special changes or initialization settings are required to enable the use of chan
 based communications via go routines.  The top level ColumnSets.AddColumnXX methods
-are agnostic to how the data is accumulated, so you can mix and match ass many
+are agnostic to how the data is accumulated, so you can mix and match as many
 variations as needed.
 
 __Creation of our go routines__
 
 The creation of our go routines is done via a declaration of a closure.
 Each call to our closure will spawn an new go routine and begin pushing data to our
-initialized chan instance under the hood for us.
+initialized chan instance under the hood for us.  The closure will create and manage an
+instance of OlssChanStater[E] and add it to our ColumnSets instance.  From there on out
+the context management will be handled by the ColumnSets instances.
 
 The OlssChanStater[E] struct when instantiated by a factory interface will be initialized
 with 3 important instances:
