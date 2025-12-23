@@ -284,7 +284,7 @@ lower level implementation details, but as a note.  The OlssChanStater[E] struct
 __Adding our data sets__
 
 The "Add" closure will manage the creation of our go routines and will return the ColumnId.
-We can use the return vale from the "Add" closure we created to denote the mapping of the 
+We can use the return value from the "Add" closure we created to denote the mapping of the 
 ColumnId to the SetName.
 
 	// We will map our ColumnId to our Set Name
