@@ -144,6 +144,7 @@ func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromSbChan(c <-chan SpanBoundry[E
 	}
 }
 
+// Factory interface for stater creator.
 func (s *SpanOverlapAccumulator[E]) NewSpanIterSeq2Stater() *SpanIterSeq2Stater[E] {
 	var si = &SpanIterSeq2Stater[E]{
 		Sa:      s,
@@ -206,11 +207,12 @@ func (s *SpanOverlapAccumulator[E]) NewCoaFromSbSlice(list *[]SpanBoundry[E]) *C
 	return s.NewCoaFromOlssSeq2(s.NewOlssSeq2FromSbSlice(list))
 }
 
+// Factory for convering a channel of OverlappingSpanSets[E] to a ColumnOverlapAccumulator[E].
 func (s *SpanOverlapAccumulator[E]) NewCoaFromOlssChan(c <-chan *OverlappingSpanSets[E]) *ColumnOverlapAccumulator[E] {
 	return s.SpanUtil.NewCoaFromOlssSeq2(s.NewOlssSeq2FromOlssChan(c))
 }
 
-
+// Creates a new context aware context.Context aware SpanBoundry[E] accumulation instance.
 func (s *SpanOverlapAccumulator[E]) NewOlssChanStater() *OlssChanStater[E] {
 	ctx,cancle :=context.WithCancel(context.Background())
 	return &OlssChanStater[E]{

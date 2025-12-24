@@ -5,11 +5,17 @@ import (
 	"slices"
 )
 
+// Represents a source data set of the culumn consolidation process.
 type CurrentColumn[E any] struct {
 	ColumnOverlap[E]
 	ColumnId int
 }
 
+// This struct acts as the majordomo of the constrained span intersection iteration process.
+//
+// For every instance created make sure to scope the proper defer call:
+//
+//   defer i.Close()
 type ColumnSets[E any] struct {
 	Util    *SpanUtil[E]
 	columns *[]*ColumnOverlapAccumulator[E]
@@ -39,6 +45,7 @@ type ColumnResults[E any] interface {
 	SpanBoundry[E]
 }
 
+// Returns the SpanBoundry instance that represents the intersection of our current column state.
 func (s *ColumnSets[E]) GetSpan() SpanBoundry[E] {
 	return s.overlap
 }
@@ -57,6 +64,7 @@ func (s *ColumnSets[E]) GetColumns() *[]*CurrentColumn[E] {
 	return s.current
 }
 
+// Shuts down and cleans up the instance, and any go routines that were registered.
 func (s *ColumnSets[E]) Close() {
 	if s.closed {
 		return
@@ -74,6 +82,7 @@ func (s *ColumnSets[E]) Close() {
 	}
 }
 
+// Adds a function to call when the close operation is called or the iterator optations have been completed.
 func (s *ColumnSets[E]) AddOnClose(todo func()) {
 	if s.OnClose == nil {
 		s.OnClose = &[]func(){todo}
@@ -112,6 +121,7 @@ func (s *ColumnSets[E]) AddColumnFromSpanSlice(list *[]SpanBoundry[E]) (int, *Sp
 	return res, ac
 }
 
+// Adds list as a column to the internals.
 func (s *ColumnSets[E]) AddColumnFromOverlappingSpanSets(list *[]*OverlappingSpanSets[E]) int {
 	return s.AddColumn(
 		s.Util.NewColumnOverlapAccumulator(
@@ -126,8 +136,8 @@ func (s *ColumnSets[E]) AddColumnFromOverlappingSpanSets(list *[]*OverlappingSpa
 //
 // # Warning
 //
-// If you don't start the goroutine that appends to the chanel before calling this method, 
-// it will cause a race condition that will prevent the ColumnSets instence from working 
+// If you don't start the go routine that appends to the channel before calling this method, 
+// it will cause a race condition that will prevent the ColumnSets instancce from working 
 // correctly.
 func (s *ColumnSets[E]) AddColumnFromNewOlssChanStater(sa *OlssChanStater[E]) int {
 	id := s.AddColumn(
