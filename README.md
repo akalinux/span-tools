@@ -284,7 +284,7 @@ lower level implementation details, but as a note.  The OlssChanStater[E] struct
 __Adding our data sets__
 
 The "Add" closure will manage the creation of our go routines and will return the ColumnId.
-We can use the return vale from the "Add" closure we created to denote the mapping of the 
+We can use the return value from the "Add" closure we created to denote the mapping of the 
 ColumnId to the SetName.
 
 	// We will map our ColumnId to our Set Name
@@ -548,6 +548,76 @@ The full example can be found: [here](https://github.com/akalinux/span-tools/blo
 			return &MySpan{a,b}
 		}
 	}
+
+# Thesis of Universal Span Intersection Algorithm
+
+The "Universal Span Intersection Algorithm" is implemented by breaking operations down into their constituent parts.
+The process of finding the overlaps in data sets is in no way constrained by the types of data.  We simply need
+a way to define our spans, compare values, and create a next value.
+
+__The parts can be described as follows:__
+
+Required tools:
+ - A way to compare values
+ - Creating a new next value
+ - A way to define the begin and end values of the sets
+
+The Iterative process:
+ 1. Finding the first span
+ 2. Finding the next span
+ 2. Repeating step 2 until no more overlaps are found
+
+__Finding the first span__
+
+The act of "Finding the first span" is performed  in 3 stages:
+ 1. The first stage requires finding the smallest begin and end value of all of our spans.
+ 2. If a begin value in our sets is both greater than the smallest begin value and less than or equal to smallest end value,
+   then the initial end value must set to the smallest begin value, else we use the smallest end value.
+ 3. We will use the begin value from stage 1 and the end value from stage 2 as our "first span"
+
+__Finding the next span__
+
+The act of "Finding the next span" is performed in 4 stages:
+ 1. The first stage we create a "new next value" that is greater than our last span end value. 
+  This "new next value" will be used as the "begin" value for step 3.
+ 2. We look for the next smallest begin or end value in our sets that are, greater than or equal to our "new next value".
+  The value from this process will be used as our next "end" value for step 3.
+ 3. For each set that overlaps with the span defined by the "begin" from step 1 and the "end" from step 2:
+  We need to look for the largest begin value and the smallest end value.
+ 4. We will used the largest begin value and smallest end value as our "next span"
+ 
+We can repeat the "Finding the next set" until step 1 yields a value beyond any end value in our sets.
+
+## Thesis of How to find intersections in a list of sets of sets
+
+The core thesis works for finding overlaps in a list of spans, but does not scale to a list of list of spans.  For comparison
+of lists of list of spans, we need to define constraints for our data sets beyond just the concept of begin and end values.
+
+__Defining our constraints:__
+
+In order to compare a list of list of spans we will add the following constraints:
+ 1. Each list of list of spans must be presented in a specific order. 
+  The order is defined as: begin value in ascending order, end value in descending order.
+ 2. Each time a overlapping value is encountered a new Larger span consisting of the smallest begin value and largest
+  end value must be created.  As a side effect of this the original spans that caused this overlapping set should be
+  retained to explain where this new larger span came from. 
+ 3. To find the end of an overlapping set we must continue until we find the next span that does not overlap with our current
+   span or we run out of spans to process.
+
+__Finding intersections with our constraints applied:__
+
+With our constraints applied, we can now consolidate list of list of spans, however we will need to add some enhancements to 
+the process.
+
+The enhancements are as follows:
+ 1. Now our our "Finding the first span" list of spans are pulled the first member of each constrained and consolidated list
+   list of spans.  We will refer the "first span" as the "current span".
+ 2. For each constrained list of spans: iterate through each constrained span and save all the constrained spans that overlap with
+   our current span.  When we find a span with an end or begin value beyond the current span end value we or we have exhausted this list of
+   spans, this list iteration is complete.
+ 3. Now we apply "Finding the next span" to our current list of constrained spans.  We will refer to the "next span" as the "current span"
+ 4. Repeat steps 2 and 3 until we have exhausted all lists of constrained spans.
+
 # More Examples
 
-For more examples see the Examples folder [examples](https://github.com/akalinux/span-tools/tree/main/examples)
+For more examples see the Examples folder [examples](https://github.com/akalinux/span-tools/tree/main/examples
