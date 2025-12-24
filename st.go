@@ -1,16 +1,23 @@
+// # SpanTools Overview
+//
 // Implements the universal span intersection algorithm. The algorithm represents a unified way to find intersections 
 // and overlaps of "one dimensional spans" of any data type.  The package is built around the SpanUtil[E any] struct, and
 // the manipulation of the SpanBoundry[E any] interface.
 //
 // For examples and extended documentation please see the [Project] page.
 //
+// # How it works
+//
 // The "Universal Span Intersection Algorithm" is implemented by breaking operations down into their constituent parts.
-// The process of finding the overlaps in data sets is in no way constrained by the types of data.  We simply need
-// a way to define our spans, compare values, and create a next value.
+//
+// Finding intersections of one dimensional spans of generic data types requires the following:
+//  - A way contian the begin and end values, representing our span
+//  - Method to  compare values.
+//  - Method to create a next value
 // 
-// # The parts can be described as follows:
+// # Instance Construction
 // 
-// The SpanUtils[E any] struct requires 2 methods be passed to the constructor in order to implement the algorithm:
+// The st.NewSpanUtil[E any](Cmp,Next) function requires 2 methods be passed to the constructor in order to implement the algorithm:
 // - A "Compare" function see: [cmp.Compare] for more details.
 // - A "Next" function, takes a given value and returns next value.
 //   The next value must be greater than the input value
