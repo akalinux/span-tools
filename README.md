@@ -175,11 +175,7 @@ Finally we want to iterate through the resulting overlaps and intersections foun
 	fmt.Print(header)
 	fmt.Print("| Seq | Begin and End      | Set Name:(Row,Row)                 |\n")
 	for pos, res := range ac.Iter() {
-		// check if there were errors
-		if ac.Err != nil {
-			fmt.Printf("Error: on Column: %s, error was: %v\n",m[ac.ErrCol],ac.Err)
-			return
-		}
+
 		cols := res.GetColumns()
 		names := []string{}
 		for _, column := range *cols {
@@ -193,6 +189,11 @@ Finally we want to iterate through the resulting overlaps and intersections foun
 			res.GetEnd(),
 			strings.Join(names, ", "),
 		)
+	}
+	// check if there were errors
+	if ac.Err != nil {
+		fmt.Printf("Error: on Column: %s, error was: %v\n",m[ac.ErrCol],ac.Err)
+		return
 	}
 	fmt.Print(header)
 
