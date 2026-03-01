@@ -1,5 +1,7 @@
 # Span-Tools
 
+[![Go Reference](https://pkg.go.dev/badge/github.com/akalinux/span-tools.svg)](https://pkg.go.dev/github.com/akalinux/span-tools)
+
 Implements the universal span intersection algorithm. The algorithm represents a unified way to find intersections 
 and overlaps of "one dimensional spans" of any data type.  The package is built around the SpanUtil[E any] struct, and
 the manipulation of the SpanBoundry[E any] interface.
