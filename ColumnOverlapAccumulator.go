@@ -49,7 +49,7 @@ func (s *ColumnOverlapAccumulator[E]) GetLastSpan() (int, SpanBoundry[E]) {
 	return (*s.Overlaps)[len(*s.Overlaps)-1].GetLastSpan()
 }
 
-// Returns all spans with the sequence id from the orginal data source.
+// Returns all spans with the sequence id from the original data source.
 func (s *ColumnOverlapAccumulator[E]) GetSources() *[]*OvelapSources[E] {
 	list := []*OvelapSources[E]{}
 	for _, ol := range *s.Overlaps {

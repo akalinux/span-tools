@@ -2,7 +2,7 @@ package st
 
 import "testing"
 
-// Validates the inital range of a list of ranges
+// Validates the initial range of a list of ranges
 func TestFirstRange(t *testing.T) {
 	var src *[]SpanBoundry[int] = &[]SpanBoundry[int]{
 		&Span[int]{Begin: 2, End: 2},

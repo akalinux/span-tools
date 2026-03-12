@@ -164,7 +164,7 @@ func TestExersizeSubIterator(t *testing.T) {
 		}
 	}
 	if count != 5 {
-		t.Errorf("Force Final iterator block to exersize for channel test failed? Expected a total 5 for got: %d", count)
+		t.Errorf("Force Final iterator block to exercise for channel test failed? Expected a total 5 for got: %d", count)
 	}
 }
 
@@ -181,7 +181,7 @@ func TestExersizeSubIteratorSlice(t *testing.T) {
 		}
 	}
 	if count != 5 {
-		t.Errorf("Force Final iterator block to exersize for channel test failed? Expected a total 5 for got: %d", count)
+		t.Errorf("Force Final iterator block to exercise for channel test failed? Expected a total 5 for got: %d", count)
 	}
 }
 

@@ -9,7 +9,7 @@ func TestEmptyColumnSet(t *testing.T) {
 
 	var cs = testDriver.NewColumnSets()
 	if cs.OverlapCount() != -1 {
-		t.Errorf("Expected the uninitalized set to be -1")
+		t.Errorf("Expected the uninitialized set to be -1")
 	}
 	cs.columns = &[]*ColumnOverlapAccumulator[int]{}
 	cs.setNext()

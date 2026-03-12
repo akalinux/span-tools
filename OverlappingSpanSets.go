@@ -58,7 +58,7 @@ func (s *OverlappingSpanSets[E]) GetEnd() E {
 	return s.Span.GetEnd()
 }
 
-// Returns the first span that created this interseciton.
+// Returns the first span that created this intersections.
 func (s *OverlappingSpanSets[E]) GetFirstSpan() (int, SpanBoundry[E]) {
 	if s.IsUnique() {
 		return s.SrcBegin, s.Span
@@ -66,7 +66,7 @@ func (s *OverlappingSpanSets[E]) GetFirstSpan() (int, SpanBoundry[E]) {
 	return s.SrcBegin, (*s.Contains)[0]
 }
 
-// Returns the last span that created this interseciton.
+// Returns the last span that created this intersections.
 func (s *OverlappingSpanSets[E]) GetLastSpan() (int, SpanBoundry[E]) {
 	if s.IsUnique() {
 		return s.SrcEnd, s.Span
@@ -80,7 +80,7 @@ type OvelapSources[E any] struct {
 	SrcId int
 }
 
-// Returns all of the spans and thier indexes that caused this current intersection.
+// Returns all of the spans and their indexes that caused this current intersection.
 func (s *OverlappingSpanSets[E]) GetSources() *[]*OvelapSources[E] {
 	res := &[]*OvelapSources[E]{}
 	if s.IsUnique() {

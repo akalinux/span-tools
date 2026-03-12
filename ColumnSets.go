@@ -234,10 +234,10 @@ func (s *ColumnSets[E]) Iter() iter.Seq2[int, ColumnResults[E]] {
 	s.itr = true
 	s.init()
 
-	return func(yeild func(int, ColumnResults[E]) bool) {
+	return func(yield func(int, ColumnResults[E]) bool) {
 		defer s.Close()
 		for s.pos != -1 {
-			if !yeild(s.pos, s) {
+			if !yield(s.pos, s) {
 				return
 			}
 			s.setNext()

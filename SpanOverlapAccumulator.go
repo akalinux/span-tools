@@ -33,7 +33,7 @@ type SpanOverlapAccumulator[E any] struct {
 // the OverlappingSpanSets is expanded and the span is append to the Contains slice.
 // When the span is outside of the current internal span,
 // then a new OverlappingSpanSets is created with this span as its current span.
-// The error value is nil, by default, when an error has happend it is no longer nil.
+// The error value is nil, by default, when an error has happened it is no longer nil.
 func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*OverlappingSpanSets[E], error) {
 	s.Pos++
 	if s.Validate && s.Err==nil {
@@ -115,7 +115,7 @@ func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromSbChan(c <-chan SpanBoundry[E
 			span, ok = <-c
 		}
 	}
-	return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
+	return func(yield func(int, *OverlappingSpanSets[E]) bool) {
 		// no chan??? stop here
 		if !sa.HasNext() {
 			return
@@ -127,7 +127,7 @@ func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromSbChan(c <-chan SpanBoundry[E
 			}
 			if sa.HasNext() {
 				var id, current = sa.GetNext()
-				if !yeild(id, current) {
+				if !yield(id, current) {
 					return
 				}
 				var span, ok = <-c
@@ -174,7 +174,7 @@ func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromSbSlice(list *[]SpanBoundry[E
 		}
 	}
 
-	return func(yeild func(int, *OverlappingSpanSets[E]) bool) {
+	return func(yield func(int, *OverlappingSpanSets[E]) bool) {
 		// no list stop here
 		if end == -1 {
 			return
@@ -184,7 +184,7 @@ func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromSbSlice(list *[]SpanBoundry[E
 			if au.HasNext() {
 				var id, current = au.GetNext()
 
-				if !yeild(id, current) {
+				if !yield(id, current) {
 					return
 				}
 				for pos < end {

@@ -30,7 +30,7 @@ var testSets = [][][]SpanBoundry[int]{
 		},
 		AllSet,
 	},
-	// test set 1, Seperate blocks with only 1 overlap
+	// test set 1, Separate blocks with only 1 overlap
 	{
 		{
 			&Span[int]{Begin: 2, End: 2},
@@ -191,7 +191,7 @@ func TestGrowth(t *testing.T) {
 				t.Errorf("Bad Range on element 1")
 			}
 			if res.IsUnique() {
-				t.Errorf("Expected to be stand alone, but contians multiple elements")
+				t.Errorf("Expected to be stand alone, but contains multiple elements")
 			}
 			if *lastRes != *res {
 				t.Errorf("Did not expect new result!")
@@ -331,7 +331,7 @@ func TestChanAccumulatro(t *testing.T) {
 		count++
 	}
 	if count != 0 {
-		t.Errorf("Exersize Error, failed? Expected a total 1 for got: %d", count)
+		t.Errorf("Exercise Error, failed? Expected a total 1 for got: %d", count)
 	}
 
 	c = make(chan SpanBoundry[int], len(MultiSet))
@@ -345,7 +345,7 @@ func TestChanAccumulatro(t *testing.T) {
 		break
 	}
 	if count != 1 {
-		t.Errorf("Force, yeild test coverage... Expected a total 1 for got: %d", count)
+		t.Errorf("Force, yield test coverage... Expected a total 1 for got: %d", count)
 	}
 
 }

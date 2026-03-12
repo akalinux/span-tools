@@ -11,7 +11,7 @@
 // The "Universal Span Intersection Algorithm" is implemented by breaking operations down into their constituent parts.
 //
 // Finding intersections of one dimensional spans of generic data types requires the following:
-//  - A way contian the begin and end values, representing our span
+//  - A way contain the begin and end values, representing our span
 //  - Method to  compare values.
 //  - Method to create a next value
 // 
@@ -167,7 +167,7 @@
 // # Integrating go routines and streaming data sets
 //
 // The internals of the st package, can be used to create context instances to mange communication between go routines for us.
-// If the spans are recived out of order or fail to pass error checking constraints, then the main iterator loop will be halted.
+// If the spans are received out of order or fail to pass error checking constraints, then the main iterator loop will be halted.
 // In this example we will simulate streaming the same data set via go routines.
 //
 // First we create an "Add" function to create our go routien and push data into our column channel based iterators:
