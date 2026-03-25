@@ -8,44 +8,43 @@ func TestFirstRange(t *testing.T) {
 		&Span[int]{Begin: 2, End: 2},
 		&Span[int]{Begin: 0, End: 1},
 	}
-	var span,_ = testDriver.FirstSpan(src)
+	var span, _ = testDriver.FirstSpan(src)
 	if span.GetBegin() != 0 || span.GetEnd() != 1 {
 		t.Errorf("Invalid start range")
 	}
-	var check=testDriver.GetOverlapIndexes(span,src);
-	if(len(*check)==0) {
+	var check = testDriver.GetOverlapIndexes(span, src)
+	if len(*check) == 0 {
 		t.Errorf("should not be empty")
 	}
-	check=testDriver.GetOverlapIndexes(span,nil);
+	check = testDriver.GetOverlapIndexes(span, nil)
 
-	if(len(*check)!=0) {
+	if len(*check) != 0 {
 		t.Errorf("should not be empty")
 	}
 }
 
+func CommonNextSpan(src *[]SpanBoundry[int], expected *[]SpanBoundry[int], t *testing.T) {
 
-func CommonNextSpan(src *[]SpanBoundry[int],expected *[]SpanBoundry[int],t *testing.T) {
-
-	var check,ok = testDriver.NextSpan(&Span[int]{Begin: -1, End: -1}, src)
-	for id,span := range *expected {
+	var check, ok = testDriver.NextSpan(&Span[int]{Begin: -1, End: -1}, src)
+	for id, span := range *expected {
 		if !ok {
-			t.Errorf("Should have gotten as our next return value for id: %d",id)
+			t.Errorf("Should have gotten as our next return value for id: %d", id)
 			return
 		}
 		if span.GetBegin() != check.GetBegin() {
-			t.Errorf("Invalid begin, expected: %v, got: %v for set: %d", span, check,id)
+			t.Errorf("Invalid begin, expected: %v, got: %v for set: %d", span, check, id)
 			return
 		}
 		if span.GetEnd() != check.GetEnd() {
-			t.Errorf("Invalid end, expected: %v, got: %v for set: %d", span, check,id)
+			t.Errorf("Invalid end, expected: %v, got: %v for set: %d", span, check, id)
 			return
 		}
-		check,ok = testDriver.NextSpan(check, src)
+		check, ok = testDriver.NextSpan(check, src)
 	}
 	if ok {
-		t.Errorf("Expected last call to NextSpan to return nil, got: %v",check)
+		t.Errorf("Expected last call to NextSpan to return nil, got: %v", check)
 		return
-	}	
+	}
 }
 
 func TestGetNextSpan(t *testing.T) {
@@ -59,7 +58,7 @@ func TestGetNextSpan(t *testing.T) {
 		&Span[int]{Begin: 2, End: 2},
 		&Span[int]{Begin: 3, End: 3},
 	}
-	CommonNextSpan(src,expected,t)
+	CommonNextSpan(src, expected, t)
 }
 
 func TestGetNextSpanReducedColumns(t *testing.T) {
@@ -74,7 +73,7 @@ func TestGetNextSpanReducedColumns(t *testing.T) {
 		&Span[int]{Begin: 4, End: 5},
 		&Span[int]{Begin: 6, End: 6},
 	}
-	CommonNextSpan(src,expected,t)
+	CommonNextSpan(src, expected, t)
 }
 
 func TestGetNextSpanAllColumnsSetA(t *testing.T) {
@@ -92,7 +91,7 @@ func TestGetNextSpanAllColumnsSetA(t *testing.T) {
 		&Span[int]{Begin: 6, End: 6},
 	}
 
-	CommonNextSpan(src,expected,t)
+	CommonNextSpan(src, expected, t)
 }
 
 func TestGetNextSpanAllColumnsSetB(t *testing.T) {
@@ -110,5 +109,5 @@ func TestGetNextSpanAllColumnsSetB(t *testing.T) {
 		&Span[int]{Begin: 6, End: 6},
 	}
 
-	CommonNextSpan(src,expected,t)
+	CommonNextSpan(src, expected, t)
 }

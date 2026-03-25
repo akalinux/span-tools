@@ -18,7 +18,7 @@ type OverlappingSpanSets[E any] struct {
 
 	// Ending position in the original data set
 	SrcEnd int
-	
+
 	Err error
 }
 
@@ -26,7 +26,6 @@ type OverlappingSpanSets[E any] struct {
 func (s *OverlappingSpanSets[E]) GetSrcId() int {
 	return s.SrcBegin
 }
-
 
 // Returns the indexed sequence point of the last original span representing this intersection.
 func (s *OverlappingSpanSets[E]) GetEndId() int {

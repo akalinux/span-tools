@@ -11,7 +11,7 @@ type SpanIterSeq2Stater[E any] struct {
 // Returns true if this SpanBoundry[E] created a new data intersrection.
 // If the value is true you must make a call to s.GetNext() instance method before calling this method again!
 func (s *SpanIterSeq2Stater[E]) SetNext(span SpanBoundry[E]) bool {
-	cmp,_ := s.Sa.Accumulate(span)
+	cmp, _ := s.Sa.Accumulate(span)
 	if s.Current == nil {
 		s.Current = cmp
 		return false
@@ -37,4 +37,3 @@ func (s *SpanIterSeq2Stater[E]) GetNext() (int, *OverlappingSpanSets[E]) {
 
 	return s.Id, next
 }
-

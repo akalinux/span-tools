@@ -15,7 +15,7 @@ func MakeOverlapTestList() *[]*OverlappingSpanSets[int] {
 
 func TestOverlapChannel(t *testing.T) {
 	var ac = testDriver.NewSpanOverlapAccumulator()
-	var list =*MakeOverlapTestList() 
+	var list = *MakeOverlapTestList()
 	ch := make(chan *OverlappingSpanSets[int], len(list))
 	for _, ol := range list {
 		ch <- ol
@@ -35,7 +35,7 @@ func TestOverlapChannel(t *testing.T) {
 }
 func TestBreakLoopOverlapChannel(t *testing.T) {
 	var ac = testDriver.NewSpanOverlapAccumulator()
-	var list =*MakeOverlapTestList() 
+	var list = *MakeOverlapTestList()
 	ch := make(chan *OverlappingSpanSets[int], len(list))
 	for _, ol := range list {
 		ch <- ol
@@ -51,22 +51,21 @@ func TestBreakLoopOverlapChannel(t *testing.T) {
 	}
 }
 func TestNilOverlapChannel(t *testing.T) {
-	var itb=testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssChan(nil);
-	var count=0
-	for  range itb  {
-	  count++
+	var itb = testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssChan(nil)
+	var count = 0
+	for range itb {
+		count++
 	}
-	if(count!=0) {
+	if count != 0 {
 		t.Error("Should Not get any elements in our loop")
 	}
 }
 
-
 func TestBreakLoopOverlapSlice(t *testing.T) {
-	var list =*MakeOverlapTestList() 
-	var itb=testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssSlice(&list);
-  var count=0
-	for range itb  {
+	var list = *MakeOverlapTestList()
+	var itb = testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssSlice(&list)
+	var count = 0
+	for range itb {
 		count++
 		break
 	}
@@ -76,10 +75,10 @@ func TestBreakLoopOverlapSlice(t *testing.T) {
 }
 
 func TestOverlapSlice(t *testing.T) {
-	var list =*MakeOverlapTestList() 
-	var itb=testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssSlice(&list);
-  var count=0
-	for id, value := range itb  {
+	var list = *MakeOverlapTestList()
+	var itb = testDriver.NewSpanOverlapAccumulator().NewOlssSeq2FromOlssSlice(&list)
+	var count = 0
+	for id, value := range itb {
 		count++
 		if list[id] != value {
 			t.Errorf("Error, wrong object ref in slice iter??")

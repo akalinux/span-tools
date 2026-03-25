@@ -22,11 +22,11 @@ type SpanUtil[E any] struct {
 	// Example of when true: 1,2 and 2,3 consolidate to 1,3, when false they do not consolidate.
 	// Default is false.
 	Consolidate bool
-	
+
 	// Denotes if objects created should sort by default.
 	Sort bool
-	
-	SpanFactory func(begin,end E) SpanBoundry[E]
+
+	SpanFactory func(begin, end E) SpanBoundry[E]
 }
 
 // This method is used to verify the sanity of the next and current value.
@@ -63,11 +63,11 @@ func (s *SpanUtil[E]) GetP(x E) *E {
 // [cmp.Compare]: https://pkg.go.dev/github.com/google/go-cmp/cmp#Comparer
 func NewSpanUtil[E any](cmp func(a, b E) int, next func(e E) E) *SpanUtil[E] {
 	return &SpanUtil[E]{
-		Cmp:  cmp,
-		Next: next,
-		Validate: true,
-		Sort:true,
-		SpanFactory: func(a,b E) SpanBoundry[E] { return &Span[E]{Begin: a, End: b} },
+		Cmp:         cmp,
+		Next:        next,
+		Validate:    true,
+		Sort:        true,
+		SpanFactory: func(a, b E) SpanBoundry[E] { return &Span[E]{Begin: a, End: b} },
 	}
 }
 
@@ -109,7 +109,7 @@ func (s *SpanUtil[E]) NewSpan(a, b E) (SpanBoundry[E], error) {
 
 // Creates a new SpanBoundry[E], but does not do any error checking.
 func (s *SpanUtil[E]) Ns(a, b E) SpanBoundry[E] {
-	return s.SpanFactory(a,b)
+	return s.SpanFactory(a, b)
 }
 
 // Generates the first valid span representing the smallest overlapping set.
@@ -123,22 +123,22 @@ func (s *SpanUtil[E]) FirstSpan(list *[]SpanBoundry[E]) (SpanBoundry[E], bool) {
 	if list == nil || len(*list) == 0 {
 		return nil, false
 	}
-	var span = s.Ns((*list)[0].GetBegin(),(*list)[0].GetEnd())
-	
+	var span = s.Ns((*list)[0].GetBegin(), (*list)[0].GetEnd())
+
 	var last = len(*list)
 	var Cmp = s.Cmp
 	for i := 1; i < last; i++ {
 		var check = (*list)[i]
 		if Cmp(check.GetBegin(), span.GetEnd()) == -1 {
-			span= s.Ns(check.GetBegin(),span.GetEnd())
+			span = s.Ns(check.GetBegin(), span.GetEnd())
 		}
 		if Cmp(check.GetEnd(), span.GetEnd()) == -1 {
-			span= s.Ns(span.GetBegin(),check.GetEnd())
+			span = s.Ns(span.GetBegin(), check.GetEnd())
 		}
 	}
 	for _, check := range *list {
 		if Cmp(check.GetBegin(), span.GetBegin()) > 0 && Cmp(span.GetEnd(), check.GetBegin()) > -1 {
-			span= s.Ns(span.GetBegin(),span.GetBegin())
+			span = s.Ns(span.GetBegin(), span.GetBegin())
 			return span, true
 		}
 	}
@@ -154,7 +154,7 @@ func (s *SpanUtil[E]) NewSpanOverlapAccumulator() *SpanOverlapAccumulator[E] {
 		Rss:         &OverlappingSpanSets[E]{Contains: nil, Span: nil},
 		Pos:         -1,
 		Consolidate: s.Consolidate,
-		Sort: s.Sort,
+		Sort:        s.Sort,
 	}
 }
 
@@ -179,7 +179,7 @@ func (s *SpanUtil[E]) NewColumnOverlapAccumulator(next func() (int, *Overlapping
 	res.Util = s
 	var _, current, ok = res.ItrGetNext()
 	if ok {
-		res.Err=current.Err
+		res.Err = current.Err
 		res.Next = current
 	}
 	return res
@@ -221,7 +221,7 @@ func (s *SpanUtil[E]) CreateOverlapSpan(list *[]SpanBoundry[E]) (SpanBoundry[E],
 	var begin *E
 	var end *E
 	var Cmp = s.Cmp
-	var res SpanBoundry[E];
+	var res SpanBoundry[E]
 	for _, span := range *list {
 		if begin == nil {
 			begin = s.GetP(span.GetBegin())

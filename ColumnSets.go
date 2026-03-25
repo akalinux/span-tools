@@ -15,7 +15,7 @@ type CurrentColumn[E any] struct {
 //
 // For every instance created make sure to scope the proper defer call:
 //
-//   defer i.Close()
+//	defer i.Close()
 type ColumnSets[E any] struct {
 	Util    *SpanUtil[E]
 	columns *[]*ColumnOverlapAccumulator[E]
@@ -136,8 +136,8 @@ func (s *ColumnSets[E]) AddColumnFromOverlappingSpanSets(list *[]*OverlappingSpa
 //
 // # Warning
 //
-// If you don't start the go routine that appends to the channel before calling this method, 
-// it will cause a race condition that will prevent the ColumnSets instancce from working 
+// If you don't start the go routine that appends to the channel before calling this method,
+// it will cause a race condition that will prevent the ColumnSets instancce from working
 // correctly.
 func (s *ColumnSets[E]) AddColumnFromNewOlssChanStater(sa *OlssChanStater[E]) int {
 	id := s.AddColumn(

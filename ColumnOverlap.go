@@ -4,8 +4,8 @@ package st
 // a given source, or intersections between multiple sources.
 //
 // Representation as a SpanBoundry is as follows:
-//  - GetBegin() returns the smallest most intersection boundary.
-//  - GetEnd()   returns the largest most intersection boundary.
+//   - GetBegin() returns the smallest most intersection boundary.
+//   - GetEnd()   returns the largest most intersection boundary.
 type ColumnOverlap[E any] interface {
 	SpanBoundry[E]
 	// Returns the first index point from the soruce data set
@@ -14,9 +14,9 @@ type ColumnOverlap[E any] interface {
 	GetEndId() int
 	GetOverlaps() *[]*OverlappingSpanSets[E]
 	// Returns both the index point of the first data soruce, and the original SpanBoundry.
-	GetFirstSpan() (int,SpanBoundry[E])
+	GetFirstSpan() (int, SpanBoundry[E])
 	// Returns both the index point of the last data soruce, and the original SpanBoundry.
-	GetLastSpan() (int,SpanBoundry[E])
+	GetLastSpan() (int, SpanBoundry[E])
 	// Returns all intersecting SpanBoundry instances and their indexes
 	GetSources() *[]*OvelapSources[E]
 }

@@ -1,6 +1,7 @@
 # Span-Tools
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/akalinux/span-tools.svg)](https://pkg.go.dev/github.com/akalinux/span-tools)
+[![Go Report Card](https://goreportcard.com/badge/github.com/akalinux/span-tools)](https://goreportcard.com/report/github.com/akalinux/span-tools)
 [![Unit Tests](https://github.com/akalinux/span-tools/actions/workflows/go.yml/badge.svg)](https://github.com/akalinux/span-tools/actions/workflows/go.yml)
 
 Implements the universal span intersection algorithm. The algorithm represents a unified way to find intersections 

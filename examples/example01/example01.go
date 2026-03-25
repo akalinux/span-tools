@@ -15,7 +15,7 @@ var u = st.NewSpanUtil(
 
 type MySpan struct {
 	a int
-	b int 
+	b int
 }
 
 func (s *MySpan) GetBegin() int {
@@ -27,8 +27,8 @@ func (s *MySpan) GetEnd() int {
 
 func init() {
 	// overload the default span
-	u.SpanFactory=func (a,b int) st.SpanBoundry[int] {
-		return &MySpan{a,b}
+	u.SpanFactory = func(a, b int) st.SpanBoundry[int] {
+		return &MySpan{a, b}
 	}
 }
 

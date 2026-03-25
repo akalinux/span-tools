@@ -9,8 +9,8 @@ import (
 // If you are managing an instance ouside of the normal factory methods,
 // you will need to add the following defer statements in the properly
 // scopes:
-//  - in the main thread add a defer s.Shutdown()
-//  - in the go routine add a defer s.Final()
+//   - in the main thread add a defer s.Shutdown()
+//   - in the go routine add a defer s.Final()
 type OlssChanStater[E any] struct {
 	Chan       chan *OverlappingSpanSets[E]
 	Closed     bool
@@ -25,10 +25,10 @@ type OlssChanStater[E any] struct {
 //
 // Example:
 //
-//  defer s.Final()
-//  for s.CanAccumulate(span) {
-//    // get your next SpanBoundry
-//  }
+//	defer s.Final()
+//	for s.CanAccumulate(span) {
+//	  // get your next SpanBoundry
+//	}
 func (s *OlssChanStater[E]) CanAccumulate(span SpanBoundry[E]) bool {
 	if s.Closed {
 		return false
@@ -49,7 +49,7 @@ func (s *OlssChanStater[E]) Push(next *OverlappingSpanSets[E]) bool {
 	select {
 	case <-s.Ctx.Done():
 		if !s.Closed {
-			s.Closed=true
+			s.Closed = true
 			close(s.Chan)
 		}
 		return false
@@ -61,7 +61,7 @@ func (s *OlssChanStater[E]) Push(next *OverlappingSpanSets[E]) bool {
 // Shuts down the context from the Column accumulator thread.  Do not call this outside
 // of the thread running the ColumnOverlapAccumulator instance or you will get undefined
 // behavior.
-func (s *OlssChanStater[E]) Shutdown()  {
+func (s *OlssChanStater[E]) Shutdown() {
 	if s.IsShutDown {
 		return
 	}
@@ -74,19 +74,19 @@ func (s *OlssChanStater[E]) Shutdown()  {
 //
 // Example:
 //
-//  defer s.Final()
+//	defer s.Final()
 func (s *OlssChanStater[E]) Final() bool {
 	if s.Closed {
 		return false
 	}
 
-	res :=false
+	res := false
 	if s.Stater.HasNext() {
 		_, ol := s.Stater.GetNext()
-		res= s.Push(ol)
+		res = s.Push(ol)
 	}
 
 	close(s.Chan)
-	s.Closed=true
+	s.Closed = true
 	return res
 }

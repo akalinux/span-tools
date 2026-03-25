@@ -13,8 +13,9 @@ var u = st.NewSpanUtil(
 	// Define our Next function
 	func(e int) int { return e + 1 },
 )
+
 func main() {
-	
+
 	// this slice will end up being sorted by the "st" internals
 	unsorted := &[]st.SpanBoundry[int]{
 		// Raw       // Will be sorted to
@@ -28,7 +29,7 @@ func main() {
 	// This pass will error out
 	fmt.Print("Processing our data with an invalid order\n")
 	AccumulateSet(unsorted)
-	
+
 	// Once the data is sorted consolidation will work correctly
 	slices.SortFunc(*unsorted, u.Compare)
 	fmt.Print("\nProcessing post sort\n")
@@ -44,7 +45,7 @@ func AccumulateSet(list *[]st.SpanBoundry[int]) {
 	id := 1
 	span := (*list)[0]
 	ol, err := ac.Accumulate(span)
-	max := len(*list) 
+	max := len(*list)
 
 	var last *st.OverlappingSpanSets[int]
 	for ; id < max; id++ {

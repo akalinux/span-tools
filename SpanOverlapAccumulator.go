@@ -1,9 +1,9 @@
 package st
 
 import (
+	"context"
 	"iter"
 	"slices"
-	"context"
 )
 
 // This is a stater structure, used to drive the creation of new OverlappingSpanSets.
@@ -36,12 +36,12 @@ type SpanOverlapAccumulator[E any] struct {
 // The error value is nil, by default, when an error has happened it is no longer nil.
 func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*OverlappingSpanSets[E], error) {
 	s.Pos++
-	if s.Validate && s.Err==nil {
+	if s.Validate && s.Err == nil {
 		s.Err = s.Check(span, s.Rss.Span)
 	}
 
 	if s.Err != nil {
-		s.Rss.Err=s.Err
+		s.Rss.Err = s.Err
 	}
 
 	if s.Rss.Span == nil {
@@ -55,7 +55,7 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*Overlappin
 		if s.Consolidate {
 			var next = s.Next(a.GetEnd())
 			if s.Cmp(next, span.GetBegin()) == 0 {
-				s.Rss.Span = s.Ns(a.GetBegin(),span.GetEnd())
+				s.Rss.Span = s.Ns(a.GetBegin(), span.GetEnd())
 				joined = true
 			}
 		}
@@ -66,13 +66,13 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*Overlappin
 				Contains: nil,
 				SrcBegin: s.Pos,
 				SrcEnd:   s.Pos,
-				Err: s.Err,
+				Err:      s.Err,
 			}
 		}
 	} else {
 		x, y := s.ContainedBy(a, span)
 		if x|y != 0 {
-			var begin,end E;
+			var begin, end E
 			if x < 0 {
 				begin = a.GetBegin()
 			} else {
@@ -83,7 +83,7 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*Overlappin
 			} else {
 				end = span.GetEnd()
 			}
-			s.Rss.Span = s.Ns(begin,end)
+			s.Rss.Span = s.Ns(begin, end)
 		}
 
 		if s.Rss.Contains == nil {
@@ -96,11 +96,9 @@ func (s *SpanOverlapAccumulator[E]) Accumulate(span SpanBoundry[E]) (*Overlappin
 	return s.Rss, s.Err
 }
 
-
-
 // Helper function to create an overlap iterator from a slice of list.
 func (s *SpanOverlapAccumulator[E]) NewOlssSeq2FromOlssSlice(list *[]*OverlappingSpanSets[E]) iter.Seq2[int, *OverlappingSpanSets[E]] {
-  return slices.All(*list)
+	return slices.All(*list)
 }
 
 // Generates a iter.Seq2 iterator, for a channel of SpanBoundry instances.
@@ -214,11 +212,11 @@ func (s *SpanOverlapAccumulator[E]) NewCoaFromOlssChan(c <-chan *OverlappingSpan
 
 // Creates a new context aware context.Context aware SpanBoundry[E] accumulation instance.
 func (s *SpanOverlapAccumulator[E]) NewOlssChanStater() *OlssChanStater[E] {
-	ctx,cancle :=context.WithCancel(context.Background())
+	ctx, cancle := context.WithCancel(context.Background())
 	return &OlssChanStater[E]{
 		Stater: *s.NewSpanIterSeq2Stater(),
-		Chan: make(chan *OverlappingSpanSets[E]),
-		Ctx: ctx,
+		Chan:   make(chan *OverlappingSpanSets[E]),
+		Ctx:    ctx,
 		Cancel: cancle,
 	}
 }

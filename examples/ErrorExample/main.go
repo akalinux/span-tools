@@ -30,9 +30,9 @@ func main() {
 		err := u.Check(next, current)
 		if err == nil {
 			fmt.Printf("id: %d SpanBoundry: %v, OK\n", id, next)
-			current=next
+			current = next
 		} else {
-			fmt.Printf("id: %d SpanBoundry: %v, Not Ok, error was: %v\n", id, next,err)
+			fmt.Printf("id: %d SpanBoundry: %v, Not Ok, error was: %v\n", id, next, err)
 			break
 		}
 	}

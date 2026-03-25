@@ -48,8 +48,8 @@ func testOverlapStruct(expected []IterValidate, t *testing.T, src *[]SpanBoundry
 		}
 		if res.InOverlap() {
 			if len(*res.GetSources()) == 0 {
-				t.Errorf("Should never get 0 records from GetSources on set: %v",conf.Next)
-				t.Errorf("Next is: %v",res.Next.Span)
+				t.Errorf("Should never get 0 records from GetSources on set: %v", conf.Next)
+				t.Errorf("Next is: %v", res.Next.Span)
 				return
 			}
 			// just making sure these methods don't cause a crash... not testing the results

@@ -3,15 +3,15 @@ package main
 import (
 	"cmp"
 	"fmt"
-	"strings"
 	"github.com/akalinux/span-tools"
+	"strings"
 )
 
 func main() {
 	u := st.NewSpanUtil(
 		// use the standard Compare function
 		cmp.Compare,
-		
+
 		// Define our Next function
 		func(e int) int { return e + 1 },
 	)
@@ -45,7 +45,6 @@ func main() {
 	ac.AddColumnFromSpanSlice(setc)
 	m[2] = "SetC"
 
-
 	header := "+-----+--------------------+------------------------------------+\n"
 	fmt.Print(header)
 	fmt.Print("| Seq | Begin and End      | Set Name:(Row,Row)                 |\n")
@@ -54,7 +53,7 @@ func main() {
 		cols := res.GetColumns()
 		names := []string{}
 		for _, column := range *cols {
-			str :=fmt.Sprintf("%s:(%d-%d)",m[column.ColumnId],column.GetSrcId(),column.GetEndId())
+			str := fmt.Sprintf("%s:(%d-%d)", m[column.ColumnId], column.GetSrcId(), column.GetEndId())
 			names = append(names, str)
 		}
 		fmt.Print(header)
@@ -67,11 +66,9 @@ func main() {
 	}
 	// check if there were errors
 	if ac.Err != nil {
-		fmt.Printf("Error: on Column: %s, error was: %v\n",m[ac.ErrCol],ac.Err)
+		fmt.Printf("Error: on Column: %s, error was: %v\n", m[ac.ErrCol], ac.Err)
 		return
 	}
 	fmt.Print(header)
-
-
 
 }

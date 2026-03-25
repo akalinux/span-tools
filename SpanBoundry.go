@@ -9,7 +9,6 @@ type Span[E any] struct {
 	End E
 }
 
-
 // This interface acts as the core representation of spans for the "st" package.
 // Spans are represent by 2 values a "Begin" value and an "End" value.
 // The Begin value should be returned by GetBegin and should be greater than
@@ -31,4 +30,3 @@ func (s *Span[E]) GetBegin() E {
 func (s *Span[E]) GetEnd() E {
 	return s.End
 }
-
